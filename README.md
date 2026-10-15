@@ -55,7 +55,7 @@ I analysed MyFitnessPal, Cronometer, Lifesum, Noom, MyProtein, iHerb, Udemy and 
 - Weight log, daily steps, water intake and sleep tracking
 - **30-day interactive charts** (Chart.js) with real-time macro and calorie progress against daily targets
 
-<img src="screenshots/05-tracking-bmr.png" alt="Tracking page with BMR/TDEE calculator" width="850"/>
+<img src="smartfit/screenshots/05-tracking-bmr.png" alt="Tracking page with BMR/TDEE calculator" width="850"/>
 
 ---
 
@@ -68,7 +68,7 @@ I analysed MyFitnessPal, Cronometer, Lifesum, Noom, MyProtein, iHerb, Udemy and 
 - Automatic **PDF invoice** generation (iText) and **HTML confirmation email** (Spring Mail)
 - Full order lifecycle: `PENDING → SHIPPED → DELIVERED / CANCELLED`
 
-<img src="screenshots/06-shop.png" alt="Shop with filters and active XP discount" width="850"/>
+<img src="smartfit/screenshots/06-shop.png" alt="Shop with filters and active XP discount" width="850"/>
 
 ---
 
@@ -78,7 +78,7 @@ I analysed MyFitnessPal, Cronometer, Lifesum, Noom, MyProtein, iHerb, Udemy and 
 - **Server-side quiz scoring** — results cannot be tampered with from the browser
 - Passing a quiz awards **XP**, unlocks a **digital certificate** and moves the user up the **global leaderboard**
 
-<img src="screenshots/07-academy.png" alt="Academy course catalogue with XP progress" width="850"/>
+<img src="smartfit/screenshots/07-academy.png" alt="Academy course catalogue with XP progress" width="850"/>
 
 ---
 
@@ -103,8 +103,8 @@ Four report types: **nutrition summary, weight evolution, invoices & orders, aca
 
 <table>
 <tr>
-<td><img src="screenshots/08-admin-dashboard.png" alt="Admin dashboard"/></td>
-<td><img src="screenshots/09-audit-log.png" alt="Audit log"/></td>
+<td><img src="smartfit/screenshots/08-admin-dashboard.png" alt="Admin dashboard"/></td>
+<td><img src="smartfit/screenshots/09-audit-log.png" alt="Audit log"/></td>
 </tr>
 </table>
 
@@ -266,7 +266,7 @@ erDiagram
 | `CourseAdminServiceTest` | 10 | Course CRUD, quiz question replacement, search |
 | `MainControllerTest` | 10 | HTTP status codes, redirects for protected pages, 403 for wrong role, registration flow |
 
-<img src="screenshots/10-tests.png" alt="JUnit test results: 43/43 passing" width="700"/>
+<img src="smartfit/screenshots/10-tests.png" alt="JUnit test results: 43/43 passing" width="700"/>
 
 ---
 
