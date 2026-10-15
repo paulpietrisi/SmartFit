@@ -15,7 +15,7 @@
 ![Tests](https://img.shields.io/badge/tests-43%2F43_passing-brightgreen?logo=junit5&logoColor=white)
 ![License](https://img.shields.io/badge/license-Apache_2.0-blue)
 
-<img src="screenshots/01-landing.png" alt="SmartFit landing page" width="850"/>
+<img src="smartfit/screenshots/01-landing.png" alt="SmartFit landing page" width="850"/>
 
 </div>
 
