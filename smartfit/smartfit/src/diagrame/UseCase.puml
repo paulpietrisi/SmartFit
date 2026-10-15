@@ -1,0 +1,29 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Client (User)" as client
+actor "Angajat" as employee
+actor "Administrator" as admin
+
+rectangle "Aplicația SmartFit" {
+  client -- (Înregistrare / Autentificare)
+  client -- (Gestionează Jurnal Alimentar)
+  client -- (Calculează BMR / TDEE)
+  client -- (Navighează Magazin)
+  client -- (Plasează Comandă)
+  client -- (Parcurge Cursuri în Academie)
+  client -- (Vizualizează Dashboard / Progres)
+
+  employee -- (Gestionează Comenzi)
+  employee -- (Gestionează Produse Magazin)
+  employee -- (Adaugă Cursuri în Academie)
+
+  admin -- (Gestionează Angajați)
+  admin -- (Gestionează Utilizatori)
+  admin -- (Vizualizează Rapoarte Financiare)
+  admin -- (Setări Generale Aplicație)
+}
+
+employee <|-- admin
+@enduml

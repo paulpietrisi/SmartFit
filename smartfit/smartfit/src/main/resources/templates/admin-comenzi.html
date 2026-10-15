@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Comenzi | Admin SmartFit</title>
+    <th:block th:replace="fragments/admin-layout :: styles"></th:block>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="fragments/admin-layout :: sidebar"></div>
+
+    <main class="main">
+        <div class="page-header">
+            <div>
+                <h1>📦 Comenzi</h1>
+                <p class="subtitle" th:text="${#lists.size(orders)} + ' comenzi găsite'">0</p>
+            </div>
+            <a class="btn btn-secondary" th:href="@{/admin/comenzi/export/excel(status=${status})}">⬇️ Export Excel</a>
+        </div>
+
+        <div th:replace="fragments/admin-layout :: alerts"></div>
+
+        <!-- FILTRE -->
+        <form class="filter-bar" method="get" th:action="@{/admin/comenzi}">
+            <div class="field">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">Toate</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == status}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Email client</label>
+                <input type="text" name="email" th:value="${email}" placeholder="email@exemplu.ro">
+            </div>
+            <div class="field">
+                <label>De la data</label>
+                <input type="date" name="from" th:value="${from}">
+            </div>
+            <div class="field">
+                <label>Până la data</label>
+                <input type="date" name="to" th:value="${to}">
+            </div>
+            <div class="field">
+                <label>Total minim</label>
+                <input type="number" step="0.01" name="minTotal" th:value="${minTotal}">
+            </div>
+            <div class="field">
+                <label>Total maxim</label>
+                <input type="number" step="0.01" name="maxTotal" th:value="${maxTotal}">
+            </div>
+            <button type="submit" class="btn btn-primary">Filtrează</button>
+            <a class="btn btn-secondary" th:href="@{/admin/comenzi}">Resetează</a>
+        </form>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Client</th><th>Email</th><th>Total</th>
+                        <th>Status</th><th>Data</th><th>Acțiuni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="o : ${orders}">
+                        <td th:text="'#ORD-' + ${o.id}"></td>
+                        <td th:text="${o.fullName}"></td>
+                        <td th:text="${o.contactEmail}"></td>
+                        <td th:text="${#numbers.formatDecimal(o.totalPrice,1,2)} + ' lei'"></td>
+                        <td><span class="badge" th:class="'badge badge-' + ${o.status}"
+                                  th:text="${
+        o.status == 'PENDING'   ? 'Confirmed' :
+        o.status == 'SHIPPED'   ? 'Expediat' :
+        o.status == 'DELIVERED' ? 'Livrat' :
+        o.status == 'CANCELLED' ? 'Anulat' :
+        o.status
+    }"></span></td>
+                        <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd.MM.yyyy HH:mm') : '-'}"></td>
+                        <td class="actions-cell">
+                            <form th:action="@{/admin/comenzi/{id}/status(id=${o.id})}" method="post" style="display:flex; gap:4px;">
+                                <select name="status" style="padding:4px 6px; font-size:12px; border-radius:6px; border:1px solid var(--border);">
+                                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == o.status}"></option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-secondary">Salvează</button>
+                            </form>
+                            <a class="btn btn-sm btn-secondary" th:href="@{/admin/comenzi/{id}/factura(id=${o.id})}">📄 Factură</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${orders.isEmpty()}">
+                        <td colspan="7" class="empty-state">Nu există comenzi care să corespundă filtrelor.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

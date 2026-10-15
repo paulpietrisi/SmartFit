@@ -1,0 +1,22 @@
+@startuml
+[*] --> PENDING : Creare comandă (Checkout)
+
+PENDING --> SHIPPED : Admin/Angajat aprobă și expediază comanda
+PENDING --> CANCELLED : Admin anulează (ex: stoc epuizat)
+
+SHIPPED --> DELIVERED : Confirmare primire de la curier
+SHIPPED --> CANCELLED : Colet returnat / refuzat la livrare
+
+DELIVERED --> [*]
+CANCELLED --> [*]
+
+note left of PENDING
+  Comanda a intrat în DB.
+  Stocul a fost rezervat.
+end note
+
+note right of SHIPPED
+  A fost generat ID-ul Stripe / Cash.
+  Așteaptă livrarea fizică.
+end note
+@enduml

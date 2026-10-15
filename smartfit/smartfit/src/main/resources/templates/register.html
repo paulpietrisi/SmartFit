@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartFit – Creare cont</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;
+      --blue-deep:#0A2540;--blue-light:#EAF3FF;
+      --white:#FFFFFF;--off:#F5F5F7;
+      --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+      --border:rgba(0,0,0,0.09);
+      --r:14px;--r-lg:20px;
+      --sh:0 8px 40px rgba(0,0,0,0.10);
+    }
+    html,body{height:100%;overflow:hidden}
+    body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--white);color:var(--text);display:flex}
+
+    /* ── PANEL STÂNGA ── */
+    .lp{
+      flex:1.05;position:relative;overflow:hidden;
+      background:linear-gradient(150deg,var(--blue-deep) 0%,#0B3870 50%,#0C4A92 100%);
+      display:flex;flex-direction:column;justify-content:space-between;padding:48px 52px;
+    }
+    .lp::before{content:'';position:absolute;inset:0;
+      background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);
+      background-size:36px 36px;pointer-events:none}
+    .blob{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+    .b1{width:600px;height:600px;background:#0A84FF;opacity:.13;top:-200px;left:-200px;animation:bdrift 18s ease-in-out infinite}
+    .b2{width:380px;height:380px;background:#5AC8FA;opacity:.09;bottom:-80px;right:-80px;animation:bdrift 14s ease-in-out infinite reverse}
+    .b3{width:200px;height:200px;background:#30D158;opacity:.06;bottom:38%;left:30%;animation:bdrift 11s ease-in-out infinite 3s}
+    @keyframes bdrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-22px) scale(1.05)}}
+
+    .logo{display:flex;align-items:center;gap:11px;text-decoration:none;position:relative;z-index:1}
+    .logo-icon{width:36px;height:36px;background:var(--white);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,.22)}
+    .logo-icon svg{width:19px;height:19px}
+    .logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:#fff;letter-spacing:-.2px}
+
+    .lhero{position:relative;z-index:1}
+    .ltag{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.75);font-size:11px;font-weight:500;letter-spacing:.5px;padding:6px 14px;border-radius:100px;margin-bottom:26px}
+    .ldot{width:6px;height:6px;border-radius:50%;background:#30D158;animation:dp 2s infinite}
+    @keyframes dp{0%,100%{opacity:1}50%{opacity:.25}}
+    .ltitle{font-family:'Syne',sans-serif;font-size:clamp(36px,4vw,56px);font-weight:800;color:#fff;line-height:1.03;letter-spacing:-1.2px;margin-bottom:18px}
+    .ltitle span{color:var(--blue-3)}
+    .lsub{font-size:15px;font-weight:300;color:rgba(255,255,255,.52);line-height:1.7;max-width:340px}
+
+    .lcards{position:relative;z-index:1;display:flex;flex-direction:column;gap:11px}
+    .lcard{background:rgba(255,255,255,.08);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:13px}
+    .lcard-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+    .li1{background:rgba(10,132,255,.22)}.li2{background:rgba(48,209,88,.18)}.li3{background:rgba(255,159,10,.18)}
+    .lcard-info{flex:1}
+    .lcard-t{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}
+    .lcard-d{font-size:11px;color:rgba(255,255,255,.42)}
+    .lcard-arrow{color:rgba(255,255,255,.25);font-size:14px}
+
+    /* ── PANEL DREAPTA (FORMULAR) ── */
+    .rp{
+      flex:.95;display:flex;align-items:center;justify-content:center;
+      padding:32px 52px;background:var(--white);overflow-y:auto;
+    }
+    .fc{width:100%;max-width:400px}
+
+    .fh{margin-bottom:28px}
+    .fh-back{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-3);text-decoration:none;margin-bottom:20px;transition:color .2s}
+    .fh-back:hover{color:var(--blue)}
+    .fh-back svg{width:13px;height:13px}
+    .fh-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+    .fh-title{font-family:'Syne',sans-serif;font-size:clamp(26px,3vw,34px);font-weight:800;color:var(--text);line-height:1.08;letter-spacing:-.8px;margin-bottom:6px}
+    .fh-sub{font-size:14px;color:var(--text-2);line-height:1.6;font-weight:300}
+
+    .alert{border-radius:10px;padding:11px 16px;font-size:13px;display:none;margin-bottom:18px;align-items:flex-start;gap:10px}
+    .alert.vis{display:flex}
+    .ale{background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.22);color:#D93025}
+    .als{background:rgba(48,209,88,.08);border:1px solid rgba(48,209,88,.22);color:#1A8A3A}
+
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-2);margin-bottom:7px}
+    .iw{position:relative}
+    .iw input,.iw select{
+      width:100%;padding:13px 44px 13px 16px;
+      background:var(--off);border:1.5px solid transparent;
+      border-radius:var(--r);color:var(--text);
+      font-family:'DM Sans',sans-serif;font-size:15px;
+      outline:none;transition:border-color .2s,background .2s;
+      -webkit-appearance:none;
+    }
+    .iw select{padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236E6E73' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+    .iw input::placeholder{color:var(--text-3)}
+    .iw input:focus,.iw select:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+    .iw input.err,.iw select.err{border-color:#D93025}
+    .iico{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+    .tpw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;opacity:.38;padding:4px;display:flex;align-items:center;transition:opacity .2s}
+    .tpw:hover{opacity:.7}
+
+    .pw-strength{height:4px;background:var(--off);border-radius:2px;margin-top:8px;overflow:hidden;transition:.3s}
+    .pw-fill{height:100%;border-radius:2px;transition:width .4s,background .4s;width:0}
+    .pw-hint{font-size:11px;color:var(--text-3);margin-top:5px}
+
+    .terms{font-size:12px;color:var(--text-3);line-height:1.55;margin-bottom:20px;padding:12px 14px;background:var(--off);border-radius:10px}
+    .terms a{color:var(--blue);text-decoration:none}
+    .terms a:hover{opacity:.7}
+
+    .btn-p{
+      width:100%;padding:15px;background:var(--blue);border:none;border-radius:var(--r);
+      color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+      cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;
+      position:relative;overflow:hidden;box-shadow:0 4px 22px rgba(0,102,204,.28);margin-bottom:14px;
+    }
+    .btn-p:hover{background:#0055AA;box-shadow:0 6px 28px rgba(0,102,204,.35)}
+    .btn-p:active{transform:scale(.98)}
+    .btn-p .ld{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:var(--blue)}
+    .btn-p.loading .bt{opacity:0}.btn-p.loading .ld{display:flex}
+    .spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .65s linear infinite}
+    @keyframes sp{to{transform:rotate(360deg)}}
+
+    .fn{text-align:center;font-size:13px;color:var(--text-3)}
+    .fn a{color:var(--blue);text-decoration:none;font-weight:500}
+    .fn a:hover{opacity:.7}
+
+    @media(max-width:820px){.lp{display:none}.rp{flex:1;padding:28px 24px}}
+    @media(max-height:680px){.rp{align-items:flex-start;padding-top:24px}}
+  </style>
+</head>
+<body>
+
+<!-- PANEL STÂNGA -->
+<div class="lp">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+  <a th:href="@{/home}" class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0066CC" stroke-width="2.6" stroke-linecap="round">
+        <rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/>
+        <rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>
+        <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+      </svg>
+    </div>
+    <span class="logo-text">SmartFit</span>
+  </a>
+
+  <div class="lhero">
+    <div class="ltag"><span class="ldot"></span>Înregistrare gratuită</div>
+    <h1 class="ltitle">Începe<br>călătoria <span>sănătoasă.</span></h1>
+    <p class="lsub">Crează-ți contul în câteva secunde și accesează tracking alimentar, magazin premium și academia de nutriție.</p>
+  </div>
+
+  <div class="lcards">
+    <div class="lcard">
+      <div class="lcard-ico li1">🎯</div>
+      <div class="lcard-info">
+        <div class="lcard-t">Calculator BMR personalizat</div>
+        <div class="lcard-d">Calorii și macro-nutrienți calculați automat</div>
+      </div>
+      <span class="lcard-arrow">›</span>
+    </div>
+    <div class="lcard">
+      <div class="lcard-ico li2">🏆</div>
+      <div class="lcard-info">
+        <div class="lcard-t">Puncte XP & discounturi</div>
+        <div class="lcard-d">Câștigă reduceri reale în magazin prin quiz-uri</div>
+      </div>
+      <span class="lcard-arrow">›</span>
+    </div>
+    <div class="lcard">
+      <div class="lcard-ico li3">🛒</div>
+      <div class="lcard-info">
+        <div class="lcard-t">Magazin de suplimente</div>
+        <div class="lcard-d">Produse verificate cu livrare 24–48h</div>
+      </div>
+      <span class="lcard-arrow">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL DREAPTA -->
+<div class="rp">
+  <div class="fc">
+    <div class="fh">
+      <a th:href="@{/home}" class="fh-back">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg>
+        Înapoi la pagina principală
+      </a>
+      <div class="fh-tag">Cont nou</div>
+      <h2 class="fh-title">Creează cont<br>gratuit.</h2>
+      <p class="fh-sub">Acces instant la toate funcțiile. Fără card de credit.</p>
+    </div>
+
+    <!-- Alerte -->
+    <div class="alert ale" id="emailAlert" th:classappend="${emailError} ? 'vis' : ''">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 10.5v.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Adresa de email este deja folosită. <a th:href="@{/login}" style="color:inherit;font-weight:600">Autentifică-te</a></span>
+    </div>
+    <div class="alert ale" id="pwAlert" th:classappend="${pwError} ? 'vis' : ''">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 10.5v.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Parola trebuie să aibă minim 6 caractere.</span>
+    </div>
+    <div class="alert ale" id="clientErrAlert">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 10.5v.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span id="clientErrMsg">Completează toate câmpurile corect.</span>
+    </div>
+
+    <form id="rf" th:action="@{/register}" method="post" novalidate>
+
+      <div class="row2">
+        <div class="field">
+          <label for="firstName">Prenume</label>
+          <div class="iw">
+            <input type="text" id="firstName" name="firstName"
+                   th:value="${firstName}"
+                   placeholder="Ion" autocomplete="given-name" required/>
+          </div>
+        </div>
+        <div class="field">
+          <label for="lastName">Nume</label>
+          <div class="iw">
+            <input type="text" id="lastName" name="lastName"
+                   th:value="${lastName}"
+                   placeholder="Popescu" autocomplete="family-name" required/>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Adresă de email</label>
+        <div class="iw">
+          <input type="email" id="email" name="email"
+                 th:value="${emailVal}"
+                 th:classappend="${emailError} ? 'err' : ''"
+                 placeholder="exemplu@gmail.com"
+                 autocomplete="email" required/>
+          <span class="iico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+                    </span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="pw">Parolă</label>
+        <div class="iw">
+          <input type="password" id="pw" name="password"
+                 th:classappend="${pwError} ? 'err' : ''"
+                 placeholder="Minim 6 caractere"
+                 autocomplete="new-password" required
+                 oninput="checkStrength(this.value)"/>
+          <button type="button" class="tpw" id="tpwBtn" aria-label="Arată parola">
+            <svg id="eyeSvg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="1.7" stroke-linecap="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="pw-strength"><div class="pw-fill" id="pwFill"></div></div>
+        <div class="pw-hint" id="pwHint">Introdu o parolă</div>
+      </div>
+
+      <div class="field">
+        <label for="gender">Gen</label>
+        <div class="iw">
+          <select id="gender" name="gender">
+            <option value="M">Masculin</option>
+            <option value="F">Feminin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="terms">
+        Prin crearea contului ești de acord cu
+        <a href="#">Termenii de utilizare</a> și
+        <a href="#">Politica de confidențialitate</a> SmartFit.
+        Datele tale sunt protejate prin criptare BCrypt și nu sunt partajate cu terți.
+      </div>
+
+      <button type="submit" class="btn-p" id="subBtn">
+        <span class="bt">Creează cont gratuit →</span>
+        <div class="ld"><div class="spin"></div></div>
+      </button>
+    </form>
+
+    <p class="fn">Ai deja un cont? <a th:href="@{/login}">Autentifică-te</a></p>
+  </div>
+</div>
+
+<script>
+  /* Toggle password visibility */
+  const tpwBtn = document.getElementById('tpwBtn');
+  const pwIn   = document.getElementById('pw');
+  const eyeSvg = document.getElementById('eyeSvg');
+  tpwBtn.addEventListener('click', () => {
+    const show = pwIn.type === 'password';
+    pwIn.type = show ? 'text' : 'password';
+    eyeSvg.innerHTML = show
+            ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22" stroke="#1D1D1F" stroke-width="1.7" stroke-linecap="round"/>'
+            : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#1D1D1F" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="#1D1D1F" stroke-width="1.7"/>';
+  });
+
+  /* Password strength indicator */
+  function checkStrength(v) {
+    const fill  = document.getElementById('pwFill');
+    const hint  = document.getElementById('pwHint');
+    if (!v) { fill.style.width='0'; hint.textContent='Introdu o parolă'; fill.style.background=''; return; }
+    let score = 0;
+    if (v.length >= 6)  score++;
+    if (v.length >= 10) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const levels = [
+      {w:'20%',c:'#FF3B30',t:'Foarte slabă'},
+      {w:'40%',c:'#FF9F0A',t:'Slabă'},
+      {w:'60%',c:'#FFD60A',t:'Medie'},
+      {w:'80%',c:'#34C759',t:'Bună'},
+      {w:'100%',c:'#30D158',t:'Excelentă'}
+    ];
+    const lvl = levels[Math.min(score-1, 4)] || levels[0];
+    fill.style.width = lvl.w;
+    fill.style.background = lvl.c;
+    hint.textContent = lvl.t;
+    hint.style.color = lvl.c;
+  }
+
+  /* Client-side validation */
+  document.getElementById('rf').addEventListener('submit', function(e) {
+    const fn  = document.getElementById('firstName');
+    const ln  = document.getElementById('lastName');
+    const em  = document.getElementById('email');
+    const pw  = document.getElementById('pw');
+    const err = document.getElementById('clientErrAlert');
+    const msg = document.getElementById('clientErrMsg');
+
+    [fn,ln,em,pw].forEach(i=>i.classList.remove('err'));
+    err.classList.remove('vis');
+
+    let valid = true;
+    if (!fn.value.trim()) { fn.classList.add('err'); valid=false; }
+    if (!ln.value.trim()) { ln.classList.add('err'); valid=false; }
+    if (!em.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value)) { em.classList.add('err'); valid=false; }
+    if (!pw.value || pw.value.length < 6) { pw.classList.add('err'); valid=false; }
+
+    if (!valid) {
+      e.preventDefault();
+      msg.textContent = 'Completează toate câmpurile corect (parola min. 6 caractere).';
+      err.classList.add('vis');
+      return;
+    }
+    document.getElementById('subBtn').classList.add('loading');
+  });
+
+  document.getElementById('firstName').focus();
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head><title>fragments</title></head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     FRAGMENT: styles
+     CSS comun pentru admin-*.html și angajat-*.html
+     Paletă reluată din EmailService (BLUE_DARK #0A2540, BLUE_MID #0066CC)
+     ════════════════════════════════════════════════════════════ -->
+<th:block th:fragment="styles">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    :root {
+        --blue-dark:#0A2540; --blue-mid:#0066CC; --blue-light:#EAF3FF;
+        --green:#30D158; --gray-bg:#F5F5F7; --gray-text:#6E6E73;
+        --border:#E5E5EA; --red:#FF3B30; --yellow:#FFD86E; --orange:#FF9500;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,'Segoe UI',Arial,sans-serif; }
+    body { background:var(--gray-bg); color:var(--blue-dark); font-size:14px; }
+
+    .layout { display:flex; min-height:100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+        width:240px; background:var(--blue-dark); color:#fff; flex-shrink:0;
+        display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto;
+    }
+    .sidebar .brand { padding:24px 20px; font-size:20px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .sidebar .brand span { color:var(--green); }
+    .sidebar nav { flex:1; padding:16px 0; }
+    .sidebar .section-label { padding:16px 20px 6px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#6E8AAE; }
+    .sidebar a {
+        display:flex; align-items:center; gap:10px; padding:11px 20px; color:#C8D6E8;
+        text-decoration:none; font-size:13px; font-weight:500; transition:.15s;
+        border-left:3px solid transparent;
+    }
+    .sidebar a:hover, .sidebar a.active { background:rgba(255,255,255,0.07); color:#fff; border-left-color:var(--blue-mid); }
+    .sidebar .user-box { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); font-size:12px; color:#9AAFC7; }
+    .sidebar .user-box strong { color:#fff; display:block; font-size:13px; margin-bottom:2px; }
+    .sidebar form.logout { margin-top:8px; }
+    .sidebar form.logout button {
+        width:100%; background:rgba(255,59,48,0.15); color:#FF8A80; border:none; border-radius:6px;
+        padding:8px; font-size:12px; font-weight:600; cursor:pointer;
+    }
+    .sidebar form.logout button:hover { background:rgba(255,59,48,0.3); }
+
+    /* ── MAIN CONTENT ── */
+    .main { flex:1; padding:28px 32px; max-width:100%; overflow-x:auto; }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-header h1 { font-size:24px; font-weight:800; }
+    .page-header p.subtitle { color:var(--gray-text); font-size:13px; margin-top:4px; }
+
+    /* ── ALERTS ── */
+    .alert { padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:13px; font-weight:500; }
+    .alert-success { background:#E8F8EF; color:#1A5C2A; border:1px solid #B8ECC8; }
+    .alert-error { background:#FFEFEE; color:#B3261E; border:1px solid #FFCDC9; }
+    .alert-warning { background:#FFF9EC; color:#8A5500; border:1px solid #FFD86E; }
+
+    /* ── CARDS / STATS ── */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .stat-card { background:#fff; border-radius:12px; padding:18px 20px; border:1px solid var(--border); }
+    .stat-card .label { font-size:12px; color:var(--gray-text); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+    .stat-card .value { font-size:26px; font-weight:800; color:var(--blue-dark); }
+    .stat-card .value.green { color:#1A5C2A; }
+    .stat-card .value.blue { color:var(--blue-mid); }
+
+    .card { background:#fff; border-radius:12px; border:1px solid var(--border); padding:20px; margin-bottom:20px; }
+    .card h2 { font-size:16px; font-weight:700; margin-bottom:14px; }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+        background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px;
+        display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px; align-items:end;
+    }
+    .filter-bar .field { display:flex; flex-direction:column; gap:4px; min-width:140px; }
+    .filter-bar label { font-size:11px; color:var(--gray-text); font-weight:600; text-transform:uppercase; }
+    .filter-bar input, .filter-bar select {
+        padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+        display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:8px;
+        font-size:13px; font-weight:600; text-decoration:none; border:none; cursor:pointer; transition:.15s;
+    }
+    .btn-primary { background:var(--blue-mid); color:#fff; }
+    .btn-primary:hover { background:var(--blue-dark); }
+    .btn-secondary { background:var(--gray-bg); color:var(--blue-dark); border:1px solid var(--border); }
+    .btn-secondary:hover { background:#ECECEE; }
+    .btn-success { background:var(--green); color:#0A2540; }
+    .btn-danger { background:#FFEFEE; color:#B3261E; border:1px solid #FFCDC9; }
+    .btn-danger:hover { background:#FFD8D5; }
+    .btn-sm { padding:6px 10px; font-size:12px; }
+
+    /* ── TABLES ── */
+    .table-wrap { background:#fff; border-radius:12px; border:1px solid var(--border); overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { background:var(--blue-dark); color:#fff; text-align:left; padding:10px 12px; font-weight:600; white-space:nowrap; }
+    td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    tr:hover td { background:#FAFBFD; }
+    tr:last-child td { border-bottom:none; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-PENDING { background:#FFF9EC; color:#8A5500; }
+    .badge-SHIPPED { background:#EAF3FF; color:#0066CC; }
+    .badge-DELIVERED { background:#E8F8EF; color:#1A5C2A; }
+    .badge-CANCELLED { background:#FFEFEE; color:#B3261E; }
+    .badge-ADMIN { background:#F0E8FF; color:#6B21A8; }
+    .badge-EMPLOYEE { background:#EAF3FF; color:#0066CC; }
+    .badge-USER { background:var(--gray-bg); color:var(--gray-text); }
+    .badge-ACADEMY { background:#FFF9EC; color:#8A5500; }
+    .badge-SHOP { background:#E8F8EF; color:#1A5C2A; }
+
+    .actions-cell { display:flex; gap:6px; white-space:nowrap; }
+    .empty-state { text-align:center; padding:40px 20px; color:var(--gray-text); }
+
+    /* ── FORMS ── */
+    .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+    .form-group label { font-size:12px; font-weight:600; color:var(--blue-dark); }
+    .form-group input, .form-group select, .form-group textarea {
+        padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline:none; border-color:var(--blue-mid);
+    }
+    .form-error { color:#B3261E; font-size:12px; margin-top:2px; }
+    .checkbox-row { display:flex; align-items:center; gap:8px; }
+    .checkbox-row input { width:auto; }
+    .form-actions { display:flex; gap:10px; margin-top:16px; }
+
+    .quiz-question-block { border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px; background:#FAFBFD; }
+    .quiz-question-block h4 { font-size:13px; margin-bottom:10px; color:var(--gray-text); }
+
+    /* ── PAGINATION ── */
+    .pagination { display:flex; gap:6px; margin-top:14px; flex-wrap:wrap; }
+    .pagination a, .pagination span {
+        padding:6px 12px; border-radius:6px; font-size:12px; text-decoration:none;
+        background:#fff; border:1px solid var(--border); color:var(--blue-dark);
+    }
+    .pagination .active { background:var(--blue-mid); color:#fff; border-color:var(--blue-mid); }
+
+    /* ── CHART CONTAINERS ── */
+    .charts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; margin-bottom:20px; }
+    .chart-box { background:#fff; border-radius:12px; border:1px solid var(--border); padding:16px; }
+    .chart-box h3 { font-size:14px; font-weight:700; margin-bottom:12px; }
+    .chart-box canvas { max-height:280px; }
+
+    @media (max-width: 900px) {
+        .sidebar { width:70px; }
+        .sidebar .brand, .sidebar .section-label, .sidebar a span.label, .sidebar .user-box { display:none; }
+        .sidebar a { justify-content:center; }
+        .main { padding:16px; }
+    }
+</style>
+</th:block>
+
+<!-- ════════════════════════════════════════════════════════════
+     FRAGMENT: sidebar
+     Navigare laterală — diferă în funcție de rol (sec:authorize)
+     ════════════════════════════════════════════════════════════ -->
+<div th:fragment="sidebar" class="sidebar">
+    <div class="brand">Smart<span>Fit</span></div>
+    <nav>
+        <!-- ═══ ADMIN ═══ -->
+        <th:block sec:authorize="hasRole('ADMIN')">
+            <div class="section-label">Administrare</div>
+            <a th:href="@{/admin/dashboard}"><span>📊</span><span class="label">Dashboard</span></a>
+            <a th:href="@{/admin/produse}"><span>🛒</span><span class="label">Produse</span></a>
+            <a th:href="@{/admin/cursuri}"><span>🎓</span><span class="label">Cursuri</span></a>
+            <a th:href="@{/admin/comenzi}"><span>📦</span><span class="label">Comenzi</span></a>
+            <a th:href="@{/admin/utilizatori}"><span>👥</span><span class="label">Utilizatori</span></a>
+            <a th:href="@{/admin/angajati}"><span>🧑‍💼</span><span class="label">Angajați</span></a>
+            <a th:href="@{/admin/rapoarte}"><span>📈</span><span class="label">Rapoarte</span></a>
+            <a th:href="@{/admin/loguri}"><span>🧾</span><span class="label">Log-uri</span></a>
+        </th:block>
+
+        <!-- ═══ ANGAJAT ACADEMIE ═══ -->
+        <th:block sec:authorize="hasRole('EMPLOYEE')" th:if="${profile != null and profile.isAcademy()}">
+            <div class="section-label">Academie</div>
+            <a th:href="@{/angajat/dashboard}"><span>📊</span><span class="label">Dashboard</span></a>
+            <a th:href="@{/angajat/cursuri}"><span>🎓</span><span class="label">Cursuri</span></a>
+            <a th:href="@{/angajat/rapoarte}"><span>📈</span><span class="label">Rapoarte</span></a>
+        </th:block>
+
+        <!-- ═══ ANGAJAT MAGAZIN ═══ -->
+        <th:block sec:authorize="hasRole('EMPLOYEE')" th:if="${profile != null and profile.isShop()}">
+            <div class="section-label">Magazin</div>
+            <a th:href="@{/angajat/dashboard}"><span>📊</span><span class="label">Dashboard</span></a>
+            <a th:href="@{/angajat/produse}"><span>🛒</span><span class="label">Produse</span></a>
+            <a th:href="@{/angajat/comenzi}"><span>📦</span><span class="label">Comenzi</span></a>
+            <a th:href="@{/angajat/rapoarte}"><span>📈</span><span class="label">Rapoarte</span></a>
+        </th:block>
+
+        <div class="section-label">General</div>
+        <a th:href="@{/dashboard}"><span>🏠</span><span class="label">Site SmartFit</span></a>
+    </nav>
+    <div class="user-box">
+        <strong sec:authentication="name">utilizator@smartfit.ro</strong>
+        <span sec:authorize="hasRole('ADMIN')">Administrator</span>
+        <span sec:authorize="hasRole('EMPLOYEE')" th:if="${profile != null}" th:text="'Angajat — ' + (${profile.isAcademy()} ? 'Academie' : 'Magazin')">Angajat</span>
+        <form class="logout" th:action="@{/logout}" method="post">
+            <button type="submit">Deconectare</button>
+        </form>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     FRAGMENT: alerts
+     Mesaje flash success/error/warning (RedirectAttributes)
+     ════════════════════════════════════════════════════════════ -->
+<th:block th:fragment="alerts">
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+    <div class="alert alert-warning" th:if="${warning}" th:text="${warning}"></div>
+</th:block>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Rapoarte Magazin | Angajat SmartFit</title>
+    <th:block th:replace="fragments/admin-layout :: styles"></th:block>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="fragments/admin-layout :: sidebar"></div>
+
+    <main class="main">
+        <div class="page-header">
+            <div>
+                <h1>📈 Rapoarte Magazin</h1>
+                <p class="subtitle">Vânzări și performanță produse în perioada selectată</p>
+            </div>
+        </div>
+
+        <div th:replace="fragments/admin-layout :: alerts"></div>
+
+        <form class="filter-bar" method="get" th:action="@{/angajat/rapoarte}">
+            <div class="field">
+                <label>De la data</label>
+                <input type="date" name="from" th:value="${from}">
+            </div>
+            <div class="field">
+                <label>Până la data</label>
+                <input type="date" name="to" th:value="${to}">
+            </div>
+            <div class="field">
+                <label>Status comandă</label>
+                <select name="status">
+                    <option value="">Toate</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == status}"></option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Generează</button>
+        </form>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Venituri totale</div>
+                <div class="value green" th:text="${#numbers.formatDecimal(salesReport.totalRevenue,1,2)} + ' lei'">0 lei</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Comenzi în perioadă</div>
+                <div class="value" th:text="${salesReport.totalOrders}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Valoare medie comandă</div>
+                <div class="value blue"
+                     th:text="${salesReport.totalOrders > 0 ? #numbers.formatDecimal(salesReport.totalRevenue / salesReport.totalOrders, 1, 2) + ' lei' : '0 lei'}">
+                    0 lei
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-box">
+                <h3>Vânzări pe categorie</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Evoluție zilnică (venituri)</h3>
+                <canvas id="dailyChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Top produse vândute (cantitate)</h3>
+                <canvas id="topProductsChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Distribuție status comenzi</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Comenzi în perioada selectată</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>ID</th><th>Client</th><th>Total</th><th>Status</th><th>Data</th></tr></thead>
+                    <tbody>
+                        <tr th:each="o : ${salesReport.orders}">
+                            <td th:text="'#ORD-' + ${o.id}"></td>
+                            <td th:text="${o.fullName}"></td>
+                            <td th:text="${#numbers.formatDecimal(o.totalPrice,1,2)} + ' lei'"></td>
+                            <td><span class="badge" th:class="'badge badge-' + ${o.status}"
+                                      th:text="${
+        o.status == 'PENDING'   ? 'Confirmed' :
+        o.status == 'SHIPPED'   ? 'Expediat' :
+        o.status == 'DELIVERED' ? 'Livrat' :
+        o.status == 'CANCELLED' ? 'Anulat' :
+        o.status
+    }"></span></td>
+                            <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd.MM.yyyy HH:mm') : '-'}"></td>
+                        </tr>
+                        <tr th:if="${salesReport.orders.isEmpty()}">
+                            <td colspan="5" class="empty-state">Nu există comenzi în această perioadă.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            const categoryLabels = /*[[${salesReport.categoryLabels}]]*/ [];
+            const categoryValues = /*[[${salesReport.categoryValues}]]*/ [];
+            const dailyLabels = /*[[${salesReport.dailyLabels}]]*/ [];
+            const dailyValues = /*[[${salesReport.dailyValues}]]*/ [];
+            const statusLabels = /*[[${salesReport.statusDistribution.keySet()}]]*/ [];
+            const statusValues = /*[[${salesReport.statusDistribution.values()}]]*/ [];
+            const statusLabelMap = { PENDING: 'Confirmed', SHIPPED: 'Expediat', DELIVERED: 'Livrat', CANCELLED: 'Anulat' };
+            const statusLabelsDisplay = statusLabels.map(s => statusLabelMap[s] || s);
+            const topProducts = /*[[${salesReport.topProducts}]]*/ [];
+            const topProductLabels = topProducts.map(p => p[0]);
+            const topProductQty = topProducts.map(p => p[1]);
+
+            new Chart(document.getElementById('categoryChart'), {
+                type: 'bar',
+                data: { labels: categoryLabels, datasets: [{ label: 'Vânzări (lei)', data: categoryValues, backgroundColor: '#0066CC' }] },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('dailyChart'), {
+                type: 'line',
+                data: { labels: dailyLabels, datasets: [{ label: 'Venituri (lei)', data: dailyValues, borderColor: '#30D158', backgroundColor: 'rgba(48,209,88,0.15)', tension: 0.3, fill: true }] },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('topProductsChart'), {
+                type: 'bar',
+                data: { labels: topProductLabels, datasets: [{ label: 'Bucăți vândute', data: topProductQty, backgroundColor: '#FF9500' }] },
+                options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('statusChart'), {
+                type: 'pie',
+                data: { labels: statusLabelsDisplay, datasets: [{ data: statusValues, backgroundColor: ['#FFD86E','#0066CC','#30D158','#FF3B30'] }] },
+                options: { responsive: true }
+            });
+        </script>
+    </main>
+</div>
+</body>
+</html>

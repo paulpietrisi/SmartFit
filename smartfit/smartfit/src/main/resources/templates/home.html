@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SmartFit – Mens sana in corpore sano</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap"
+          rel="stylesheet"/>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --blue: #0066CC;
+            --blue-2: #0A84FF;
+            --blue-deep: #0A2540;
+            --blue-dark2: #0D3060;
+            --blue-light: #EAF3FF;
+            --blue-mid: #1A7FE8;
+            --white: #FFFFFF;
+            --off-white: #F5F5F7;
+            --text: #1D1D1F;
+            --text-2: #6E6E73;
+            --text-3: #86868B;
+            --border: rgba(0, 0, 0, 0.08);
+            --r-sm: 12px;
+            --r-md: 18px;
+            --r-lg: 24px;
+            --r-xl: 32px;
+            --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.07);
+            --shadow-md: 0 8px 40px rgba(0, 0, 0, 0.11);
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            color: var(--text);
+            background: var(--white);
+            overflow-x: hidden
+        }
+
+        /* ──────────── NAVBAR ──────────── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: saturate(180%) blur(22px);
+            -webkit-backdrop-filter: saturate(180%) blur(22px);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.07);
+            transition: background .3s, box-shadow .3s;
+        }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            align-items: center
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            text-decoration: none;
+            margin-right: 48px;
+            flex-shrink: 0
+        }
+
+        .nav-logo-icon {
+            width: 30px;
+            height: 30px;
+            background: var(--blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .nav-logo-icon svg {
+            width: 17px;
+            height: 17px
+        }
+
+        .nav-logo-text {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text);
+            letter-spacing: -.3px
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            flex: 1;
+            list-style: none
+        }
+
+        .nav-links a {
+            font-size: 13px;
+            color: var(--text-2);
+            text-decoration: none;
+            transition: color .2s;
+            font-weight: 400
+        }
+
+        .nav-links a:hover {
+            color: var(--text)
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0
+        }
+
+        .btn-nav-ghost {
+            font-size: 13px;
+            color: var(--blue);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 7px 16px;
+            border-radius: 100px;
+            transition: background .2s;
+            font-family: 'DM Sans', sans-serif;
+            text-decoration: none
+        }
+
+        .btn-nav-ghost:hover {
+            background: var(--blue-light)
+        }
+
+        .btn-nav-primary {
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+            background: var(--blue);
+            border: none;
+            cursor: pointer;
+            padding: 8px 20px;
+            border-radius: 100px;
+            transition: background .2s, transform .15s;
+            font-family: 'DM Sans', sans-serif;
+            text-decoration: none
+        }
+
+        .btn-nav-primary:hover {
+            background: #0055AA
+        }
+
+        .btn-nav-primary:active {
+            transform: scale(.97)
+        }
+
+        /* ──────────── HERO ──────────── */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(150deg, var(--blue-deep) 0%, #0B3870 45%, #0C4A92 100%);
+            display: flex;
+            align-items: center;
+            padding: 90px 32px 60px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 38px 38px;
+            pointer-events: none
+        }
+
+        .h-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: .14;
+            pointer-events: none
+        }
+
+        .hb1 {
+            width: 700px;
+            height: 700px;
+            background: #0A84FF;
+            top: -200px;
+            right: -180px
+        }
+
+        .hb2 {
+            width: 450px;
+            height: 450px;
+            background: #30D158;
+            bottom: -120px;
+            left: -120px;
+            opacity: .07
+        }
+
+        .hb3 {
+            width: 280px;
+            height: 280px;
+            background: #5AC8FA;
+            bottom: 15%;
+            right: 20%;
+            opacity: .1
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            position: relative;
+            z-index: 1
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: rgba(255, 255, 255, .82);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: .5px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            margin-bottom: 28px
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            background: #30D158;
+            border-radius: 50%;
+            animation: bpulse 2s infinite
+        }
+
+        @keyframes bpulse {
+            0%, 100% {
+                opacity: 1
+            }
+            50% {
+                opacity: .35
+            }
+        }
+
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(42px, 5.5vw, 72px);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.04;
+            letter-spacing: -1.5px;
+            margin-bottom: 20px
+        }
+
+        .hero-title .accent {
+            color: #5AC8FA
+        }
+
+        .hero-sub {
+            font-size: 17px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, .6);
+            line-height: 1.68;
+            margin-bottom: 40px;
+            max-width: 420px
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 13px;
+            flex-wrap: wrap
+        }
+
+        .btn-hp {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 32px;
+            background: #fff;
+            color: var(--blue-deep);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 4px 28px rgba(0, 0, 0, .28)
+        }
+
+        .btn-hp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 36px rgba(0, 0, 0, .32)
+        }
+
+        .btn-hs {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 26px;
+            background: transparent;
+            color: rgba(255, 255, 255, .82);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 100px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s, border-color .2s
+        }
+
+        .btn-hs:hover {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(255, 255, 255, .38)
+        }
+
+        /* hero visual */
+        .hero-visual {
+            position: relative;
+            height: 480px
+        }
+
+        .mc {
+            background: rgba(255, 255, 255, .09);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .13);
+            border-radius: var(--r-lg);
+            padding: 22px;
+            color: #fff
+        }
+
+        .mc-main {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 290px;
+            animation: mfloat 4.5s ease-in-out infinite
+        }
+
+        @keyframes mfloat {
+            0%, 100% {
+                transform: translateY(0)
+            }
+            50% {
+                transform: translateY(-12px)
+            }
+        }
+
+        .mc-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .45);
+            margin-bottom: 15px
+        }
+
+        .mc-ring-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px
+        }
+
+        .mc-ring-wrap {
+            position: relative;
+            width: 68px;
+            height: 68px;
+            flex-shrink: 0
+        }
+
+        .mc-ring-wrap svg {
+            transform: rotate(-90deg)
+        }
+
+        .mc-ring-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center
+        }
+
+        .mc-ring-n {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1
+        }
+
+        .mc-ring-u {
+            font-size: 9px;
+            color: rgba(255, 255, 255, .45);
+            margin-top: 2px
+        }
+
+        .mc-ring-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px
+        }
+
+        .mc-ring-sub {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .45)
+        }
+
+        .mc-macros {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 9px
+        }
+
+        .mc-macro {
+            background: rgba(255, 255, 255, .07);
+            border-radius: 9px;
+            padding: 9px 11px
+        }
+
+        .mc-macro-nm {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .45);
+            margin-bottom: 3px
+        }
+
+        .mc-macro-v {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px
+        }
+
+        .mc-bar {
+            height: 3px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 2px;
+            overflow: hidden
+        }
+
+        .mc-fill {
+            height: 100%;
+            border-radius: 2px
+        }
+
+        .mf {
+            position: absolute;
+            animation: mf2 5s ease-in-out infinite
+        }
+
+        @keyframes mf2 {
+            0%, 100% {
+                transform: translateY(0)
+            }
+            50% {
+                transform: translateY(-9px)
+            }
+        }
+
+        .mf1 {
+            bottom: 50px;
+            left: 0;
+            animation-delay: -1.2s
+        }
+
+        .mf2 {
+            top: 110px;
+            left: 36px;
+            animation-delay: -2.8s
+        }
+
+        .mc-mini {
+            width: 155px;
+            background: rgba(255, 255, 255, .1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 13px;
+            padding: 13px 15px
+        }
+
+        .mc-mini-ico {
+            font-size: 18px;
+            margin-bottom: 5px
+        }
+
+        .mc-mini-v {
+            font-family: 'Syne', sans-serif;
+            font-size: 19px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 2px
+        }
+
+        .mc-mini-l {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .45)
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, .3);
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            pointer-events: none
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 36px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, .35));
+            animation: sline 1.6s ease-in-out infinite
+        }
+
+        @keyframes sline {
+            0% {
+                transform: scaleY(0);
+                transform-origin: top
+            }
+            50% {
+                transform: scaleY(1);
+                transform-origin: top
+            }
+            51% {
+                transform: scaleY(1);
+                transform-origin: bottom
+            }
+            100% {
+                transform: scaleY(0);
+                transform-origin: bottom
+            }
+        }
+
+        /* ──────────── SECTION BASE ──────────── */
+        section {
+            padding: 110px 32px
+        }
+
+        .si {
+            max-width: 1200px;
+            margin: 0 auto
+        }
+
+        .stag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 15px
+        }
+
+        .stitle {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(34px, 4vw, 52px);
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.08;
+            letter-spacing: -1px;
+            margin-bottom: 17px
+        }
+
+        .stitle .ac {
+            color: var(--blue)
+        }
+
+        .ssub {
+            font-size: 17px;
+            color: var(--text-2);
+            line-height: 1.66;
+            font-weight: 300;
+            max-width: 460px;
+            margin-bottom: 34px
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-bottom: 34px
+        }
+
+        .chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--blue-light);
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 13px;
+            border-radius: 100px
+        }
+
+        .chip-d {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--blue)
+        }
+
+        .btn-s {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 13px 26px;
+            background: var(--blue);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s, transform .15s
+        }
+
+        .btn-s:hover {
+            background: #0055AA;
+            transform: translateY(-1px)
+        }
+
+        .btn-sg {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--blue);
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            padding: 0;
+            margin-left: 15px;
+            transition: gap .2s
+        }
+
+        .btn-sg:hover {
+            gap: 9px
+        }
+
+        .two {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 72px;
+            align-items: center
+        }
+
+        .two.rev .ct {
+            order: 2
+        }
+
+        .two.rev .cv {
+            order: 1
+        }
+
+        /* ──────────── TRACKING ──────────── */
+        .s-track {
+            background: var(--white)
+        }
+
+        .tv {
+            background: var(--off-white);
+            border-radius: var(--r-xl);
+            padding: 26px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .tv::before {
+            content: '';
+            position: absolute;
+            top: -70px;
+            right: -70px;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(0, 102, 204, .11), transparent 70%);
+            pointer-events: none
+        }
+
+        .tv-hd {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px
+        }
+
+        .tv-hd-t {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text)
+        }
+
+        .tv-hd-d {
+            font-size: 11px;
+            color: var(--text-3)
+        }
+
+        .cal-box {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            padding: 18px;
+            background: #fff;
+            border-radius: var(--r-md);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 18px
+        }
+
+        .cal-svg {
+            flex-shrink: 0
+        }
+
+        .cal-info {
+            flex: 1
+        }
+
+        .cal-lbl {
+            font-size: 10px;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px
+        }
+
+        .cal-n {
+            font-family: 'Syne', sans-serif;
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--blue);
+            line-height: 1;
+            margin-bottom: 2px
+        }
+
+        .cal-g {
+            font-size: 12px;
+            color: var(--text-2)
+        }
+
+        .cal-prog {
+            margin-top: 10px;
+            height: 5px;
+            background: var(--blue-light);
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .cal-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue), var(--blue-2));
+            border-radius: 3px;
+            width: 84%
+        }
+
+        .mgrid {
+            display: grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px
+        }
+
+        .mc2 {
+            background: #fff;
+            border-radius: var(--r-sm);
+            padding: 13px;
+            box-shadow: var(--shadow-sm);
+            text-align: center
+        }
+
+        .mc2-n {
+            font-size: 10px;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 5px
+        }
+
+        .mc2-v {
+            font-family: 'Syne', sans-serif;
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 5px
+        }
+
+        .mc2-b {
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            background: var(--off-white)
+        }
+
+        .mc2-f {
+            height: 100%;
+            border-radius: 2px
+        }
+
+        .meals {
+            background: #fff;
+            border-radius: var(--r-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm)
+        }
+
+        .mi {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 11px 14px;
+            border-bottom: .5px solid var(--border)
+        }
+
+        .mi:last-child {
+            border-bottom: none
+        }
+
+        .mi-ico {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0
+        }
+
+        .mi-info {
+            flex: 1
+        }
+
+        .mi-n {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text)
+        }
+
+        .mi-d {
+            font-size: 10px;
+            color: var(--text-3)
+        }
+
+        .mi-c {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--blue)
+        }
+
+        /* ──────────── SHOP ──────────── */
+        .s-shop {
+            background: var(--off-white)
+        }
+
+        .shv {
+            position: relative;
+            padding-bottom: 30px
+        }
+
+        .sgrid {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 13px
+        }
+
+        .pcard {
+            background: #fff;
+            border-radius: var(--r-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform .25s, box-shadow .25s;
+            cursor: pointer
+        }
+
+        .pcard:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 44px rgba(0, 0, 0, .12)
+        }
+
+        .pimg {
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            position: relative
+        }
+
+        .pi1 {
+            background: linear-gradient(135deg, #EAF3FF, #C5DFFF)
+        }
+
+        .pi2 {
+            background: linear-gradient(135deg, #E8F8EF, #B8ECCC)
+        }
+
+        .pi3 {
+            background: linear-gradient(135deg, #FFF0E8, #FFCCAA)
+        }
+
+        .pi4 {
+            background: linear-gradient(135deg, #F0E8FF, #D4AAFF)
+        }
+
+        .pbadge {
+            position: absolute;
+            top: 9px;
+            right: 9px;
+            background: var(--blue);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 100px
+        }
+
+        .pbody {
+            padding: 13px
+        }
+
+        .pcat {
+            font-size: 9px;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px
+        }
+
+        .pname {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 7px
+        }
+
+        .pfooter {
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .pprice {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--blue)
+        }
+
+        .prat {
+            font-size: 10px;
+            color: var(--text-3)
+        }
+
+        .stars {
+            color: #FF9F00
+        }
+
+        .cart-pill {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--blue-deep);
+            color: #fff;
+            border-radius: 100px;
+            padding: 11px 22px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-size: 13px;
+            white-space: nowrap;
+            box-shadow: 0 8px 36px rgba(10, 37, 64, .4)
+        }
+
+        .cart-count {
+            background: var(--blue-2);
+            border-radius: 100px;
+            padding: 2px 9px;
+            font-size: 11px;
+            font-weight: 700
+        }
+
+        /* ──────────── ACADEMY ──────────── */
+        .s-ac {
+            background: var(--blue-deep);
+            position: relative;
+            overflow: hidden
+        }
+
+        .s-ac::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px);
+            background-size: 30px 30px
+        }
+
+        .s-ac .stag {
+            color: #5AC8FA
+        }
+
+        .s-ac .stitle {
+            color: #fff
+        }
+
+        .s-ac .stitle .ac {
+            color: #5AC8FA
+        }
+
+        .s-ac .ssub {
+            color: rgba(255, 255, 255, .5)
+        }
+
+        .s-ac .chip {
+            background: rgba(90, 200, 250, .14);
+            color: #5AC8FA
+        }
+
+        .s-ac .chip-d {
+            background: #5AC8FA
+        }
+
+        .s-ac .btn-s {
+            background: #fff;
+            color: var(--blue-deep)
+        }
+
+        .s-ac .btn-s:hover {
+            background: rgba(255, 255, 255, .9)
+        }
+
+        .s-ac .btn-sg {
+            color: #5AC8FA
+        }
+
+        .cstack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .ccard {
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .09);
+            border-radius: var(--r-md);
+            padding: 17px 18px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            transition: background .2s, border-color .2s;
+            cursor: pointer
+        }
+
+        .ccard:hover {
+            background: rgba(255, 255, 255, .1);
+            border-color: rgba(255, 255, 255, .18)
+        }
+
+        .cico {
+            width: 44px;
+            height: 44px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            flex-shrink: 0
+        }
+
+        .cc1 {
+            background: rgba(90, 200, 250, .2)
+        }
+
+        .cc2 {
+            background: rgba(48, 209, 88, .2)
+        }
+
+        .cc3 {
+            background: rgba(255, 159, 10, .2)
+        }
+
+        .cinfo {
+            flex: 1
+        }
+
+        .ctitle {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 3px
+        }
+
+        .cmeta {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .4);
+            margin-bottom: 9px
+        }
+
+        .cprow {
+            display: flex;
+            align-items: center;
+            gap: 9px
+        }
+
+        .cbar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 2px;
+            overflow: hidden
+        }
+
+        .cfill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #5AC8FA, #0A84FF)
+        }
+
+        .cpct {
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .55)
+        }
+
+        .xp-box {
+            background: rgba(255, 159, 10, .15);
+            border: 1px solid rgba(255, 159, 10, .28);
+            border-radius: var(--r-md);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 13px
+        }
+
+        .xp-ico {
+            font-size: 26px
+        }
+
+        .xp-main {
+            font-family: 'Syne', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #FF9F0A
+        }
+
+        .xp-sub {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .45)
+        }
+
+        /* ──────────── STATS ──────────── */
+        .s-stats {
+            padding: 80px 32px;
+            background: var(--white)
+        }
+
+        .stats-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap: 2px;
+            background: var(--border);
+            border-radius: var(--r-lg);
+            overflow: hidden
+        }
+
+        .sitem {
+            background: #fff;
+            padding: 38px 20px;
+            text-align: center
+        }
+
+        .snum {
+            font-family: 'Syne', sans-serif;
+            font-size: 38px;
+            font-weight: 800;
+            color: var(--blue);
+            line-height: 1;
+            margin-bottom: 8px
+        }
+
+        .slbl {
+            font-size: 13px;
+            color: var(--text-2)
+        }
+
+        /* ──────────── FEATURES ──────────── */
+        .s-feat {
+            padding: 100px 32px;
+            background: var(--off-white)
+        }
+
+        .feat-hd {
+            text-align: center;
+            margin-bottom: 60px
+        }
+
+        .feat-hd .ssub {
+            margin: 0 auto
+        }
+
+        .fgrid {
+            display: grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap: 18px
+        }
+
+        .fitem {
+            background: #fff;
+            border-radius: var(--r-lg);
+            padding: 30px 26px;
+            transition: transform .25s, box-shadow .25s
+        }
+
+        .fitem:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md)
+        }
+
+        .fico {
+            width: 46px;
+            height: 46px;
+            background: var(--blue-light);
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px
+        }
+
+        .ftitle {
+            font-family: 'Syne', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 9px
+        }
+
+        .fdesc {
+            font-size: 13px;
+            color: var(--text-2);
+            line-height: 1.62
+        }
+
+        /* ──────────── CTA ──────────── */
+        .s-cta {
+            padding: 110px 32px;
+            background: linear-gradient(140deg, var(--blue-deep), #0C4A92);
+            text-align: center;
+            position: relative;
+            overflow: hidden
+        }
+
+        .s-cta::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(10, 132, 255, .22), transparent 60%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none
+        }
+
+        .cta-in {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1
+        }
+
+        .cta-t {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(34px, 4vw, 52px);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 14px
+        }
+
+        .cta-s {
+            font-size: 17px;
+            color: rgba(255, 255, 255, .52);
+            line-height: 1.65;
+            margin-bottom: 38px;
+            font-weight: 300
+        }
+
+        .cta-acts {
+            display: flex;
+            gap: 13px;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        /* ──────────── FOOTER ──────────── */
+        footer {
+            background: #F5F5F7;
+            padding: 56px 32px 36px;
+            border-top: .5px solid var(--border)
+        }
+
+        .fi {
+            max-width: 1200px;
+            margin: 0 auto
+        }
+
+        .ftop {
+            display: grid;
+            grid-template-columns:2fr 1fr 1fr 1fr 1fr;
+            gap: 36px;
+            margin-bottom: 36px
+        }
+
+        .fb-txt {
+            font-size: 13px;
+            color: var(--text-3);
+            line-height: 1.65;
+            margin-top: 11px;
+            max-width: 230px
+        }
+
+        .fc-t {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--text-2);
+            margin-bottom: 13px
+        }
+
+        .flinks {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .flinks a {
+            font-size: 12px;
+            color: var(--text-3);
+            text-decoration: none;
+            transition: color .2s
+        }
+
+        .flinks a:hover {
+            color: var(--text)
+        }
+
+        .fbot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 18px;
+            border-top: .5px solid var(--border);
+            font-size: 11px;
+            color: var(--text-3)
+        }
+
+        /* ──────────── ANIMATIONS ──────────── */
+        .fu {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity .75s ease, transform .75s ease
+        }
+
+        .fu.vis {
+            opacity: 1;
+            transform: none
+        }
+
+        .fd1 {
+            transition-delay: .1s
+        }
+
+        .fd2 {
+            transition-delay: .2s
+        }
+
+        .fd3 {
+            transition-delay: .3s
+        }
+
+        .fd4 {
+            transition-delay: .4s
+        }
+
+        /* ──────────── RESPONSIVE ──────────── */
+        @media (max-width: 900px) {
+            .hero-inner, .two {
+                grid-template-columns:1fr;
+                gap: 40px
+            }
+
+            .two.rev .ct, .two.rev .cv {
+                order: unset
+            }
+
+            .hero-visual {
+                height: 320px
+            }
+
+            .mc-main {
+                width: 230px
+            }
+
+            .stats-grid {
+                grid-template-columns:repeat(2, 1fr)
+            }
+
+            .fgrid {
+                grid-template-columns:repeat(2, 1fr)
+            }
+
+            .ftop {
+                grid-template-columns:1fr 1fr
+            }
+
+            nav .nav-links {
+                display: none
+            }
+        }
+
+        @media (max-width: 560px) {
+            section {
+                padding: 80px 20px
+            }
+
+            .fgrid {
+                grid-template-columns:1fr
+            }
+
+            .ftop {
+                grid-template-columns:1fr
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════ NAVBAR ═══════ -->
+<nav id="navbar">
+    <div class="nav-inner">
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                    <rect x="2" y="10" width="3" height="4" rx="1"/>
+                    <rect x="19" y="10" width="3" height="4" rx="1"/>
+                    <rect x="5" y="8" width="3" height="8" rx="1"/>
+                    <rect x="16" y="8" width="3" height="8" rx="1"/>
+                    <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+                </svg>
+            </div>
+            <span class="nav-logo-text">SmartFit</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#tracking">Tracking</a></li>
+            <li><a href="#shop">Magazin</a></li>
+            <li><a href="#academy">Academie</a></li>
+            <li><a href="#features">Beneficii</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a href="/login" class="btn-nav-ghost">Autentificare</a>
+            <a href="/register" class="btn-nav-primary">Încearcă gratuit</a>
+        </div>
+    </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+    <div class="h-blob hb1"></div>
+    <div class="h-blob hb2"></div>
+    <div class="h-blob hb3"></div>
+    <div class="hero-inner">
+        <div class="hero-text">
+            <div class="hero-badge"><span class="badge-dot"></span>Mens sana in corpore sano</div>
+            <h1 class="hero-title">Sănătatea ta,<br><span class="accent">reimaginată.</span></h1>
+            <p class="hero-sub">Singura platformă care unește jurnalul alimentar, magazinul de suplimente și academia de
+                nutriție — personalizată pentru tine.</p>
+            <div class="hero-actions">
+                <a href="/register" class="btn-hp">
+                    Începe gratuit
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 8h10M9 4l4 4-4 4" stroke="#0A2540" stroke-width="1.8" stroke-linecap="round"
+                              stroke-linejoin="round"/>
+                    </svg>
+                </a>
+                <a href="#tracking" class="btn-hs">
+                    Descoperă mai mult
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 3v10M4 9l4 4 4-4" stroke="rgba(255,255,255,.85)" stroke-width="1.8"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+        <!-- Hero visual mock -->
+        <div class="hero-visual">
+            <div class="mc mc-main">
+                <div class="mc-label">Dashboard astăzi</div>
+                <div class="mc-ring-row">
+                    <div class="mc-ring-wrap">
+                        <svg width="68" height="68" viewBox="0 0 68 68">
+                            <circle cx="34" cy="34" r="26" stroke="rgba(255,255,255,.1)" stroke-width="5.5"
+                                    fill="none"/>
+                            <circle cx="34" cy="34" r="26" stroke="#0A84FF" stroke-width="5.5" fill="none"
+                                    stroke-dasharray="163.4" stroke-dashoffset="26.1" stroke-linecap="round"/>
+                        </svg>
+                        <div class="mc-ring-center"><span class="mc-ring-n">84%</span><span
+                                class="mc-ring-u">obiectiv</span></div>
+                    </div>
+                    <div>
+                        <div class="mc-ring-title">1,847 kcal</div>
+                        <div class="mc-ring-sub">din 2,200 kcal</div>
+                    </div>
+                </div>
+                <div class="mc-macros">
+                    <div class="mc-macro">
+                        <div class="mc-macro-nm">Proteine</div>
+                        <div class="mc-macro-v">145g</div>
+                        <div class="mc-bar">
+                            <div class="mc-fill" style="width:80%;background:#5AC8FA"></div>
+                        </div>
+                    </div>
+                    <div class="mc-macro">
+                        <div class="mc-macro-nm">Carbohidr.</div>
+                        <div class="mc-macro-v">210g</div>
+                        <div class="mc-bar">
+                            <div class="mc-fill" style="width:88%;background:#30D158"></div>
+                        </div>
+                    </div>
+                    <div class="mc-macro">
+                        <div class="mc-macro-nm">Grăsimi</div>
+                        <div class="mc-macro-v">65g</div>
+                        <div class="mc-bar">
+                            <div class="mc-fill" style="width:72%;background:#FF9F0A"></div>
+                        </div>
+                    </div>
+                    <div class="mc-macro">
+                        <div class="mc-macro-nm">Fibre</div>
+                        <div class="mc-macro-v">28g</div>
+                        <div class="mc-bar">
+                            <div class="mc-fill" style="width:93%;background:#BF5AF2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mf mf1">
+                <div class="mc-mini">
+                    <div class="mc-mini-ico">💧</div>
+                    <div class="mc-mini-v">2.1L</div>
+                    <div class="mc-mini-l">din 3L hidratare</div>
+                </div>
+            </div>
+            <div class="mf mf2">
+                <div class="mc-mini">
+                    <div class="mc-mini-ico">🏃</div>
+                    <div class="mc-mini-v">7,432</div>
+                    <div class="mc-mini-l">pași astăzi</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="scroll-hint">
+        <div class="scroll-line"></div>
+        <span>Scroll</span></div>
+</section>
+
+<!-- ═══════ TRACKING ═══════ -->
+<section class="s-track" id="tracking">
+    <div class="si">
+        <div class="two">
+            <div class="ct fu">
+                <span class="stag">01 — Tracking</span>
+                <h2 class="stitle">Jurnalul tău<br><span class="ac">alimentar inteligent.</span></h2>
+                <p class="ssub">Calculează automat caloriile și macro-nutrienții. Introdu datele antropometrice și
+                    obține BMR-ul personalizat în secunde.</p>
+                <div class="chips">
+                    <span class="chip"><span class="chip-d"></span>Calculator BMR</span>
+                    <span class="chip"><span class="chip-d"></span>Macro tracker</span>
+                    <span class="chip"><span class="chip-d"></span>Grafice 30 zile</span>
+                    <span class="chip"><span class="chip-d"></span>Obiective personale</span>
+                </div>
+                <a href="/register" class="btn-s">Încearcă gratuit</a>
+                <a href="#" class="btn-sg">Află mai mult →</a>
+            </div>
+            <div class="cv fu fd2">
+                <div class="tv">
+                    <div class="tv-hd"><span class="tv-hd-t">Dashboard Nutriție</span><span class="tv-hd-d">Astăzi, 28 Apr</span>
+                    </div>
+                    <div class="cal-box">
+                        <svg class="cal-svg" width="78" height="78" viewBox="0 0 78 78">
+                            <circle cx="39" cy="39" r="29" stroke="#EAF3FF" stroke-width="6.5" fill="none"/>
+                            <circle cx="39" cy="39" r="29" stroke="#0066CC" stroke-width="6.5" fill="none"
+                                    stroke-dasharray="182.2" stroke-dashoffset="29.2" stroke-linecap="round"
+                                    transform="rotate(-90 39 39)"/>
+                        </svg>
+                        <div class="cal-info">
+                            <div class="cal-lbl">Calorii consumate</div>
+                            <div class="cal-n">1,847</div>
+                            <div class="cal-g">din 2,200 kcal · rămân 353</div>
+                            <div class="cal-prog">
+                                <div class="cal-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mgrid">
+                        <div class="mc2">
+                            <div class="mc2-n">Proteine</div>
+                            <div class="mc2-v" style="color:#0066CC">145g</div>
+                            <div class="mc2-b">
+                                <div class="mc2-f" style="width:80%;background:#0066CC"></div>
+                            </div>
+                        </div>
+                        <div class="mc2">
+                            <div class="mc2-n">Carbohidrați</div>
+                            <div class="mc2-v" style="color:#30D158">210g</div>
+                            <div class="mc2-b">
+                                <div class="mc2-f" style="width:88%;background:#30D158"></div>
+                            </div>
+                        </div>
+                        <div class="mc2">
+                            <div class="mc2-n">Grăsimi</div>
+                            <div class="mc2-v" style="color:#FF9F0A">65g</div>
+                            <div class="mc2-b">
+                                <div class="mc2-f" style="width:72%;background:#FF9F0A"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="meals">
+                        <div class="mi">
+                            <div class="mi-ico" style="background:#EAF3FF">🥣</div>
+                            <div class="mi-info">
+                                <div class="mi-n">Mic dejun</div>
+                                <div class="mi-d">Fulgi ovăz + fructe · 08:30</div>
+                            </div>
+                            <div class="mi-c">420 kcal</div>
+                        </div>
+                        <div class="mi">
+                            <div class="mi-ico" style="background:#E8F8EF">🍗</div>
+                            <div class="mi-info">
+                                <div class="mi-n">Prânz</div>
+                                <div class="mi-d">Piept pui + orez + legume · 13:15</div>
+                            </div>
+                            <div class="mi-c">680 kcal</div>
+                        </div>
+                        <div class="mi">
+                            <div class="mi-ico" style="background:#FFF0E8">🥗</div>
+                            <div class="mi-info">
+                                <div class="mi-n">Gustare</div>
+                                <div class="mi-d">Salată + shake proteic · 16:00</div>
+                            </div>
+                            <div class="mi-c">320 kcal</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════ SHOP ═══════ -->
+<section class="s-shop" id="shop">
+    <div class="si">
+        <div class="two rev">
+            <div class="cv fu">
+                <div class="shv">
+                    <div class="sgrid">
+                        <div class="pcard">
+                            <div class="pimg pi1"><span>🥛</span><span class="pbadge">Top vânzări</span></div>
+                            <div class="pbody">
+                                <div class="pcat">Suplimente</div>
+                                <div class="pname">Whey Protein Gold</div>
+                                <div class="pfooter"><span class="pprice">149 lei</span><span class="prat"><span
+                                        class="stars">★★★★★</span> 4.9</span></div>
+                            </div>
+                        </div>
+                        <div class="pcard">
+                            <div class="pimg pi2"><span>🌿</span></div>
+                            <div class="pbody">
+                                <div class="pcat">Alimente</div>
+                                <div class="pname">Mix Nuts Premium</div>
+                                <div class="pfooter"><span class="pprice">64 lei</span><span class="prat"><span
+                                        class="stars">★★★★☆</span> 4.7</span></div>
+                            </div>
+                        </div>
+                        <div class="pcard">
+                            <div class="pimg pi3"><span>👕</span><span class="pbadge">Nou</span></div>
+                            <div class="pbody">
+                                <div class="pcat">Vestimentație</div>
+                                <div class="pname">SmartFit Tee Pro</div>
+                                <div class="pfooter"><span class="pprice">89 lei</span><span class="prat"><span
+                                        class="stars">★★★★★</span> 5.0</span></div>
+                            </div>
+                        </div>
+                        <div class="pcard">
+                            <div class="pimg pi4"><span>💊</span></div>
+                            <div class="pbody">
+                                <div class="pcat">Suplimente</div>
+                                <div class="pname">Omega-3 Complex</div>
+                                <div class="pfooter"><span class="pprice">79 lei</span><span class="prat"><span
+                                        class="stars">★★★★☆</span> 4.8</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cart-pill">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                             stroke-linecap="round">
+                            <circle cx="9" cy="21" r="1"/>
+                            <circle cx="20" cy="21" r="1"/>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/>
+                        </svg>
+                        Coș cumpărături <span class="cart-count">3</span> · 381 lei
+                    </div>
+                </div>
+            </div>
+            <div class="ct fu fd2">
+                <span class="stag">02 — Magazin</span>
+                <h2 class="stitle">Tot ce ai nevoie,<br><span class="ac">la un click distanță.</span></h2>
+                <p class="ssub">Suplimente, alimente funcționale și articole vestimentare sport, curate, verificate. Cu
+                    discount dacă câștigi puncte în Academie.</p>
+                <div class="chips">
+                    <span class="chip"><span class="chip-d"></span>Filtrare avansată</span>
+                    <span class="chip"><span class="chip-d"></span>Coș & comenzi</span>
+                    <span class="chip"><span class="chip-d"></span>Facturi PDF</span>
+                    <span class="chip"><span class="chip-d"></span>Discounturi XP</span>
+                </div>
+                <a href="/magazin" class="btn-s">Explorează magazinul</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════ ACADEMY ═══════ -->
+<section class="s-ac" id="academy">
+    <div class="si" style="position:relative;z-index:1">
+        <div class="two">
+            <div class="ct fu">
+                <span class="stag">03 — Academie</span>
+                <h2 class="stitle">Învață. Câștigă.<br><span class="ac">Transformă-te.</span></h2>
+                <p class="ssub">Cursuri de nutriție verificate de specialiști. Câștigă puncte XP la fiecare quiz și
+                    deblochează discounturi reale în magazin.</p>
+                <div class="chips">
+                    <span class="chip"><span class="chip-d"></span>Quiz-uri gamificate</span>
+                    <span class="chip"><span class="chip-d"></span>Puncte XP</span>
+                    <span class="chip"><span class="chip-d"></span>Certificate</span>
+                    <span class="chip"><span class="chip-d"></span>Conținut aprobat</span>
+                </div>
+                <a href="/register" class="btn-s">Începe să înveți</a>
+                <a href="/academie" class="btn-sg">Toate cursurile →</a>
+            </div>
+            <div class="cv fu fd2">
+                <div class="cstack">
+                    <div class="ccard">
+                        <div class="cico cc1">🧬</div>
+                        <div class="cinfo">
+                            <div class="ctitle">Nutriție fundamentală</div>
+                            <div class="cmeta">8 lecții · ~2h · Nivel Începător</div>
+                            <div class="cprow">
+                                <div class="cbar">
+                                    <div class="cfill" style="width:75%"></div>
+                                </div>
+                                <span class="cpct">75%</span></div>
+                        </div>
+                    </div>
+                    <div class="ccard">
+                        <div class="cico cc2">💪</div>
+                        <div class="cinfo">
+                            <div class="ctitle">Proteine & Recuperare Musculară</div>
+                            <div class="cmeta">6 lecții · ~1h30 · Nivel Mediu</div>
+                            <div class="cprow">
+                                <div class="cbar">
+                                    <div class="cfill" style="width:40%"></div>
+                                </div>
+                                <span class="cpct">40%</span></div>
+                        </div>
+                    </div>
+                    <div class="ccard">
+                        <div class="cico cc3">⚡</div>
+                        <div class="cinfo">
+                            <div class="ctitle">Suplimentare avansată</div>
+                            <div class="cmeta">10 lecții · ~3h · Nivel Avansat</div>
+                            <div class="cprow">
+                                <div class="cbar">
+                                    <div class="cfill" style="width:10%"></div>
+                                </div>
+                                <span class="cpct">10%</span></div>
+                        </div>
+                    </div>
+                    <div class="xp-box"><span class="xp-ico">🏆</span>
+                        <div>
+                            <div class="xp-main">1,240 XP câștigați</div>
+                            <div class="xp-sub">Echivalent 12% reducere în magazin</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════ STATS ═══════ -->
+<section class="s-stats">
+    <div class="stats-grid">
+        <div class="sitem fu">
+            <div class="snum" data-target="10000">0</div>
+            <div class="slbl">Utilizatori activi</div>
+        </div>
+        <div class="sitem fu fd1">
+            <div class="snum" data-target="500">0</div>
+            <div class="slbl">Produse în magazin</div>
+        </div>
+        <div class="sitem fu fd2">
+            <div class="snum" data-target="50">0</div>
+            <div class="slbl">Cursuri disponibile</div>
+        </div>
+        <div class="sitem fu fd3">
+            <div class="snum" data-target="98">0</div>
+            <div class="slbl">% satisfacție clienți</div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════ FEATURES ═══════ -->
+<section class="s-feat" id="features">
+    <div class="si">
+        <div class="feat-hd fu">
+            <span class="stag">De ce SmartFit?</span>
+            <h2 class="stitle" style="text-align:center">Construit pentru<br><span class="ac">rezultate reale.</span>
+            </h2>
+            <p class="ssub" style="text-align:center;max-width:480px">Fiecare funcție a fost proiectată cu un singur
+                scop: să te ajute să îți atingi obiectivele de sănătate.</p>
+        </div>
+        <div class="fgrid">
+            <div class="fitem fu">
+                <div class="fico">🎯</div>
+                <div class="ftitle">Obiective personalizate</div>
+                <p class="fdesc">Slăbire, menținere sau masă musculară. SmartFit calculează automat necesarul caloric și
+                    macro-nutrienții în funcție de datele tale.</p></div>
+            <div class="fitem fu fd1">
+                <div class="fico">📊</div>
+                <div class="ftitle">Rapoarte detaliate</div>
+                <p class="fdesc">Grafice de evoluție pe 30 zile, exportare date, facturi PDF pentru comenzi. Totul
+                    documentat și accesibil din dashboard.</p></div>
+            <div class="fitem fu fd2">
+                <div class="fico">🔒</div>
+                <div class="ftitle">Securitate OWASP</div>
+                <p class="fdesc">Aplicație construită cu Spring Security, BCrypt și protecție CSRF. Datele tale sunt
+                    criptate și în siguranță.</p></div>
+            <div class="fitem fu fd1">
+                <div class="fico">🛒</div>
+                <div class="ftitle">Cumpărături inteligente</div>
+                <p class="fdesc">Produse filtrate după categorie, preț și review-uri. Coș de cumpărături cu istoric
+                    complet al comenzilor tale.</p></div>
+            <div class="fitem fu fd2">
+                <div class="fico">🎮</div>
+                <div class="ftitle">Gamificare educațională</div>
+                <p class="fdesc">Câștigă puncte XP completând quiz-uri de nutriție. Transformă-le în discounturi reale
+                    la produsele din magazin.</p></div>
+            <div class="fitem fu fd3">
+                <div class="fico">⚡</div>
+                <div class="ftitle">Performanță ridicată</div>
+                <p class="fdesc">Răspuns sub 200ms, disponibilitate 95%+. Arhitectură Spring Boot + MariaDB optimizată
+                    pentru viteză maximă.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════ CTA ═══════ -->
+<section class="s-cta">
+    <div class="cta-in">
+        <h2 class="cta-t fu">Începe călătoria spre<br>un stil de viață sănătos.</h2>
+        <p class="cta-s fu fd1">Înregistrare gratuită. Fără card de credit. Acces instant la toate funcțiile de
+            bază.</p>
+        <div class="cta-acts fu fd2">
+            <a href="/register" class="btn-hp">Creează cont gratuit
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8h10M9 4l4 4-4 4" stroke="#0A2540" stroke-width="1.8" stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                </svg>
+            </a>
+            <a href="/login" class="btn-hs">Ai deja cont? Autentifică-te</a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer>
+    <div class="fi">
+        <div class="ftop">
+            <div>
+                <a href="#"
+                   style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;margin-bottom:2px">
+                    <div class="nav-logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                            <rect x="2" y="10" width="3" height="4" rx="1"/>
+                            <rect x="19" y="10" width="3" height="4" rx="1"/>
+                            <rect x="5" y="8" width="3" height="8" rx="1"/>
+                            <rect x="16" y="8" width="3" height="8" rx="1"/>
+                            <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <span class="nav-logo-text">SmartFit</span>
+                </a>
+                <p class="fb-txt">Mens sana in corpore sano. Platforma ta completă pentru un stil de viață sănătos și
+                    echilibrat.</p>
+            </div>
+            <div>
+                <div class="fc-t">Tracking</div>
+                <ul class="flinks">
+                    <li><a href="#">Jurnal alimentar</a></li>
+                    <li><a href="#">Calculator BMR</a></li>
+                    <li><a href="#">Rapoarte</a></li>
+                    <li><a href="#">Obiective</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="fc-t">Magazin</div>
+                <ul class="flinks">
+                    <li><a href="#">Suplimente</a></li>
+                    <li><a href="#">Alimente</a></li>
+                    <li><a href="#">Vestimentație</a></li>
+                    <li><a href="#">Comenzile mele</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="fc-t">Academie</div>
+                <ul class="flinks">
+                    <li><a href="#">Cursuri</a></li>
+                    <li><a href="#">Quiz-uri</a></li>
+                    <li><a href="#">Certificate</a></li>
+                    <li><a href="#">Leaderboard</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="fc-t">Companie</div>
+                <ul class="flinks">
+                    <li><a href="#">Despre noi</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Termeni</a></li>
+                    <li><a href="#">Confidențialitate</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="fbot"><span>© 2026 SmartFit. Toate drepturile rezervate.</span><span>Proiect licență · Universitatea "Dunărea de Jos" Galați</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const obs = new IntersectionObserver(es => {
+        es.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('vis');
+                obs.unobserve(e.target)
+            }
+        })
+    }, {threshold: .1});
+    document.querySelectorAll('.fu').forEach(el => obs.observe(el));
+
+    const cobs = new IntersectionObserver(es => {
+        es.forEach(e => {
+            if (!e.isIntersecting) return;
+            const el = e.target, t = +el.dataset.target, d = 1800, s = 16, inc = t / (d / s);
+            let c = 0;
+            const tm = setInterval(() => {
+                c = Math.min(c + inc, t);
+                const v = Math.floor(c);
+                el.textContent = t === 98 ? v + '%' : t > 999 ? v.toLocaleString('ro-RO') + '+' : v + '+';
+                if (c >= t) clearInterval(tm);
+            }, s);
+            cobs.unobserve(el);
+        });
+    }, {threshold: .5});
+    document.querySelectorAll('[data-target]').forEach(el => cobs.observe(el));
+
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 8) {
+            nav.style.background = 'rgba(255,255,255,0.92)';
+            nav.style.boxShadow = '0 1px 24px rgba(0,0,0,0.09)'
+        } else {
+            nav.style.background = 'rgba(255,255,255,0.78)';
+            nav.style.boxShadow = 'none'
+        }
+    }, {passive: true});
+
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            const t = document.querySelector(a.getAttribute('href'));
+            if (t) {
+                e.preventDefault();
+                t.scrollIntoView({behavior: 'smooth', block: 'start'})
+            }
+        });
+    });
+</script>
+</body>
+</html>

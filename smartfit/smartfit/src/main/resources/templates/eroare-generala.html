@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eroare | SmartFit</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, Arial, sans-serif; }
+        body {
+            min-height:100vh; display:flex; align-items:center; justify-content:center;
+            background: linear-gradient(135deg, #0A2540 0%, #0066CC 100%);
+        }
+        .card {
+            background:#fff; border-radius:16px; padding:48px 40px; max-width:480px;
+            text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.2);
+        }
+        .icon { font-size:56px; margin-bottom:16px; }
+        h1 { color:#0A2540; font-size:24px; margin-bottom:12px; }
+        p { color:#6E6E73; font-size:14px; line-height:1.6; margin-bottom:24px; word-break:break-word; }
+        a.btn {
+            display:inline-block; background:#0066CC; color:#fff; text-decoration:none;
+            padding:12px 28px; border-radius:8px; font-weight:600; font-size:14px;
+            transition: background 0.2s; margin: 0 6px;
+        }
+        a.btn.secondary { background:#F5F5F7; color:#0A2540; }
+        a.btn:hover { background:#0A2540; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">⚠️</div>
+        <h1>A apărut o eroare</h1>
+        <p th:text="${message} ?: 'Operațiunea nu a putut fi finalizată.'">
+            Operațiunea nu a putut fi finalizată.
+        </p>
+        <a class="btn secondary" onclick="history.back()" href="javascript:void(0)">Înapoi</a>
+        <a class="btn" th:href="@{/dashboard}">Dashboard</a>
+    </div>
+</body>
+</html>

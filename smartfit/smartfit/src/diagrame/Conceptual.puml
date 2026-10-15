@@ -1,0 +1,208 @@
+@startuml SmartFit_ERD_Conceptual
+
+skinparam linetype ortho
+skinparam entity {
+    BackgroundColor #F0F4FF
+    BorderColor #3B4A6B
+    FontSize 12
+    FontName Arial
+}
+skinparam arrow {
+    Color #3B4A6B
+    FontSize 10
+    FontName Arial
+}
+
+' ==================== ENTITĂȚI PRINCIPALE ====================
+
+entity "User" as User {
+  * id : integer <<PK>>
+  --
+  email : varchar
+  first_name : varchar
+  last_name : varchar
+  role : enum {USER, EMPLOYEE, ADMIN}
+  gender : enum {M, F}
+  birth_date : date
+  height_cm : decimal
+  weight_kg : decimal
+  goal : enum
+  fit_points : integer
+  activity_level : decimal
+  profile_photo : varchar
+  created_at : timestamp
+}
+
+entity "Product" as Product {
+  * id : integer <<PK>>
+  --
+  name : varchar
+  description : text
+  price : decimal
+  stock_quantity : integer
+  category_name : varchar
+  image_url : varchar
+}
+
+entity "Food" as Food {
+  * id : integer <<PK>>
+  --
+  name : varchar
+  kcal_per_100g : decimal
+  protein : decimal
+  carbs : decimal
+  fat : decimal
+}
+
+entity "Course" as Course {
+  * id : integer <<PK>>
+  --
+  title : varchar
+  description : text
+  video_url : varchar
+  reward_points : integer
+  pass_score_percentage : integer
+  difficulty : varchar
+  content : text
+}
+
+entity "Order" as Order {
+  * id : integer <<PK>>
+  --
+  total_price : decimal
+  status : enum {PENDING, SHIPPED, DELIVERED, CANCELLED}
+  shipping_address : text
+  points_used : integer
+  full_name : varchar
+  contact_email : varchar
+  phone_number : varchar
+  payment_method : varchar
+  created_at : timestamp
+}
+
+entity "QuizQuestion" as QuizQuestion {
+  * id : integer <<PK>>
+  --
+  question_text : text
+  correct_answer : varchar
+  wrong_answer_1 : varchar
+  wrong_answer_2 : varchar
+  wrong_answer_3 : varchar
+}
+
+entity "WeightHistory" as WeightHistory {
+  * id : integer <<PK>>
+  --
+  weight_kg : decimal
+  logged_date : date
+}
+
+entity "DailyLog" as DailyLog {
+  * id : integer <<PK>>
+  --
+  log_date : date
+  sleep_minutes : integer
+  steps : integer
+  water_ml : integer
+}
+
+entity "EmployeeProfile" as EmployeeProfile {
+  * id : integer <<PK>>
+  --
+  department : enum {ACADEMY, SHOP}
+  can_create : boolean
+  can_edit : boolean
+  can_delete : boolean
+  hired_date : date
+  notes : text
+}
+
+entity "ApplicationLog" as ApplicationLog {
+  * id : integer <<PK>>
+  --
+  user_email : varchar
+  user_role : varchar
+  department : varchar
+  action_type : enum
+  action_description : varchar
+  entity_type : varchar
+  entity_id : integer
+  ip_address : varchar
+  logged_at : timestamp
+}
+
+entity "UserSettings" as UserSettings {
+  * id : integer <<PK>>
+  --
+  theme : varchar
+  language : varchar
+  daily_calories : integer
+  daily_protein : integer
+  daily_carbs : integer
+  daily_fat : integer
+  daily_water : decimal
+  email_notifications : boolean
+  push_notifications : boolean
+}
+
+' ==================== ENTITĂȚI DE ASOCIERE ====================
+
+entity "OrderItem\n<<Asociere>>" as OrderItem {
+  * id : integer <<PK>>
+  --
+  quantity : integer
+  price_at_purchase : decimal
+}
+
+entity "CartItem\n<<Asociere>>" as CartItem {
+  * id : integer <<PK>>
+  --
+  quantity : integer
+}
+
+entity "DiaryEntry\n<<Asociere>>" as DiaryEntry {
+  * id : integer <<PK>>
+  --
+  consumed_date : date
+  meal_type : enum {BREAKFAST, LUNCH, DINNER, SNACK}
+  quantity_g : decimal
+}
+
+entity "CourseEnrollment\n<<Asociere>>" as CourseEnrollment {
+  * id : integer <<PK>>
+  --
+  progress_pct : integer
+  enrolled_at : timestamp
+}
+
+entity "CourseCompletion\n<<Asociere>>" as CourseCompletion {
+  * id : integer <<PK>>
+  --
+  score_obtained : integer
+  completed_at : timestamp
+}
+
+' ==================== RELAȚII ====================
+
+User "1..1" ||--o{ "0..N" Order : "Plasează >"
+User "1..1" ||--o{ "0..N" WeightHistory : "Înregistrează >"
+User "1..1" ||--o{ "0..N" DailyLog : "Loghează >"
+User "1..1" ||--o{ "0..N" ApplicationLog : "Generează >"
+User "1..1" ||--o{ "0..N" CartItem : "Adaugă în coș >"
+User "1..1" ||--o{ "0..N" DiaryEntry : "Consumă la masă >"
+User "1..1" ||--o{ "0..N" CourseEnrollment : "Urmează cursul >"
+User "1..1" ||--o{ "0..N" CourseCompletion : "Promovează >"
+User "1..1" ||--o| "0..1" EmployeeProfile : "Are >"
+User "1..1" ||--|| "1..1" UserSettings : "Deține >"
+
+Order "1..1" ||--o{ "0..N" OrderItem : "Include >"
+Product "1..1" ||--o{ "0..N" OrderItem : "< Apare în"
+Product "1..1" ||--o{ "0..N" CartItem : "< Adăugat în"
+
+Course "1..1" ||--o{ "0..N" QuizQuestion : "Conține >"
+Course "1..1" ||--o{ "0..N" CourseEnrollment : "< Înrolat în"
+Course "1..1" ||--o{ "0..N" CourseCompletion : "< Completat"
+
+Food "1..1" ||--o{ "0..N" DiaryEntry : "< Consumat la masă"
+
+@enduml

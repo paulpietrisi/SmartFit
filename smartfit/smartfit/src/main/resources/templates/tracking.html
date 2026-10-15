@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SmartFit – Tracking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+            --blue-light:#EAF3FF;--blue-mid:rgba(0,102,204,.08);
+            --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;--teal:#32ADE6;
+            --white:#FFFFFF;--off:#F5F5F7;--off2:#EBEBED;
+            --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+            --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.10);
+            --sh-sm:0 2px 10px rgba(0,0,0,.06);--sh-md:0 6px 28px rgba(0,0,0,.09);--sh-lg:0 16px 56px rgba(0,0,0,.13);
+            --r:12px;--r-md:16px;--r-lg:22px;
+            --sidebar-w:248px;--topbar-h:58px;
+            --tr:.22s ease;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+
+        /* ══ SIDEBAR ══ */
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--tr);overflow:hidden}
+        .sidebar.closed{width:64px}
+        .sb-logo{display:flex;align-items:center;gap:11px;padding:14px 18px;height:var(--topbar-h);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;overflow:hidden}
+        .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-logo-icon svg{width:17px;height:17px}
+        .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--tr)}
+        .sidebar.closed .sb-logo-text{opacity:0}
+        .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+        .sb-nav::-webkit-scrollbar{width:0}
+        .sb-section{margin-bottom:22px}
+        .sb-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;white-space:nowrap;transition:opacity var(--tr)}
+        .sidebar.closed .sb-lbl{opacity:0}
+        .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--tr),color var(--tr);position:relative}
+        .sb-item:hover{background:var(--off);color:var(--text)}
+        .sb-item.active{background:var(--blue-light);color:var(--blue)}
+        .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-item.active .sb-ico{background:rgba(0,102,204,.12)}
+        .sb-txt{opacity:1;transition:opacity var(--tr)}
+        .sidebar.closed .sb-txt{opacity:0}
+        .sb-badge{font-size:10px;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;border-radius:100px;margin-left:auto;flex-shrink:0;transition:opacity var(--tr)}
+        .sidebar.closed .sb-badge{opacity:0}
+        .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+        .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);transition:color var(--tr);border-radius:8px}
+        .sb-toggle:hover{color:var(--text);background:var(--off)}
+        .sidebar.closed .sb-toggle{justify-content:center}
+        .sidebar.closed .sb-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:400}
+        .sidebar.closed .sb-item:hover::after{opacity:1}
+
+        /* ══ TOPBAR ══ */
+        .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--tr)}
+        .topbar.sb-closed{left:64px}
+        .tb-search{flex:1;max-width:340px;position:relative}
+        .tb-search input{width:100%;padding:9px 14px 9px 38px;background:var(--off);border:1.5px solid transparent;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr),background var(--tr)}
+        .tb-search input::placeholder{color:var(--text-3)}
+        .tb-search input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .tb-search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+        .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+        .tb-icon-btn{position:relative;width:36px;height:36px;border-radius:100px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--tr);color:var(--text-2)}
+        .tb-icon-btn:hover{background:var(--off)}
+        .notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid #fff}
+        .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;border:2px solid rgba(255,255,255,.9);box-shadow:var(--sh-sm)}
+        .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+
+        /* ══ MAIN LAYOUT ══ */
+        .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:28px;transition:margin-left var(--tr);min-height:calc(100vh - var(--topbar-h))}
+        .main.sb-closed{margin-left:64px}
+
+        /* ══ PAGE HEADER ══ */
+        .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px}
+        .ph-left .ph-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+        .ph-left h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.6px;line-height:1.05;margin-bottom:4px}
+        .ph-left p{font-size:14px;color:var(--text-2);font-weight:300}
+        .ph-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+        /* Date nav */
+        .date-nav{display:flex;align-items:center;background:#fff;border:.5px solid var(--border-2);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-sm)}
+        .date-nav button{background:none;border:none;padding:9px 13px;cursor:pointer;color:var(--text-2);display:flex;align-items:center;transition:background var(--tr),color var(--tr)}
+        .date-nav button:hover{background:var(--off);color:var(--text)}
+        .date-nav .dn-mid{font-size:13px;font-weight:600;color:var(--text);padding:9px 16px;border-left:.5px solid var(--border);border-right:.5px solid var(--border);cursor:default}
+
+        /* Buttons */
+        .btn-prim{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--tr),transform .15s;box-shadow:0 3px 14px rgba(0,102,204,.25);text-decoration:none}
+        .btn-prim:hover{background:#0055AA;transform:translateY(-1px)}
+        .btn-prim:active{transform:scale(.97)}
+        .btn-sec{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:border-color var(--tr),background var(--tr);text-decoration:none;box-shadow:var(--sh-sm)}
+        .btn-sec:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+        .btn-ghost{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;transition:opacity var(--tr)}
+        .btn-ghost:hover{opacity:.65}
+
+        /* Section label */
+        .sect-lbl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+        .sect-lbl::after{content:'';flex:1;height:.5px;background:var(--border-2)}
+
+        /* Card */
+        .card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden}
+        .card-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0;flex-wrap:wrap;gap:8px}
+        .card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+        .card-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+        .card-body{padding:16px 20px 20px}
+
+        /* Chips */
+        .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px}
+        .chip-blue{background:var(--blue-light);color:var(--blue)}
+        .chip-green{background:rgba(48,209,88,.1);color:#1A8A3A}
+        .chip-orange{background:rgba(255,159,10,.1);color:#C07000}
+        .chip-red{background:rgba(255,59,48,.08);color:#D93025}
+        .chip-purple{background:rgba(191,90,242,.1);color:#8A3DBF}
+
+        /* Tooltip */
+        [data-tt]{position:relative}
+        [data-tt]::after{content:attr(data-tt);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:500;font-family:'DM Sans',sans-serif}
+        [data-tt]:hover::after{opacity:1}
+
+        /* ══ DAILY SUMMARY STRIP ══ */
+        .summary-strip{display:grid;grid-template-columns:auto 1fr auto;background:#fff;border-radius:var(--r-lg);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:24px}
+        .ss-donut{padding:24px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-right:.5px solid var(--border)}
+        .ss-donut-wrap{position:relative;width:130px;height:130px}
+        .ss-donut-wrap svg{transform:rotate(-90deg)}
+        .ss-dc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .ss-dc-n{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);line-height:1}
+        .ss-dc-u{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
+        .ss-dc-rem{font-size:11px;font-weight:600;color:var(--blue);margin-top:2px}
+        .ss-macros{padding:24px 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:center}
+        .ss-macro{display:flex;flex-direction:column;gap:7px}
+        .ss-macro-hd{display:flex;align-items:center;justify-content:space-between}
+        .ss-macro-nm{font-size:11px;font-weight:600;color:var(--text-2)}
+        .ss-macro-v{font-size:12px;font-weight:700;color:var(--text)}
+        .ss-bar{height:6px;background:var(--off2);border-radius:3px;overflow:hidden}
+        .ss-fill{height:100%;border-radius:3px;transition:width 1.4s cubic-bezier(.22,1,.36,1)}
+        .ss-macro-g{font-size:10px;color:var(--text-3)}
+        .ss-right{padding:24px 28px;display:flex;flex-direction:column;justify-content:center;gap:10px;border-left:.5px solid var(--border);min-width:170px}
+        .ss-stat{display:flex;align-items:center;gap:10px}
+        .ss-stat-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+        .ss-stat-info{flex:1}
+        .ss-stat-lbl{font-size:10px;color:var(--text-3)}
+        .ss-stat-v{font-size:13px;font-weight:600;color:var(--text)}
+
+        /* ══ BMR CARD ══ */
+        .bmr-card{background:linear-gradient(135deg,var(--blue-deep) 0%,#0B3870 60%,#0C4A92 100%);border-radius:var(--r-lg);padding:26px 28px;margin-bottom:24px;position:relative;overflow:hidden;border:.5px solid rgba(255,255,255,.06)}
+        .bmr-card::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+        .bmr-blob{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none}
+        .bb1{width:280px;height:280px;background:#0A84FF;opacity:.12;top:-100px;right:-60px}
+        .bb2{width:180px;height:180px;background:#5AC8FA;opacity:.08;bottom:-60px;left:30%}
+        .bmr-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start}
+        .bmr-form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+        .bmr-field label{display:block;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:7px}
+        .bmr-field input,.bmr-field select{width:100%;padding:10px 13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;outline:none;transition:border-color var(--tr),background var(--tr);-webkit-appearance:none}
+        .bmr-field input::placeholder{color:rgba(255,255,255,.35)}
+        .bmr-field input:focus,.bmr-field select:focus{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.15)}
+        .bmr-field select option{background:var(--blue-deep);color:#fff}
+        .goal-chips{display:flex;gap:8px;flex-wrap:wrap}
+        .goal-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.18);color:rgba(255,255,255,.6);background:rgba(255,255,255,.07);transition:all var(--tr);font-family:'DM Sans',sans-serif}
+        .goal-chip:hover{border-color:rgba(255,255,255,.4);color:#fff;background:rgba(255,255,255,.12)}
+        .goal-chip.active{border-color:#fff;color:var(--blue-deep);background:#fff}
+        .bmr-result{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:var(--r-md);padding:20px 22px;min-width:200px;display:flex;flex-direction:column;gap:12px}
+        .bmr-res-lbl{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4)}
+        .bmr-res-n{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#fff;line-height:1}
+        .bmr-res-u{font-size:12px;color:rgba(255,255,255,.45);margin-top:-2px}
+        .bmr-res-divider{height:.5px;background:rgba(255,255,255,.12)}
+        .bmr-res-row{display:flex;justify-content:space-between;align-items:center}
+        .bmr-res-rl{font-size:11px;color:rgba(255,255,255,.45)}
+        .bmr-res-rv{font-size:13px;font-weight:700;color:#fff}
+
+        /* ══ MEAL CARDS ══ */
+        .meals-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+        .meal-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;transition:box-shadow var(--tr)}
+        .meal-card:hover{box-shadow:var(--sh-md)}
+        .mc-hd{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--border)}
+        .mc-hd-left{display:flex;align-items:center;gap:10px}
+        .mc-hd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+        .mc-hd-title{font-size:13px;font-weight:700;color:var(--text)}
+        .mc-hd-time{font-size:10px;color:var(--text-3);margin-top:1px}
+        .mc-hd-kcal{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--blue)}
+        .mc-foods{padding:0}
+        .mc-food-item{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:.5px solid var(--border);transition:background var(--tr)}
+        .mc-food-item:hover{background:rgba(0,102,204,.025)}
+        .mc-food-item:last-child{border-bottom:none}
+        .mc-food-ico{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .mc-food-info{flex:1;min-width:0}
+        .mc-food-nm{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .mc-food-macros{font-size:10px;color:var(--text-3);margin-top:2px}
+        .mc-food-kcal{font-size:12px;font-weight:700;color:var(--text-2);flex-shrink:0}
+        .mc-food-del{background:none;border:none;cursor:pointer;color:var(--text-3);padding:3px;border-radius:5px;opacity:0;transition:opacity var(--tr),color var(--tr),background var(--tr)}
+        .mc-food-item:hover .mc-food-del{opacity:1}
+        .mc-food-del:hover{color:var(--red);background:rgba(255,59,48,.08)}
+        .mc-add{display:flex;align-items:center;gap:8px;padding:11px 16px;cursor:pointer;font-size:12px;color:var(--text-3);transition:background var(--tr),color var(--tr);border-top:.5px solid var(--border)}
+        .mc-add:hover{background:var(--blue-light);color:var(--blue)}
+
+        /* ══ EXERCISE CARDS (stil meal-card) ══ */
+        .exercise-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:0}
+        .ex-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;transition:box-shadow var(--tr),transform var(--tr)}
+        .ex-card:hover{box-shadow:var(--sh-md);transform:translateY(-2px)}
+        .ex-card.done{opacity:.65}
+        .ex-card.done .ex-hd-title{text-decoration:line-through;color:var(--text-3)}
+        .ex-hd{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--border)}
+        .ex-hd-left{display:flex;align-items:center;gap:10px}
+        .ex-hd-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+        .ex-hd-title{font-size:13px;font-weight:700;color:var(--text)}
+        .ex-hd-cat{font-size:10px;font-weight:600;color:var(--text-3);margin-top:2px;text-transform:uppercase;letter-spacing:.8px}
+        .ex-hd-volume{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
+        .ex-body{padding:11px 16px 14px}
+        .ex-tip{font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:11px}
+        .ex-actions{display:flex;align-items:center;gap:8px}
+        .ex-btn-done{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--off);border:1.5px solid var(--border-2);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;transition:all var(--tr)}
+        .ex-btn-done:hover{background:rgba(48,209,88,.1);border-color:var(--green);color:#1A8A3A}
+        .ex-card.done .ex-btn-done{background:rgba(48,209,88,.12);border-color:var(--green);color:#1A8A3A}
+        .ex-cat-badge{font-size:10px;font-weight:600;padding:4px 9px;border-radius:100px;background:var(--blue-light);color:var(--blue)}
+
+        /* ══ NUTRITION ADVICE BANNER ══ */
+        .nutrition-banner{display:flex;gap:14px;align-items:flex-start;background:var(--blue-light);border:.5px solid rgba(0,102,204,.15);border-radius:var(--r-md);padding:15px 18px;margin-bottom:16px}
+        .nb-ico{font-size:22px;flex-shrink:0;margin-top:1px}
+        .nb-title{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px}
+        .nb-text{font-size:13px;color:var(--text-2);line-height:1.55}
+
+        /* ══ MACRO DISTRIBUTION ══ */
+        .macro-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+        .macro-card{border-radius:var(--r);padding:14px;text-align:center}
+        .macro-card-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+        .macro-card-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:3px}
+        .macro-card-unit{font-size:11px;color:var(--text-3)}
+        .macro-card-pct{font-size:10px;font-weight:600;margin-top:4px}
+        .macro-dist-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:14px 0 6px}
+        .macro-dist-bar span{transition:width 1.3s cubic-bezier(.22,1,.36,1)}
+        .macro-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+        .ml-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)}
+        .ml-dot{width:8px;height:8px;border-radius:50%}
+
+        /* ══ STEPS BAR ══ */
+        .steps-wrap{margin-top:20px;padding-top:16px;border-top:.5px solid var(--border)}
+        .steps-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .steps-hd-l{font-size:13px;font-weight:600;color:var(--text)}
+        .steps-hd-r{font-size:12px;color:var(--text-3)}
+        .steps-bar-wrap{height:8px;background:var(--off2);border-radius:4px;overflow:hidden}
+        .steps-bar-fill{height:100%;background:linear-gradient(90deg,var(--orange),#FF6B00);border-radius:4px;width:0%;transition:width 1.4s cubic-bezier(.22,1,.36,1)}
+
+        /* ══ FOOD MODAL ══ */
+        .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);z-index:900;display:none;align-items:flex-start;justify-content:center;padding-top:80px}
+        .modal-bg.open{display:flex}
+        .modal{background:#fff;border-radius:var(--r-lg);width:100%;max-width:540px;box-shadow:var(--sh-lg);overflow:hidden;animation:mfadeIn .25s ease}
+        @keyframes mfadeIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+        .modal-hd{padding:20px 22px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+        .modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
+        .modal-close{width:30px;height:30px;border-radius:100px;border:none;background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:background var(--tr)}
+        .modal-close:hover{background:var(--off2);color:var(--text)}
+        .modal-search-wrap{padding:16px 22px;border-bottom:.5px solid var(--border);position:relative}
+        .modal-search{width:100%;padding:11px 14px 11px 40px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color var(--tr),background var(--tr)}
+        .modal-search:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .modal-search::placeholder{color:var(--text-3)}
+        .modal-search-ico{position:absolute;left:35px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+        .modal-results{max-height:360px;overflow-y:auto;padding:8px 0}
+        .modal-results::-webkit-scrollbar{width:4px}
+        .modal-results::-webkit-scrollbar-thumb{background:var(--off2);border-radius:2px}
+        .food-result{display:flex;align-items:center;gap:13px;padding:11px 22px;cursor:pointer;transition:background var(--tr)}
+        .food-result:hover{background:var(--blue-light)}
+        .food-res-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+        .food-res-info{flex:1}
+        .food-res-nm{font-size:13px;font-weight:600;color:var(--text)}
+        .food-res-det{font-size:11px;color:var(--text-3);margin-top:2px}
+        .food-res-kcal{font-size:14px;font-weight:700;color:var(--blue);flex-shrink:0}
+        .food-res-add{width:28px;height:28px;border-radius:100px;background:var(--blue);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background var(--tr);flex-shrink:0}
+        .food-res-add:hover{background:#0055AA}
+        .modal-body-pad{padding:16px 22px}
+        .modal-portion{margin-bottom:16px}
+        .modal-portion label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:7px}
+        .modal-portion input{width:100%;padding:11px 14px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color var(--tr)}
+        .modal-portion input:focus{border-color:var(--blue);background:#fff}
+        .modal-macros-preview{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+        .mmp-item{background:var(--off);border-radius:var(--r);padding:10px;text-align:center}
+        .mmp-n{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px}
+        .mmp-l{font-size:10px;color:var(--text-3)}
+
+        /* ══ WEIGHT / WATER ══ */
+        .thirty-chart-wrap{position:relative;overflow:hidden;padding:8px 0 0}
+        .thirty-svg{width:100%;height:140px;display:block}
+        .thirty-tooltip{position:absolute;background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:6px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:10}
+        .chart-legend{display:flex;gap:18px;margin-top:10px}
+        .cl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3)}
+        .cl-dot{width:8px;height:8px;border-radius:50%}
+        .goal-item{background:#fff;border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:14px;border:.5px solid var(--border);box-shadow:var(--sh-sm);transition:box-shadow var(--tr)}
+        .goal-item:hover{box-shadow:var(--sh-md)}
+        .goal-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .goal-info{flex:1}
+        .goal-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px}
+        .goal-bar{height:5px;background:var(--off2);border-radius:3px;overflow:hidden;margin-bottom:4px}
+        .goal-fill{height:100%;border-radius:3px;transition:width 1.5s cubic-bezier(.22,1,.36,1)}
+        .goal-meta{font-size:10px;color:var(--text-3)}
+        .goal-pct{font-size:13px;font-weight:700;flex-shrink:0}
+        .weight-log-list{display:flex;flex-direction:column;margin-top:4px}
+        .wl-item{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:.5px solid var(--border)}
+        .wl-item:last-child{border-bottom:none}
+        .wl-date{font-size:12px;color:var(--text-3);min-width:56px}
+        .wl-bar-wrap{flex:1;height:6px;background:var(--off2);border-radius:3px;overflow:hidden}
+        .wl-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width 1.3s cubic-bezier(.22,1,.36,1)}
+        .wl-val{font-size:13px;font-weight:700;color:var(--text);min-width:52px;text-align:right}
+        .wl-diff{font-size:11px;font-weight:600;min-width:44px;text-align:right}
+        .diff-dn{color:#1A8A3A}.diff-up{color:var(--red)}.diff-eq{color:var(--text-3)}
+        .weight-add-row{display:flex;gap:10px;margin-top:14px}
+        .weight-add-inp{flex:1;padding:10px 14px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color var(--tr)}
+        .weight-add-inp:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .water-glasses{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+        .wglass{width:44px;height:54px;cursor:pointer;transition:transform var(--tr)}
+        .wglass:hover{transform:scale(1.08) translateY(-2px)}
+        .wglass svg{width:100%;height:100%}
+        .water-info{display:flex;align-items:center;gap:16px}
+        .water-big{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--blue);line-height:1}
+        .water-unit{font-size:13px;color:var(--text-3)}
+        .water-prog-wrap{flex:1}
+        .water-prog{height:8px;background:var(--off2);border-radius:4px;overflow:hidden;margin-top:6px}
+        .water-fill{height:100%;background:linear-gradient(90deg,var(--blue-3),var(--blue));border-radius:4px;transition:width 1s cubic-bezier(.22,1,.36,1)}
+        .water-lbl{font-size:11px;color:var(--text-3)}
+
+        /* ══ TOASTS ══ */
+        .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+        .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:14px 16px;min-width:290px;max-width:350px;pointer-events:all;transform:translateX(110%);transition:transform .38s cubic-bezier(.22,1,.36,1),opacity .38s;opacity:0}
+        .toast.show{transform:none;opacity:1}
+        .toast.hide{transform:translateX(110%);opacity:0}
+        .t-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .t-green{background:rgba(48,209,88,.1)}.t-blue{background:var(--blue-light)}.t-orange{background:rgba(255,159,10,.1)}
+        .t-info{flex:1}
+        .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+        .t-msg{font-size:12px;color:var(--text-3);line-height:1.45}
+        .t-close{background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px;flex-shrink:0}
+        .t-close:hover{color:var(--text)}
+        .t-bar{height:2px;background:var(--off2);border-radius:1px;overflow:hidden;margin-top:8px}
+        .t-bar-fill{height:100%;border-radius:1px;animation:tbar 3.8s linear forwards}
+        @keyframes tbar{from{width:100%}to{width:0%}}
+
+        /* ══ LAYOUT GRIDS ══ */
+        .g3l{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:24px}
+
+        /* ══ RESPONSIVE ══ */
+        @media(max-width:1200px){.bmr-form-grid{grid-template-columns:repeat(2,1fr)}.macro-cards{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:1050px){.meals-grid,.exercise-grid,.g3l{grid-template-columns:1fr}.summary-strip{grid-template-columns:1fr}.ss-macros{grid-template-columns:repeat(2,1fr)}.ss-donut{border-right:none;border-bottom:.5px solid var(--border)}.ss-right{border-left:none;border-top:.5px solid var(--border)}}
+        @media(max-width:900px){.topbar{left:0!important;padding:0 16px}.sidebar{transform:translateX(-100%);width:var(--sidebar-w)!important}.sidebar.mobile-open{transform:none}.main{margin-left:0!important;padding:16px}.bmr-inner{grid-template-columns:1fr}.bmr-form-grid{grid-template-columns:1fr 1fr}}
+        @media(max-width:560px){.bmr-form-grid{grid-template-columns:1fr}.modal{margin:0 12px;max-width:100%}.macro-cards{grid-template-columns:1fr 1fr}}
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar" id="sb">
+    <a href="/home" class="sb-logo">
+        <div class="sb-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round">
+                <rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/>
+                <rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+            </svg>
+        </div>
+        <span class="sb-logo-text">SmartFit</span>
+    </a>
+    <nav class="sb-nav">
+        <div class="sb-section">
+            <div class="sb-lbl">Principal</div>
+            <a class="sb-item" href="/dashboard" data-tip="Dashboard">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                <span class="sb-txt">Dashboard</span>
+            </a>
+            <a class="sb-item active" href="/tracking" data-tip="Tracking">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+                <span class="sb-txt">Tracking</span>
+            </a>
+            <a class="sb-item" href="/jurnal-alimentar" data-tip="Jurnal">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+                <span class="sb-txt">Jurnal alimentar</span>
+            </a>
+        </div>
+        <div class="sb-section">
+            <div class="sb-lbl">Servicii</div>
+            <a class="sb-item" href="/magazin" data-tip="Magazin">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+                <span class="sb-txt">Magazin</span>
+                <span class="sb-badge">3</span>
+            </a>
+            <a class="sb-item" href="/academie" data-tip="Academie">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                <span class="sb-txt">Academie</span>
+                <span class="sb-badge">2</span>
+            </a>
+            <a class="sb-item" href="/rapoarte" data-tip="Rapoarte">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+                <span class="sb-txt">Rapoarte &amp; PDF</span>
+            </a>
+        </div>
+        <div class="sb-section">
+            <div class="sb-lbl">Cont</div>
+            <a class="sb-item" href="/profil" data-tip="Profil">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span class="sb-txt">Profil</span>
+            </a>
+            <a class="sb-item" href="/setari" data-tip="Setări">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+                <span class="sb-txt">Setări</span>
+            </a>
+        </div>
+    </nav>
+    <div class="sb-bottom">
+        <button class="sb-toggle" id="sbToggle">
+            <svg id="sbArr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+    </div>
+</aside>
+
+<!-- ═══════════════ TOPBAR ═══════════════ -->
+<header class="topbar" id="topbar">
+    <div class="tb-search">
+        <span class="tb-search-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input type="search" placeholder="Caută aliment, produs, curs…"/>
+    </div>
+    <div class="tb-right">
+        <button class="tb-icon-btn" data-tt="Notificări" onclick="showToast('notif')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <span class="notif-dot"></span>
+        </button>
+        <button class="tb-icon-btn" data-tt="Generează raport PDF" onclick="window.location.href='/profil'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <div style="width:1px;height:20px;background:var(--border-2);margin:0 4px"></div>
+        <span class="tb-name" th:text="${user.firstName}">User</span>
+        <div class="tb-avatar" th:text="${userInitials}">U</div>
+    </div>
+</header>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="main" id="main">
+
+    <!-- ── PAGE HEADER ── -->
+    <div class="page-hd">
+        <div class="ph-left">
+            <div class="ph-tag">01 — Tracking</div>
+            <h1>Jurnal &amp; Antrenament</h1>
+            <p>Monitorizează caloriile, macro-nutrienții, exercițiile și evoluția greutății.</p>
+        </div>
+        <div class="ph-right">
+            <div class="date-nav">
+                <button onclick="changeDate(-1)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg></button>
+                <span class="dn-mid" id="dateLabel"></span>
+                <button onclick="changeDate(1)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3l5 5-5 5"/></svg></button>
+            </div>
+            <button class="btn-sec" onclick="openModal('breakfast')">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                Adaugă aliment
+            </button>
+            <button class="btn-prim" onclick="window.location.href='/profil'">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 10v3H3v-3M8 2v8M5 7l3 3 3-3"/></svg>
+                Export PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- ── DAILY SUMMARY STRIP ── -->
+    <div style="display:none">
+        pctP=[[${pctP}]] pctC=[[${pctC}]] pctF=[[${pctF}]]
+    </div>
+    <div class="summary-strip">
+        <!-- Donut caloric -->
+        <div class="ss-donut">
+            <div class="ss-donut-wrap">
+                <svg width="130" height="130" viewBox="0 0 130 130">
+                    <circle cx="65" cy="65" r="50" stroke="#F0F0F2" stroke-width="12" fill="none"/>
+                    <circle cx="65" cy="65" r="50" stroke="url(#dg1)" stroke-width="12" fill="none"
+                            stroke-dasharray="314" stroke-dashoffset="50.2" stroke-linecap="round" id="calRing"/>
+                    <defs>
+                        <linearGradient id="dg1" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0" stop-color="#0066CC"/>
+                            <stop offset="1" stop-color="#0A84FF"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="ss-dc">
+                    <span class="ss-dc-n" id="calConsumed">1,847</span>
+                    <span class="ss-dc-u">kcal</span>
+                    <span class="ss-dc-rem" id="calRemaining">
+                        <!-- Afișează câte kcal mai rămân din ținta din DB -->
+                        <span th:text="${caloricTarget - 1847} + ' rămase'">353 rămase</span>
+                    </span>
+                </div>
+            </div>
+            <div style="display:flex;gap:14px;margin-top:4px">
+                <span class="chip chip-blue" data-tt="Consum azi">🍽 84%</span>
+                <span class="chip chip-green" data-tt="Țintă zilnică">
+                    🎯 <span th:text="${caloricTarget}">2200</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Macros din DB -->
+        <div class="ss-macros">
+            <!-- Proteine -->
+            <div class="ss-macro">
+                <div class="ss-macro-hd">
+                    <span class="ss-macro-nm">🔵 Proteine</span>
+                    <span class="ss-macro-v" th:text="${proteinTarget} + 'g'">180g</span>
+                </div>
+                <div class="ss-bar">
+                    <div class="ss-fill" id="barP"
+                         th:style="'width:0%;background:#0066CC'"
+                         th:attr="data-w=${pctP} + '%'"></div>
+                </div>
+                <div class="ss-macro-g">
+                    țintă <span th:text="${proteinTarget}">180</span>g ·
+                    <span th:text="${proteinPct}">28</span>% kcal
+                </div>
+            </div>
+
+            <!-- Carbohidrați -->
+            <div class="ss-macro">
+                <div class="ss-macro-hd">
+                    <span class="ss-macro-nm">🟢 Carbohidrați</span>
+                    <span class="ss-macro-v" th:text="${carbTarget} + 'g'">300g</span>
+                </div>
+                <div class="ss-bar">
+                    <div class="ss-fill" id="barC"
+                         th:style="'width:0%;background:#30D158'"
+                         th:attr="data-w=${pctC} + '%'"></div>
+                </div>
+                <div class="ss-macro-g">
+                    țintă <span th:text="${carbTarget}">300</span>g ·
+                    <span th:text="${carbPct}">46</span>% kcal
+                </div>
+            </div>
+
+            <!-- Grăsimi -->
+            <div class="ss-macro">
+                <div class="ss-macro-hd">
+                    <span class="ss-macro-nm">🟠 Grăsimi</span>
+                    <span class="ss-macro-v" th:text="${fatTarget} + 'g'">90g</span>
+                </div>
+                <div class="ss-bar">
+                    <div class="ss-fill" id="barF"
+                         th:style="'width:0%;background:#FF9F0A'"
+                         th:attr="data-w=${pctF} + '%'"></div>
+                </div>
+                <div class="ss-macro-g">
+                    țintă <span th:text="${fatTarget}">90</span>g ·
+                    <span th:text="${fatPct}">26</span>% kcal
+                </div>
+            </div>
+
+            <!-- Apă -->
+            <div class="ss-macro">
+                <div class="ss-macro-hd">
+                    <span class="ss-macro-nm">💧 Apă</span>
+                    <span class="ss-macro-v" th:text="${waterTarget} + 'L'">2.8L</span>
+                </div>
+                <div class="ss-bar">
+                    <div class="ss-fill" id="barWater"
+                         th:style="'width:0%;background:#5AC8FA'"
+                         th:attr="data-w='0%'"></div>
+                </div>
+                <div class="ss-macro-g">
+                    <span th:text="${waterGlasses}">11</span> pahare × 250ml
+                </div>
+            </div>
+        </div>
+
+        <!-- Right stats din DB -->
+        <div class="ss-right">
+            <div class="ss-stat">
+                <div class="ss-stat-ico" style="background:#EAF3FF">🔥</div>
+                <div class="ss-stat-info">
+                    <div class="ss-stat-lbl">Țintă calorică</div>
+                    <div class="ss-stat-v" th:text="${caloricTarget} + ' kcal'">2500 kcal</div>
+                </div>
+            </div>
+            <div class="ss-stat">
+                <div class="ss-stat-ico" style="background:#E8F8EF">⚡</div>
+                <div class="ss-stat-info">
+                    <div class="ss-stat-lbl">TDEE</div>
+                    <div class="ss-stat-v" th:text="${tdee} + ' kcal'">2200 kcal</div>
+                </div>
+            </div>
+            <div class="ss-stat">
+                <div class="ss-stat-ico" style="background:#FFF0E8">🎯</div>
+                <div class="ss-stat-info">
+                    <div class="ss-stat-lbl">Obiectiv</div>
+                    <div class="ss-stat-v" th:text="${goalLabel}">Masă musculară</div>
+                </div>
+            </div>
+            <div class="ss-stat">
+                <div class="ss-stat-ico" style="background:#F0E8FF">🦶</div>
+                <div class="ss-stat-info">
+                    <div class="ss-stat-lbl">Obiectiv pași/zi</div>
+                    <div class="ss-stat-v" th:text="${dailySteps}">8000</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── BMR CALCULATOR ── -->
+    <div class="bmr-card">
+        <div class="bmr-blob bb1"></div>
+        <div class="bmr-blob bb2"></div>
+        <div class="bmr-inner">
+            <form th:action="@{/tracking/update}" method="post" id="bmrForm" style="display:contents;">
+                <input type="hidden" name="activityLevel" id="hiddenActivity"
+                       th:value="${user.activityLevel != null ? user.activityLevel : 1.375}">
+                <input type="hidden" name="goal" id="hiddenGoal"
+                       th:value="${user.goal != null ? user.goal : 'MAINTAIN'}">
+
+                <div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+                        <span style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45)">Calculator BMR</span>
+                        <span class="chip" style="background:rgba(255,255,255,.12);color:#fff;font-size:10px">Formula Mifflin-St Jeor</span>
+                    </div>
+                    <div class="bmr-form-grid">
+                        <div class="bmr-field">
+                            <label>Greutate (kg)</label>
+                            <input type="number" name="weightKg" id="bw" th:value="${user.weightKg}" step="0.1" required/>
+                        </div>
+                        <div class="bmr-field">
+                            <label>Înălțime (cm)</label>
+                            <input type="number" name="heightCm" id="bh" th:value="${user.heightCm}" required/>
+                        </div>
+                        <div class="bmr-field">
+                            <label>Data Nașterii</label>
+                            <input type="date" name="birthDate" id="ba" th:value="${user.birthDate}" style="color-scheme:dark;" required/>
+                        </div>
+                        <div class="bmr-field">
+                            <label>Sex</label>
+                            <select name="gender" id="bs">
+                                <option value="M" th:selected="${user.gender == 'M'}">Masculin</option>
+                                <option value="F" th:selected="${user.gender == 'F'}">Feminin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:14px">
+                        <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:9px">Nivel de activitate</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button type="button" class="goal-chip" th:classappend="${user.activityLevel == 1.2 ? ' active' : ''}" onclick="setActivity(this,1.2)">Sedentar</button>
+                            <button type="button" class="goal-chip" th:classappend="${user.activityLevel == 1.375 ? ' active' : ''}" onclick="setActivity(this,1.375)">Ușor activ</button>
+                            <button type="button" class="goal-chip" th:classappend="${user.activityLevel == 1.55 ? ' active' : ''}" onclick="setActivity(this,1.55)">Moderat</button>
+                            <button type="button" class="goal-chip" th:classappend="${user.activityLevel == 1.725 ? ' active' : ''}" onclick="setActivity(this,1.725)">Foarte activ</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:9px">Obiectiv</div>
+                        <div class="goal-chips">
+                            <button type="button" class="goal-chip" th:classappend="${user.goal == 'LOSE_WEIGHT' ? ' active' : ''}" onclick="setGoalChip(this,'LOSE_WEIGHT')">🔻 Slăbire</button>
+                            <button type="button" class="goal-chip" th:classappend="${user.goal == 'MAINTAIN' ? ' active' : ''}" onclick="setGoalChip(this,'MAINTAIN')">⚖️ Menținere</button>
+                            <button type="button" class="goal-chip" th:classappend="${user.goal == 'GAIN_MUSCLE' ? ' active' : ''}" onclick="setGoalChip(this,'GAIN_MUSCLE')">💪 Masă musculară</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result panel -->
+                <div class="bmr-result">
+                    <div>
+                        <div class="bmr-res-lbl">BMR (Rata Metabolică Bazală)</div>
+                        <div class="bmr-res-n" th:text="${bmr}">1880</div>
+                        <div class="bmr-res-u">kcal/zi în repaus</div>
+                    </div>
+                    <div class="bmr-res-divider"></div>
+                    <div class="bmr-res-row">
+                        <span class="bmr-res-rl">Țintă zilnică</span>
+                        <span class="bmr-res-rv" th:text="${caloricTarget} + ' kcal'"
+                              style="color:#5AC8FA;font-size:18px">2585 kcal</span>
+                    </div>
+                    <div class="bmr-res-row">
+                        <span class="bmr-res-rl">Obiectiv</span>
+                        <span class="bmr-res-rv" th:text="${goalLabel}">Masă musculară</span>
+                    </div>
+                    <div class="bmr-res-divider"></div>
+                    <button type="submit" class="btn-prim" style="width:100%;justify-content:center;font-size:13px">
+                        ✓ Salvează în Baza de Date
+                    </button>
+                    <p th:if="${param.success}" style="color:#30D158;font-size:10px;text-align:center;margin-top:8px;">
+                        ✅ Date actualizate cu succes!
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── MESE DE AZI ── -->
+    <div class="sect-lbl">Mese de azi</div>
+    <div class="meals-grid">
+
+        <!-- Mic dejun -->
+        <div class="meal-card" id="card-breakfast">
+            <div class="mc-hd">
+                <div class="mc-hd-left">
+                    <div class="mc-hd-ico" style="background:#FFF9EC">🌅</div>
+                    <div><div class="mc-hd-title">Mic dejun</div><div class="mc-hd-time">08:00 – 10:00</div></div>
+                </div>
+                <span class="mc-hd-kcal" id="kcal-breakfast">477 kcal</span>
+            </div>
+            <div class="mc-foods" id="foods-breakfast">
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#0066CC"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Fulgi de ovăz (100g)</div><div class="mc-food-macros">P: 13g · C: 62g · G: 7g</div></div>
+                    <span class="mc-food-kcal">370</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#30D158"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Banană medie (120g)</div><div class="mc-food-macros">P: 1.5g · C: 27g · G: 0.4g</div></div>
+                    <span class="mc-food-kcal">107</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+            </div>
+            <div class="mc-add" onclick="openModal('breakfast')">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                Adaugă aliment la mic dejun
+            </div>
+        </div>
+
+        <!-- Prânz -->
+        <div class="meal-card" id="card-lunch">
+            <div class="mc-hd">
+                <div class="mc-hd-left">
+                    <div class="mc-hd-ico" style="background:#EAF3FF">☀️</div>
+                    <div><div class="mc-hd-title">Prânz</div><div class="mc-hd-time">12:00 – 14:00</div></div>
+                </div>
+                <span class="mc-hd-kcal" id="kcal-lunch">521 kcal</span>
+            </div>
+            <div class="mc-foods" id="foods-lunch">
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#FF9F0A"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Piept de pui grătar (200g)</div><div class="mc-food-macros">P: 46g · C: 0g · G: 7g</div></div>
+                    <span class="mc-food-kcal">248</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#0066CC"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Orez brun fiert (150g)</div><div class="mc-food-macros">P: 4g · C: 47g · G: 1.5g</div></div>
+                    <span class="mc-food-kcal">218</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#30D158"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Broccoli la aburi (120g)</div><div class="mc-food-macros">P: 4g · C: 10g · G: 0.5g</div></div>
+                    <span class="mc-food-kcal">55</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+            </div>
+            <div class="mc-add" onclick="openModal('lunch')">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                Adaugă aliment la prânz
+            </div>
+        </div>
+
+        <!-- Gustare -->
+        <div class="meal-card" id="card-snack">
+            <div class="mc-hd">
+                <div class="mc-hd-left">
+                    <div class="mc-hd-ico" style="background:#F0E8FF">🍎</div>
+                    <div><div class="mc-hd-title">Gustare</div><div class="mc-hd-time">15:00 – 17:00</div></div>
+                </div>
+                <span class="mc-hd-kcal" id="kcal-snack">219 kcal</span>
+            </div>
+            <div class="mc-foods" id="foods-snack">
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#BF5AF2"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Shake proteic (30g pudră)</div><div class="mc-food-macros">P: 24g · C: 4g · G: 2g</div></div>
+                    <span class="mc-food-kcal">130</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#FF9F0A"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Banană medie (100g)</div><div class="mc-food-macros">P: 1.3g · C: 23g · G: 0.3g</div></div>
+                    <span class="mc-food-kcal">89</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+            </div>
+            <div class="mc-add" onclick="openModal('snack')">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                Adaugă gustare
+            </div>
+        </div>
+
+        <!-- Cină -->
+        <div class="meal-card" id="card-dinner">
+            <div class="mc-hd">
+                <div class="mc-hd-left">
+                    <div class="mc-hd-ico" style="background:#E8F8EF">🌙</div>
+                    <div><div class="mc-hd-title">Cină</div><div class="mc-hd-time">19:00 – 21:00</div></div>
+                </div>
+                <span class="mc-hd-kcal" id="kcal-dinner">420 kcal</span>
+            </div>
+            <div class="mc-foods" id="foods-dinner">
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#30D158"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Salată cu ton (200g)</div><div class="mc-food-macros">P: 28g · C: 8g · G: 12g</div></div>
+                    <span class="mc-food-kcal">252</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+                <div class="mc-food-item">
+                    <div class="mc-food-ico" style="background:#FF9F0A"></div>
+                    <div class="mc-food-info"><div class="mc-food-nm">Avocado (80g)</div><div class="mc-food-macros">P: 2g · C: 3g · G: 14g</div></div>
+                    <span class="mc-food-kcal">168</span>
+                    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+                </div>
+            </div>
+            <div class="mc-add" onclick="openModal('dinner')">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                Adaugă aliment la cină
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PLAN ANTRENAMENT + NUTRIȚIE (din DB via Java)
+    ══════════════════════════════════════════ -->
+    <div class="sect-lbl">
+        Plan antrenament ·
+        <span th:text="${goalLabel}">Masă musculară</span>
+    </div>
+
+    <div class="card" style="margin-bottom:24px">
+        <div class="card-hd">
+            <div>
+                <div class="card-title">Exerciții recomandate</div>
+                <div class="card-sub" th:text="${workoutNote}">Antrenament adaptat obiectivului tău</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span class="chip chip-blue"
+                      th:text="'📅 ' + ${workoutFrequency}">📅 4 zile/săpt.</span>
+                <span class="chip chip-orange"
+                      th:text="'🦶 ' + ${dailySteps} + ' pași/zi'">🦶 8000 pași/zi</span>
+            </div>
+        </div>
+        <div class="card-body">
+
+            <!-- Banner nutrițional contextual -->
+            <div class="nutrition-banner">
+                <div class="nb-ico">💡</div>
+                <div>
+                    <div class="nb-title"
+                         th:text="'Nutriție pentru ' + ${goalLabel}">
+                        Nutriție pentru obiectiv
+                    </div>
+                    <div class="nb-text" th:text="${nutritionAdvice}">
+                        Sfat nutrițional personalizat în funcție de obiectivul tău.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid exerciții — stil meal-card -->
+            <div class="exercise-grid">
+                <div class="ex-card" th:each="ex : ${exercises}">
+
+                    <!-- Header (ca mc-hd) -->
+                    <div class="ex-hd">
+                        <div class="ex-hd-left">
+                            <div class="ex-hd-ico" th:style="'background:' + ${ex.color}">
+                                <span th:text="${ex.emoji}">🏋️</span>
+                            </div>
+                            <div>
+                                <div class="ex-hd-title" th:text="${ex.name}">Exercițiu</div>
+                                <div class="ex-hd-cat" th:text="${ex.category}">Categorie</div>
+                            </div>
+                        </div>
+                        <div class="ex-hd-volume" th:text="${ex.volume}">4 × 8 rep</div>
+                    </div>
+
+                    <!-- Body (ca mc-foods) -->
+                    <div class="ex-body">
+                        <div class="ex-tip" th:text="${ex.tip}">Sfat tehnic</div>
+                        <div class="ex-actions">
+                            <button class="ex-btn-done" onclick="toggleDone(this)">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"
+                                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                                    <polyline points="2 8 6 12 14 4"/>
+                                </svg>
+                                Terminat
+                            </button>
+                            <span class="ex-cat-badge" th:text="${ex.volume}">4 × 8</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Progres pași -->
+            <div class="steps-wrap">
+                <div class="steps-hd">
+                    <span class="steps-hd-l">🦶 Pași astăzi</span>
+                    <span class="steps-hd-r">
+                        7,432 / <span th:text="${dailySteps}">8000</span> pași
+                    </span>
+                </div>
+                <div class="steps-bar-wrap">
+                    <div class="steps-bar-fill" id="stepsBar"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ȚINTE NUTRIȚIONALE — calculate din obiectiv
+    ══════════════════════════════════════════ -->
+    <div class="sect-lbl">
+        Ținte nutriționale ·
+        <span th:text="${goalLabel}">Masă musculară</span>
+    </div>
+
+    <div class="card" style="margin-bottom:24px">
+        <div class="card-hd">
+            <div>
+                <div class="card-title">Distribuție macronutrienți zilnici</div>
+                <div class="card-sub" th:text="'Calculat pentru: ' + ${goalTip}">
+                    Detalii obiectiv
+                </div>
+            </div>
+            <span class="chip chip-blue"
+                  th:text="${caloricTarget} + ' kcal/zi'">2885 kcal/zi</span>
+        </div>
+        <div class="card-body">
+
+            <!-- Bara distribuție vizuală -->
+            <div class="macro-dist-bar">
+                <span th:style="'width:' + ${proteinPct} + '%;background:#0066CC'"
+                      th:attr="data-tt='Proteine ' + ${proteinPct} + '%'"></span>
+                <span th:style="'width:' + ${carbPct} + '%;background:#30D158'"
+                      th:attr="data-tt='Carbohidrați ' + ${carbPct} + '%'"></span>
+                <span th:style="'width:' + ${fatPct} + '%;background:#FF9F0A'"
+                      th:attr="data-tt='Grăsimi ' + ${fatPct} + '%'"></span>
+            </div>
+            <div class="macro-legend">
+                <span class="ml-item">
+                    <span class="ml-dot" style="background:#0066CC"></span>
+                    Proteine <strong th:text="${proteinPct} + '%'">28%</strong>
+                </span>
+                <span class="ml-item">
+                    <span class="ml-dot" style="background:#30D158"></span>
+                    Carbohidrați <strong th:text="${carbPct} + '%'">46%</strong>
+                </span>
+                <span class="ml-item">
+                    <span class="ml-dot" style="background:#FF9F0A"></span>
+                    Grăsimi <strong th:text="${fatPct} + '%'">26%</strong>
+                </span>
+            </div>
+
+            <!-- 4 carduri macro -->
+            <div class="macro-cards">
+                <div class="macro-card" style="background:var(--blue-light)">
+                    <div class="macro-card-lbl" style="color:var(--blue)">Proteine</div>
+                    <div class="macro-card-val" style="color:var(--blue)" th:text="${proteinTarget}">180</div>
+                    <div class="macro-card-unit">grame/zi</div>
+                    <div class="macro-card-pct" style="color:var(--blue)"
+                         th:text="${proteinPct} + '% din calorii'">28%</div>
+                </div>
+                <div class="macro-card" style="background:rgba(48,209,88,.08)">
+                    <div class="macro-card-lbl" style="color:#1A8A3A">Carbohidrați</div>
+                    <div class="macro-card-val" style="color:var(--green)" th:text="${carbTarget}">320</div>
+                    <div class="macro-card-unit">grame/zi</div>
+                    <div class="macro-card-pct" style="color:#1A8A3A"
+                         th:text="${carbPct} + '% din calorii'">46%</div>
+                </div>
+                <div class="macro-card" style="background:rgba(255,159,10,.08)">
+                    <div class="macro-card-lbl" style="color:#C07000">Grăsimi</div>
+                    <div class="macro-card-val" style="color:var(--orange)" th:text="${fatTarget}">90</div>
+                    <div class="macro-card-unit">grame/zi</div>
+                    <div class="macro-card-pct" style="color:#C07000"
+                         th:text="${fatPct} + '% din calorii'">26%</div>
+                </div>
+                <div class="macro-card" style="background:rgba(90,200,250,.1)">
+                    <div class="macro-card-lbl" style="color:var(--blue)">Apă</div>
+                    <div class="macro-card-val" style="color:var(--blue-3)" th:text="${waterTarget}">2.8</div>
+                    <div class="macro-card-unit">litri/zi</div>
+                    <div class="macro-card-pct" style="color:var(--blue)"
+                         th:text="${waterGlasses} + ' pahare'">11 pahare</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── GREUTATE & HIDRATARE ── -->
+    <div class="sect-lbl">Greutate &amp; Hidratare</div>
+    <div class="g3l">
+
+        <!-- Weight log -->
+        <div class="card">
+            <div class="card-hd">
+                <div>
+                    <div class="card-title">Evoluție greutate · 30 zile</div>
+                    <div class="card-sub">Tendință: −1.6 kg față de luna trecută</div>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <span class="chip chip-green">↓ −1.6kg</span>
+                    <button class="btn-ghost" onclick="window.location.href='/profil'">Export →</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="thirty-chart-wrap">
+                    <div class="thirty-tooltip" id="wctTip"></div>
+                    <svg class="thirty-svg" id="wChart" viewBox="0 0 700 140" preserveAspectRatio="none"></svg>
+                </div>
+                <div class="chart-legend">
+                    <span class="cl-item"><span class="cl-dot" style="background:#0066CC"></span>Greutate zilnică</span>
+                    <span class="cl-item"><span class="cl-dot" style="background:#30D158;opacity:.5"></span>Medie mobilă</span>
+                </div>
+                <div style="height:.5px;background:var(--border);margin:14px 0"></div>
+                <div class="weight-log-list" id="weightLog"></div>
+                <div class="weight-add-row">
+                    <input class="weight-add-inp" type="number" id="newWeight"
+                           placeholder="Introdu greutatea de azi (kg)" step="0.1"/>
+                    <button class="btn-prim" onclick="addWeight()">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                        Înregistrează
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Water + Goals -->
+        <div class="card">
+            <div class="card-hd">
+                <div>
+                    <div class="card-title">Hidratare zilnică</div>
+                    <div class="card-sub">
+                        Obiectiv: <span th:text="${waterTarget}">2.8</span>L ·
+                        <span th:text="${waterGlasses}">11</span> pahare × 250ml
+                    </div>
+                </div>
+                <span class="chip chip-blue" id="waterChip">0%</span>
+            </div>
+            <div class="card-body">
+                <div class="water-glasses" id="waterGlasses"></div>
+                <div class="water-info">
+                    <div>
+                        <div class="water-big" id="waterLiters">0.0</div>
+                        <div class="water-unit">litri consumați</div>
+                    </div>
+                    <div class="water-prog-wrap">
+                        <div class="water-lbl">
+                            din <span th:text="${waterTarget}">2.8</span>L ·
+                            <span id="waterGlassCount">0</span> /
+                            <span id="waterGlassTotal" th:text="${waterGlasses}">11</span> pahare
+                        </div>
+                        <div class="water-prog">
+                            <div class="water-fill" id="waterBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:9px;margin-top:16px">
+                    <button class="btn-prim" style="flex:1;justify-content:center" onclick="addGlass()">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                        +250ml
+                    </button>
+                    <button class="btn-sec" onclick="removeGlass()">−250ml</button>
+                    <button class="btn-sec" onclick="resetWater()">Reset</button>
+                </div>
+            </div>
+
+            <!-- Obiective săptămânale -->
+            <div style="border-top:.5px solid var(--border);padding:16px 20px 20px">
+                <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">
+                    Obiective săptămânale
+                </div>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                    <div class="goal-item">
+                        <div class="goal-ico" style="background:#EAF3FF">🎯</div>
+                        <div class="goal-info">
+                            <div class="goal-title" th:text="'Calorii zilnice (' + ${goalLabel} + ')'">Calorii</div>
+                            <div class="goal-bar"><div class="goal-fill" style="width:72%;background:linear-gradient(90deg,#0066CC,#0A84FF)"></div></div>
+                            <div class="goal-meta" th:text="'Țintă ' + ${caloricTarget} + ' kcal/zi · 5/7 zile atins'">
+                                Țintă 2885 kcal/zi
+                            </div>
+                        </div>
+                        <span class="goal-pct" style="color:var(--blue)">72%</span>
+                    </div>
+                    <div class="goal-item">
+                        <div class="goal-ico" style="background:#E8F8EF">💪</div>
+                        <div class="goal-info">
+                            <div class="goal-title">Consum proteine zilnic</div>
+                            <div class="goal-bar"><div class="goal-fill" style="width:80%;background:linear-gradient(90deg,#30D158,#34C759)"></div></div>
+                            <div class="goal-meta"
+                                 th:text="'145g / ' + ${proteinTarget} + 'g · 6/7 zile atins'">
+                                145g / 180g
+                            </div>
+                        </div>
+                        <span class="goal-pct" style="color:var(--green)">80%</span>
+                    </div>
+                    <div class="goal-item">
+                        <div class="goal-ico" style="background:#FFF0E8">🏃</div>
+                        <div class="goal-info">
+                            <div class="goal-title">Pași zilnici</div>
+                            <div class="goal-bar"><div class="goal-fill" style="width:74%;background:linear-gradient(90deg,#FF9F0A,#FF6B00)"></div></div>
+                            <div class="goal-meta"
+                                 th:text="'7,432 / ' + ${dailySteps} + ' pași · azi'">
+                                7,432 / 8000 pași
+                            </div>
+                        </div>
+                        <span class="goal-pct" style="color:var(--orange)">74%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── CALORIE CHART 30 zile ── -->
+    <div class="sect-lbl">Evoluție calorii · 30 zile</div>
+    <div class="card" style="margin-bottom:28px">
+        <div class="card-hd">
+            <div>
+                <div class="card-title">Istoric caloric</div>
+                <div class="card-sub">Calorii consumate vs. țintă zilnică</div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:center">
+                <div style="display:flex;gap:14px">
+                    <span class="cl-item"><span class="cl-dot" style="background:#0066CC"></span>Consumate</span>
+                    <span class="cl-item"><span class="cl-dot" style="background:#FF9F0A"></span>Țintă</span>
+                </div>
+                <button class="btn-ghost" onclick="window.location.href='/profil'">Export PDF →</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="thirty-chart-wrap" style="padding-bottom:8px">
+                <div class="thirty-tooltip" id="calTip"></div>
+                <svg id="calChart" viewBox="0 0 700 150"
+                     style="width:100%;height:150px;display:block;overflow:visible"
+                     preserveAspectRatio="none"></svg>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- ═══════════════ FOOD MODAL ═══════════════ -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <div class="modal-hd">
+            <span class="modal-title" id="modalTitle">Adaugă aliment · Mic dejun</span>
+            <button class="modal-close" onclick="closeModal()">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+            </button>
+        </div>
+        <div class="modal-search-wrap">
+            <span class="modal-search-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <input class="modal-search" type="text" placeholder="Caută aliment (ex: pui, orez, banană…)"
+                   id="foodSearch" oninput="filterFoods(this.value)" autocomplete="off"/>
+        </div>
+        <div class="modal-results" id="modalResults"></div>
+        <div class="modal-body-pad" id="modalPortionWrap" style="display:none">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px" id="selectedFoodName"></div>
+            <div class="modal-portion">
+                <label>Cantitate (grame)</label>
+                <input type="number" id="portionInput" value="100" min="1" max="2000" oninput="updatePreview()"/>
+            </div>
+            <div class="modal-macros-preview">
+                <div class="mmp-item"><div class="mmp-n" id="pvKcal" style="color:var(--blue)">0</div><div class="mmp-l">Calorii</div></div>
+                <div class="mmp-item"><div class="mmp-n" id="pvP" style="color:#0066CC">0g</div><div class="mmp-l">Proteine</div></div>
+                <div class="mmp-item"><div class="mmp-n" id="pvC" style="color:#30D158">0g</div><div class="mmp-l">Carbohidrați</div></div>
+                <div class="mmp-item"><div class="mmp-n" id="pvF" style="color:#FF9F0A">0g</div><div class="mmp-l">Grăsimi</div></div>
+            </div>
+            <div style="display:flex;gap:9px">
+                <button class="btn-sec" onclick="backToSearch()" style="flex:0 0 auto">← Înapoi</button>
+                <button class="btn-prim" style="flex:1;justify-content:center" onclick="confirmAddFood()">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="2 8 6 12 14 4"/></svg>
+                    Adaugă aliment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ TOASTS ═══════════════ -->
+<div class="toast-wrap" id="tw">
+    <div class="toast" id="toast-food">
+        <div class="t-ico t-green">✅</div>
+        <div class="t-info"><div class="t-title" id="toast-food-title">Aliment adăugat!</div><div class="t-msg" id="toast-food-msg">Totalul caloric s-a actualizat.</div><div class="t-bar"><div class="t-bar-fill" style="background:#30D158"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-food')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-notif">
+        <div class="t-ico t-blue">🔔</div>
+        <div class="t-info"><div class="t-title">2 notificări noi</div><div class="t-msg">Comanda ta este în tranzit · Quiz nou disponibil</div><div class="t-bar"><div class="t-bar-fill" style="background:#0A84FF"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-notif')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-pdf">
+        <div class="t-ico t-blue">📄</div>
+        <div class="t-info"><div class="t-title">Raport generat!</div><div class="t-msg">Raportul PDF este gata de descărcare.</div><div class="t-bar"><div class="t-bar-fill" style="background:#0066CC"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-pdf')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-weight">
+        <div class="t-ico t-green">⚖️</div>
+        <div class="t-info"><div class="t-title" id="tw-title">Greutate înregistrată!</div><div class="t-msg" id="tw-msg">Valoarea a fost salvată în jurnal.</div><div class="t-bar"><div class="t-bar-fill" style="background:#30D158"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-weight')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-bmr">
+        <div class="t-ico t-blue">🎯</div>
+        <div class="t-info"><div class="t-title">Obiective actualizate!</div><div class="t-msg">Ținta calorică și macro-nutrienții au fost salvați.</div><div class="t-bar"><div class="t-bar-fill" style="background:#0A84FF"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-bmr')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /* ═══════════════════════════════════════
+      DATE DIN THYMELEAF (injectate server-side)
+   ═══════════════════════════════════════ */
+    const weightData     = /*[[${weightJson}]]*/ [78.6];
+    const calsData       = /*[[${calsJson}]]*/   [2100];
+    const CALORIC_TARGET = /*[[${caloricTarget}]]*/ 2200;
+    const DAILY_STEPS    = /*[[${dailySteps}]]*/ 8000;
+    const CURRENT_STEPS  = 7432;
+
+    /* ═══════════════════════════════════════
+       SIDEBAR TOGGLE
+    ═══════════════════════════════════════ */
+    const sb=document.getElementById('sb');
+    const sbArr=document.getElementById('sbArr');
+    const mainEl=document.getElementById('main');
+    const topbar=document.getElementById('topbar');
+    let sbOpen=true;
+    document.getElementById('sbToggle').addEventListener('click',()=>{
+        sbOpen=!sbOpen;
+        sb.classList.toggle('closed',!sbOpen);
+        mainEl.classList.toggle('sb-closed',!sbOpen);
+        topbar.classList.toggle('sb-closed',!sbOpen);
+        sbArr.style.transform=sbOpen?'':'rotate(180deg)';
+    });
+
+    /* ═══════════════════════════════════════
+       DATE NAVIGATION (ACTUALIZATĂ PENTRU PARAMETRUL DATE DIN URL)
+    ═══════════════════════════════════════ */
+    const days=['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+    const months=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'];
+
+    // Citim data din URL sau folosim ziua de azi
+    const urlParams = new URLSearchParams(window.location.search);
+    let dateParam = urlParams.get('date');
+    let curDate = new Date(); // default azi
+
+    if (dateParam) {
+        // format: YYYY-MM-DD
+        const parts = dateParam.split('-');
+        // Luna in JS incepe de la 0, deci parts[1] - 1
+        curDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function updateDateLabel() {
+        const dl = document.getElementById('dateLabel');
+        const today = new Date();
+        const isToday = today.toDateString() === curDate.toDateString();
+
+        dl.textContent = (isToday ? 'Astăzi, ' : days[curDate.getDay()] + ', ')
+            + curDate.getDate() + ' ' + months[curDate.getMonth()] + ' ' + curDate.getFullYear();
+    }
+
+    function changeDate(d){
+        curDate.setDate(curDate.getDate() + d);
+        const year = curDate.getFullYear();
+        const month = String(curDate.getMonth() + 1).padStart(2, '0');
+        const day = String(curDate.getDate()).padStart(2, '0');
+
+        // Redirecționare spre același controller, dar cu alt parametru de timp
+        window.location.href = '/tracking?date=' + year + '-' + month + '-' + day;
+    }
+
+    // Inițializare etichetă la load
+    updateDateLabel();
+
+    /* ═══════════════════════════════════════
+       BMR FORM
+    ═══════════════════════════════════════ */
+    function setActivity(btn, factor) {
+        document.getElementById('hiddenActivity').value = factor;
+        btn.closest('div').querySelectorAll('.goal-chip').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    function setGoalChip(btn, goalCode) {
+        document.getElementById('hiddenGoal').value = goalCode;
+        btn.closest('.goal-chips').querySelectorAll('.goal-chip').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    /* ═══════════════════════════════════════
+       EXERCISE TOGGLE
+    ═══════════════════════════════════════ */
+    function toggleDone(btn) {
+        const card = btn.closest('.ex-card');
+        const isDone = card.classList.toggle('done');
+        btn.innerHTML = isDone
+            ? '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="2 8 6 12 14 4"/></svg> Refă'
+            : '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="2 8 6 12 14 4"/></svg> Terminat';
+        if (isDone) {
+            document.getElementById('toast-food-title').textContent = '✅ Exercițiu finalizat!';
+            document.getElementById('toast-food-msg').textContent   = 'Continuă planul!';
+            showToast('food');
+        }
+    }
+
+    /* ═══════════════════════════════════════
+       FOOD DATABASE + MODAL
+    ═══════════════════════════════════════ */
+    const foods=[
+        {id:1,name:'Piept de pui (grătar)',icon:'🍗',cat:'Proteine',per100:{kcal:165,p:31,c:0,f:3.6}},
+        {id:2,name:'Orez brun (fiert)',icon:'🍚',cat:'Cereale',per100:{kcal:112,p:2.6,c:23.5,f:0.9}},
+        {id:3,name:'Fulgi de ovăz',icon:'🥣',cat:'Cereale',per100:{kcal:389,p:16.9,c:66,f:6.9}},
+        {id:4,name:'Banană',icon:'🍌',cat:'Fructe',per100:{kcal:89,p:1.1,c:23,f:0.3}},
+        {id:5,name:'Ou fiert',icon:'🥚',cat:'Proteine',per100:{kcal:155,p:13,c:1.1,f:11}},
+        {id:6,name:'Somon la cuptor',icon:'🐟',cat:'Proteine',per100:{kcal:206,p:20,c:0,f:13}},
+        {id:7,name:'Broccoli la aburi',icon:'🥦',cat:'Legume',per100:{kcal:35,p:2.4,c:7,f:0.4}},
+        {id:8,name:'Unt de arahide',icon:'🥜',cat:'Grăsimi sănătoase',per100:{kcal:588,p:25,c:20,f:50}},
+        {id:9,name:'Avocado',icon:'🥑',cat:'Grăsimi sănătoase',per100:{kcal:160,p:2,c:9,f:15}},
+        {id:10,name:'Iaurt grecesc 0%',icon:'🥛',cat:'Lactate',per100:{kcal:57,p:10,c:3.6,f:0.4}},
+        {id:11,name:'Paste integrale (fierte)',icon:'🍝',cat:'Cereale',per100:{kcal:174,p:7.5,c:33,f:1.4}},
+        {id:12,name:'Ton în apă',icon:'🐠',cat:'Proteine',per100:{kcal:116,p:26,c:0,f:1}},
+        {id:13,name:'Migdale',icon:'🌰',cat:'Grăsimi sănătoase',per100:{kcal:579,p:21,c:22,f:50}},
+        {id:14,name:'Căpșuni',icon:'🍓',cat:'Fructe',per100:{kcal:32,p:0.7,c:7.7,f:0.3}},
+        {id:15,name:'Whey Protein (pudră)',icon:'💪',cat:'Suplimente',per100:{kcal:400,p:80,c:6,f:5}},
+        {id:16,name:'Cartof copt',icon:'🥔',cat:'Legume',per100:{kcal:97,p:2,c:23,f:0.1}},
+        {id:17,name:'Spanac proaspăt',icon:'🥬',cat:'Legume',per100:{kcal:23,p:2.9,c:3.6,f:0.4}},
+        {id:18,name:'Morcovi',icon:'🥕',cat:'Legume',per100:{kcal:41,p:0.9,c:10,f:0.2}},
+    ];
+
+    let currentMeal='breakfast',selectedFood=null;
+    function openModal(meal){
+        currentMeal=meal;
+        const labels={breakfast:'Mic dejun',lunch:'Prânz',snack:'Gustare',dinner:'Cină'};
+        document.getElementById('modalTitle').textContent='Adaugă aliment · '+labels[meal];
+        document.getElementById('foodSearch').value='';
+        document.getElementById('modalPortionWrap').style.display='none';
+        document.getElementById('modalResults').style.display='block';
+        document.querySelector('.modal-search-wrap').style.display='block';
+        filterFoods('');
+        document.getElementById('modalBg').classList.add('open');
+        setTimeout(()=>document.getElementById('foodSearch').focus(),100);
+    }
+    function closeModal(){document.getElementById('modalBg').classList.remove('open')}
+    function filterFoods(q){
+        const res=document.getElementById('modalResults');
+        const filtered=q.trim()===''?foods:foods.filter(f=>
+            f.name.toLowerCase().includes(q.toLowerCase())||
+            f.cat.toLowerCase().includes(q.toLowerCase()));
+        if(!filtered.length){
+            res.innerHTML='<div style="text-align:center;padding:28px;color:var(--text-3);font-size:13px">Niciun aliment găsit</div>';
+            return;
+        }
+        res.innerHTML=filtered.map(f=>`
+    <div class="food-result" onclick="selectFood(${f.id})">
+        <div class="food-res-ico" style="background:var(--off)">${f.icon}</div>
+        <div class="food-res-info">
+            <div class="food-res-nm">${f.name}</div>
+            <div class="food-res-det">${f.cat} · per 100g: ${f.per100.kcal} kcal · P:${f.per100.p}g · C:${f.per100.c}g · G:${f.per100.f}g</div>
+        </div>
+        <span class="food-res-kcal">${f.per100.kcal}</span>
+        <button class="food-res-add">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+        </button>
+    </div>`).join('');
+    }
+    function selectFood(id){
+        selectedFood=foods.find(f=>f.id===id);
+        document.getElementById('selectedFoodName').textContent=selectedFood.icon+' '+selectedFood.name;
+        document.getElementById('portionInput').value=100;
+        document.getElementById('modalResults').style.display='none';
+        document.getElementById('modalPortionWrap').style.display='block';
+        document.querySelector('.modal-search-wrap').style.display='none';
+        updatePreview();
+    }
+    function backToSearch(){
+        selectedFood=null;
+        document.getElementById('modalResults').style.display='block';
+        document.getElementById('modalPortionWrap').style.display='none';
+        document.querySelector('.modal-search-wrap').style.display='block';
+    }
+    function updatePreview(){
+        if(!selectedFood)return;
+        const g=parseFloat(document.getElementById('portionInput').value)||100;
+        const m=selectedFood.per100;
+        const f=v=>Math.round(v*g/100*10)/10;
+        document.getElementById('pvKcal').textContent=f(m.kcal);
+        document.getElementById('pvP').textContent=f(m.p)+'g';
+        document.getElementById('pvC').textContent=f(m.c)+'g';
+        document.getElementById('pvF').textContent=f(m.f)+'g';
+    }
+    function confirmAddFood(){
+        if(!selectedFood)return;
+        const g=parseFloat(document.getElementById('portionInput').value)||100;
+        const m=selectedFood.per100;
+        const f=v=>Math.round(v*g/100*10)/10;
+        const kcal=f(m.kcal);
+        const foodsEl=document.getElementById('foods-'+currentMeal);
+        const mealColors={breakfast:'#FF9F0A',lunch:'#0066CC',snack:'#BF5AF2',dinner:'#30D158'};
+        const row=document.createElement('div');
+        row.className='mc-food-item';
+        row.innerHTML=`
+    <div class="mc-food-ico" style="background:${mealColors[currentMeal]}"></div>
+    <div class="mc-food-info">
+        <div class="mc-food-nm">${selectedFood.icon} ${selectedFood.name} (${g}g)</div>
+        <div class="mc-food-macros">P: ${f(m.p)}g · C: ${f(m.c)}g · G: ${f(m.f)}g</div>
+    </div>
+    <span class="mc-food-kcal">${kcal}</span>
+    <button class="mc-food-del" onclick="deleteFood(this)" data-tt="Șterge">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+    </button>`;
+        foodsEl.insertBefore(row, foodsEl.lastElementChild);
+        updateMealKcal(currentMeal);
+        closeModal();
+        document.getElementById('toast-food-title').textContent=selectedFood.icon+' '+selectedFood.name+' adăugat!';
+        document.getElementById('toast-food-msg').textContent=kcal+' kcal · P:'+f(m.p)+'g C:'+f(m.c)+'g G:'+f(m.f)+'g';
+        showToast('food');
+    }
+    function deleteFood(btn){
+        const row=btn.closest('.mc-food-item');
+        const meal=row.closest('[id^="foods-"]').id.replace('foods-','');
+        row.style.opacity='0';row.style.transform='translateX(-8px)';row.style.transition='all .2s ease';
+        setTimeout(()=>{row.remove();updateMealKcal(meal)},200);
+    }
+    function updateMealKcal(meal){
+        const items=document.querySelectorAll('#foods-'+meal+' .mc-food-kcal');
+        const total=Array.from(items).reduce((s,el)=>s+parseFloat(el.textContent||0),0);
+        document.getElementById('kcal-'+meal).textContent=Math.round(total)+' kcal';
+    }
+
+    /* ═══════════════════════════════════════
+       WATER TRACKER
+    ═══════════════════════════════════════ */
+    const waterGoalEl = document.getElementById('waterGlassTotal');
+    const WATER_GOAL  = waterGoalEl ? parseInt(waterGoalEl.textContent) || 11 : 11;
+    let waterCount = 0;
+
+    function renderWater(){
+        const wrap=document.getElementById('waterGlasses');
+        wrap.innerHTML='';
+        for(let i=0;i<WATER_GOAL;i++){
+            const filled=i<waterCount;
+            const div=document.createElement('div');
+            div.className='wglass';
+            div.setAttribute('data-tt','Pahar '+(i+1));
+            div.onclick=()=>{waterCount=i<waterCount?i:i+1;renderWater()};
+            div.innerHTML=`<svg viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="2" width="36" height="50" rx="6"
+              fill="${filled?'#EAF3FF':'#F5F5F7'}"
+              stroke="${filled?'#0066CC':'#EBEBED'}" stroke-width="2"/>
+        ${filled?`<rect x="6" y="14" width="32" height="36" rx="4" fill="url(#wg${i})"/>
+        <defs><linearGradient id="wg${i}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5AC8FA" stop-opacity=".7"/>
+            <stop offset="1" stop-color="#0066CC" stop-opacity=".85"/>
+        </linearGradient></defs>`:''}
+        <text x="22" y="10" text-anchor="middle" font-size="7"
+              fill="${filled?'#0066CC':'#86868B'}" font-family="DM Sans">${i+1}</text>
+    </svg>`;
+            wrap.appendChild(div);
+        }
+        const liters=(waterCount*.25).toFixed(1);
+        const pct=Math.round(waterCount/WATER_GOAL*100);
+        document.getElementById('waterLiters').textContent=liters;
+        document.getElementById('waterGlassCount').textContent=waterCount;
+        const bw=document.getElementById('barWater');
+        if(bw) bw.style.width=pct+'%';
+        document.getElementById('waterBar').style.width=pct+'%';
+        document.getElementById('waterChip').textContent=pct+'%';
+    }
+    function addGlass(){if(waterCount<WATER_GOAL){waterCount++;renderWater()}}
+    function removeGlass(){if(waterCount>0){waterCount--;renderWater()}}
+    function resetWater(){waterCount=0;renderWater()}
+    renderWater();
+
+    /* ═══════════════════════════════════════
+       WEIGHT LOG
+    ═══════════════════════════════════════ */
+    const recentWeights = weightData.slice(-5).reverse();
+    function renderWeightLog(){
+        const mn=Math.min(...recentWeights)-.2, mx=Math.max(...recentWeights)+.2;
+        const labels=['Azi','Ieri','Alaltăieri','3 zile','4 zile'];
+        document.getElementById('weightLog').innerHTML=recentWeights.map((w,i)=>{
+            const prev=i<recentWeights.length-1?recentWeights[i+1]:w;
+            const diff=+(w-prev).toFixed(1);
+            const cls=diff<0?'diff-dn':diff>0?'diff-up':'diff-eq';
+            const sign=diff>0?'+':'';
+            const pct=((w-mn)/(mx-mn)*100).toFixed(0);
+            return `<div class="wl-item">
+        <div class="wl-date">${labels[i]}</div>
+        <div class="wl-bar-wrap"><div class="wl-bar" style="width:${pct}%"></div></div>
+        <div class="wl-val">${w} kg</div>
+        <div class="wl-diff ${cls}">${i===recentWeights.length-1?'—':sign+diff+' kg'}</div>
+    </div>`;
+        }).join('');
+    }
+    renderWeightLog();
+
+    function addWeight(){
+        const inp=document.getElementById('newWeight');
+        const val=parseFloat(inp.value);
+        if(!val||val<30||val>300){
+            inp.style.borderColor='var(--red)';
+            setTimeout(()=>inp.style.borderColor='',1200);
+            return;
+        }
+        inp.style.borderColor='';inp.value='';
+        document.getElementById('tw-title').textContent='Greutate înregistrată: '+val+' kg';
+        document.getElementById('tw-msg').textContent='Valoarea a fost salvată în jurnalul de astăzi.';
+        showToast('weight');
+    }
+
+    /* ═══════════════════════════════════════
+       WEIGHT CHART — date din DB via Thymeleaf
+    ═══════════════════════════════════════ */
+    (function(){
+        const data = weightData;
+        if (!data || data.length === 0) return;
+        const svg=document.getElementById('wChart');
+        const W=700,H=140,pad={t:12,b:24,l:5,r:5};
+        const mn=Math.min(...data)-.3, mx=Math.max(...data)+.3;
+        const xs=i=>(i/(Math.max(data.length-1,1)))*(W-pad.l-pad.r)+pad.l;
+        const ys=v=>pad.t+(1-(v-mn)/(mx-mn))*(H-pad.t-pad.b);
+
+        // Grid lines
+        const gridVals = [mn+0.1, (mn+mx)/2, mx-0.1];
+        gridVals.forEach(v=>{
+            const y=ys(v);
+            const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+            l.setAttribute('x1',pad.l);l.setAttribute('x2',W-pad.r);
+            l.setAttribute('y1',y);l.setAttribute('y2',y);
+            l.setAttribute('stroke','#EBEBED');l.setAttribute('stroke-width','1');
+            svg.appendChild(l);
+        });
+
+        // Gradient fill
+        const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+        const g1=document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+        g1.id='wag';g1.setAttribute('x1','0');g1.setAttribute('x2','0');
+        g1.setAttribute('y1','0');g1.setAttribute('y2','1');
+        [{offset:'0',op:'0.18'},{offset:'1',op:'0'}].forEach(({offset,op})=>{
+            const s=document.createElementNS('http://www.w3.org/2000/svg','stop');
+            s.setAttribute('offset',offset);s.setAttribute('stop-color','#0066CC');
+            s.setAttribute('stop-opacity',op);g1.appendChild(s);
+        });
+        defs.appendChild(g1);svg.appendChild(defs);
+
+        // Area
+        let ap=`M${xs(0)},${H-pad.b}`;
+        data.forEach((_,i)=>ap+=` L${xs(i)},${ys(data[i])}`);
+        ap+=` L${xs(data.length-1)},${H-pad.b} Z`;
+        const area=document.createElementNS('http://www.w3.org/2000/svg','path');
+        area.setAttribute('d',ap);area.setAttribute('fill','url(#wag)');svg.appendChild(area);
+
+        // Moving average
+        const avg=data.map((_,i)=>{
+            const s=data.slice(Math.max(0,i-4),i+1);
+            return s.reduce((a,b)=>a+b,0)/s.length;
+        });
+        const avgLine=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+        avgLine.setAttribute('points',avg.map((_,i)=>`${xs(i)},${ys(avg[i])}`).join(' '));
+        avgLine.setAttribute('fill','none');avgLine.setAttribute('stroke','#30D158');
+        avgLine.setAttribute('stroke-width','1.5');avgLine.setAttribute('stroke-dasharray','4,3');
+        avgLine.setAttribute('opacity','0.6');svg.appendChild(avgLine);
+
+        // Line
+        const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+        line.setAttribute('points',data.map((_,i)=>`${xs(i)},${ys(data[i])}`).join(' '));
+        line.setAttribute('fill','none');line.setAttribute('stroke','#0066CC');
+        line.setAttribute('stroke-width','2');line.setAttribute('stroke-linecap','round');
+        svg.appendChild(line);
+
+        // Dots + tooltip
+        const tip=document.getElementById('wctTip');
+        const cont=svg.closest('.thirty-chart-wrap');
+        data.forEach((w,i)=>{
+            const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+            dot.setAttribute('cx',xs(i));dot.setAttribute('cy',ys(w));
+            dot.setAttribute('r','3');dot.setAttribute('fill','#0066CC');
+            dot.setAttribute('stroke','#fff');dot.setAttribute('stroke-width','2');
+            dot.style.cursor='pointer';
+            dot.addEventListener('mouseenter',function(e){
+                this.setAttribute('r','5');
+                const r=cont.getBoundingClientRect();
+                tip.textContent='Zi '+(i+1)+': '+w.toFixed(1)+' kg';
+                tip.style.opacity='1';
+                tip.style.left=(e.clientX-r.left-50)+'px';
+                tip.style.top=(e.clientY-r.top-36)+'px';
+            });
+            dot.addEventListener('mouseleave',function(){
+                this.setAttribute('r','3');tip.style.opacity='0';
+            });
+            svg.appendChild(dot);
+        });
+
+        // X labels
+        [0,5,10,15,20,25,29].filter(i=>i<data.length).forEach(i=>{
+            const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+            t.setAttribute('x',xs(i));t.setAttribute('y',H-5);
+            t.setAttribute('font-size','8');t.setAttribute('fill','#86868B');
+            t.setAttribute('text-anchor','middle');t.textContent='Z'+(i+1);
+            svg.appendChild(t);
+        });
+    })();
+
+    /* ═══════════════════════════════════════
+       CALORIE CHART — date din DB via Thymeleaf
+    ═══════════════════════════════════════ */
+    (function(){
+        const cals   = calsData;
+        const target = CALORIC_TARGET;
+        if (!cals || cals.length === 0) return;
+
+        const svg=document.getElementById('calChart');
+        const W=700,H=150,pad={t:12,b:24,l:5,r:5};
+        const bw=(W-pad.l-pad.r)/cals.length*.75;
+        const gap=(W-pad.l-pad.r)/cals.length;
+        const maxV=Math.max(...cals,target)*1.05;
+
+        // Linia target
+        const ty=pad.t+(1-target/maxV)*(H-pad.t-pad.b);
+        const tl=document.createElementNS('http://www.w3.org/2000/svg','line');
+        tl.setAttribute('x1',pad.l);tl.setAttribute('x2',W-pad.r);
+        tl.setAttribute('y1',ty);tl.setAttribute('y2',ty);
+        tl.setAttribute('stroke','#FF9F0A');tl.setAttribute('stroke-width','1.5');
+        tl.setAttribute('stroke-dasharray','6,3');svg.appendChild(tl);
+
+        const tt=document.createElementNS('http://www.w3.org/2000/svg','text');
+        tt.setAttribute('x',W-pad.r-2);tt.setAttribute('y',ty-3);
+        tt.setAttribute('font-size','8');tt.setAttribute('fill','#FF9F0A');
+        tt.setAttribute('text-anchor','end');
+        tt.textContent='Țintă: '+target.toLocaleString('ro-RO');svg.appendChild(tt);
+
+        // Bare + tooltip
+        const tip=document.getElementById('calTip');
+        const cont=svg.closest('.thirty-chart-wrap');
+        cals.forEach((c,i)=>{
+            if (c === 0) return; // ziua fără date → skip
+            const x=pad.l+i*gap+(gap-bw)/2;
+            const barH=(c/maxV)*(H-pad.t-pad.b);
+            const y=H-pad.b-barH;
+            const over=c>target;
+
+            const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+            rect.setAttribute('x',x);rect.setAttribute('y',y);
+            rect.setAttribute('width',bw);rect.setAttribute('height',barH);
+            rect.setAttribute('rx','3');
+            rect.setAttribute('fill',over?'rgba(255,59,48,.25)':'rgba(0,102,204,.25)');
+            rect.style.cursor='pointer';rect.style.transition='fill .15s';
+            rect.addEventListener('mouseenter',function(e){
+                this.setAttribute('fill',over?'rgba(255,59,48,.5)':'rgba(0,102,204,.5)');
+                const r=cont.getBoundingClientRect();
+                tip.textContent='Zi '+(i+1)+': '+c.toLocaleString('ro-RO')+' kcal';
+                tip.style.opacity='1';
+                tip.style.left=(e.clientX-r.left-55)+'px';
+                tip.style.top=(e.clientY-r.top-36)+'px';
+            });
+            rect.addEventListener('mouseleave',function(){
+                this.setAttribute('fill',over?'rgba(255,59,48,.25)':'rgba(0,102,204,.25)');
+                tip.style.opacity='0';
+            });
+            svg.appendChild(rect);
+
+            // Accent line pe top
+            const acc=document.createElementNS('http://www.w3.org/2000/svg','rect');
+            acc.setAttribute('x',x);acc.setAttribute('y',y);
+            acc.setAttribute('width',bw);acc.setAttribute('height','2');acc.setAttribute('rx','1');
+            acc.setAttribute('fill',over?'#FF3B30':'#0066CC');svg.appendChild(acc);
+        });
+
+        // X labels
+        [0,5,10,15,20,25,29].filter(i=>i<cals.length).forEach(i=>{
+            const x=pad.l+i*gap+gap/2;
+            const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+            t.setAttribute('x',x);t.setAttribute('y',H-5);
+            t.setAttribute('font-size','8');t.setAttribute('fill','#86868B');
+            t.setAttribute('text-anchor','middle');t.textContent='Z'+(i+1);
+            svg.appendChild(t);
+        });
+    })();
+
+    /* ═══════════════════════════════════════
+       TOASTS
+    ═══════════════════════════════════════ */
+    const toastMap={food:'toast-food',notif:'toast-notif',pdf:'toast-pdf',
+        weight:'toast-weight',bmr:'toast-bmr'};
+    function showToast(type){
+        const id=toastMap[type];if(!id)return;
+        const el=document.getElementById(id);
+        el.classList.remove('show','hide');void el.offsetWidth;el.classList.add('show');
+        setTimeout(()=>hideToast(id),4500);
+    }
+    function hideToast(id){
+        const el=document.getElementById(id);
+        el.classList.add('hide');
+        setTimeout(()=>el.classList.remove('show','hide'),420);
+    }
+
+    /* ═══════════════════════════════════════
+       ANIMAȚII LA LOAD
+    ═══════════════════════════════════════ */
+    window.addEventListener('load', () => {
+
+        // ── Bare macro (data-w setat din Thymeleaf) ──
+        document.querySelectorAll('.ss-fill[data-w]').forEach(el => {
+            const target = el.getAttribute('data-w');
+            setTimeout(() => el.style.width = target, 200);
+        });
+
+        // ── Bara pași
+        const stepsBar = document.getElementById('stepsBar');
+        if (stepsBar) {
+            const pctSteps = Math.min(Math.round(CURRENT_STEPS / DAILY_STEPS * 100), 100);
+            setTimeout(() => stepsBar.style.width = pctSteps + '%', 350);
+            const stepsRight = document.querySelector('.steps-hd-r');
+            if (stepsRight) {
+                stepsRight.textContent = CURRENT_STEPS.toLocaleString('ro-RO') + ' / ' + DAILY_STEPS.toLocaleString('ro-RO') + ' pași';
+            }
+        }
+
+        // ── restul animațiilor
+        document.querySelectorAll('.goal-fill, .wl-bar').forEach(el => {
+            const w = el.style.width;
+            el.style.width = '0';
+            requestAnimationFrame(() => setTimeout(() => el.style.width = w, 200));
+        });
+
+        setTimeout(() => showToast('notif'), 900);
+    });
+
+    filterFoods('');
+</script>
+</body>
+</html>

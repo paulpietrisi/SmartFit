@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <!-- CSRF meta tags pentru request-urile AJAX -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>SmartFit – Profil</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+            --blue-light:#EAF3FF;--blue-mid:rgba(0,102,204,.07);
+            --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;--gold:#FFD60A;
+            --white:#fff;--off:#F5F5F7;--off2:#EBEBED;
+            --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+            --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.10);
+            --sh-sm:0 2px 10px rgba(0,0,0,.06);--sh-md:0 6px 28px rgba(0,0,0,.09);--sh-lg:0 16px 56px rgba(0,0,0,.13);
+            --r:12px;--r-md:16px;--r-lg:22px;--sw:248px;--th:58px;--tr:.22s ease;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--tr);overflow:hidden}
+        .sidebar.closed{width:64px}
+        .sb-logo{display:flex;align-items:center;gap:11px;padding:14px 18px;height:var(--th);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;overflow:hidden}
+        .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-logo-icon svg{width:17px;height:17px}
+        .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--tr)}
+        .sidebar.closed .sb-logo-text{opacity:0}
+        .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+        .sb-nav::-webkit-scrollbar{width:0}
+        .sb-sec{margin-bottom:22px}
+        .sb-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;white-space:nowrap;transition:opacity var(--tr)}
+        .sidebar.closed .sb-lbl{opacity:0}
+        .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--tr),color var(--tr);position:relative}
+        .sb-item:hover{background:var(--off);color:var(--text)}
+        .sb-item.active{background:var(--blue-light);color:var(--blue)}
+        .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-item.active .sb-ico{background:rgba(0,102,204,.12)}
+        .sb-txt{opacity:1;transition:opacity var(--tr)}
+        .sidebar.closed .sb-txt{opacity:0}
+        .sb-badge{font-size:10px;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;border-radius:100px;margin-left:auto;flex-shrink:0;transition:opacity var(--tr)}
+        .sidebar.closed .sb-badge{opacity:0}
+        .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+        .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);border-radius:8px;transition:color var(--tr)}
+        .sb-toggle:hover{color:var(--text);background:var(--off)}
+        .sidebar.closed .sb-toggle{justify-content:center}
+        .sidebar.closed .sb-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:400}
+        .sidebar.closed .sb-item:hover::after{opacity:1}
+        .topbar{position:fixed;top:0;left:var(--sw);right:0;height:var(--th);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--tr)}
+        .topbar.sb-closed{left:64px}
+        .tb-search{flex:1;max-width:380px;position:relative}
+        .tb-search input{width:100%;padding:9px 14px 9px 38px;background:var(--off);border:1.5px solid transparent;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr)}
+        .tb-search input::placeholder{color:var(--text-3)}
+        .tb-search input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .tb-sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+        .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+        .tb-icon-btn{width:36px;height:36px;border-radius:100px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:background var(--tr)}
+        .tb-icon-btn:hover{background:var(--off)}
+        .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;border:2px solid rgba(255,255,255,.9);box-shadow:var(--sh-sm)}
+        .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+        .main{margin-left:var(--sw);margin-top:var(--th);padding:28px;transition:margin-left var(--tr);min-height:calc(100vh - var(--th))}
+        .main.sb-closed{margin-left:64px}
+        .btn-prim{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--tr),transform .15s;box-shadow:0 3px 14px rgba(0,102,204,.25);white-space:nowrap}
+        .btn-prim:hover{background:#0055AA;transform:translateY(-1px)}
+        .btn-sec{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all var(--tr);box-shadow:var(--sh-sm);white-space:nowrap}
+        .btn-sec:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+        .btn-ghost{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;transition:opacity var(--tr)}
+        .btn-ghost:hover{opacity:.65}
+        .card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden}
+        .card-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+        .card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+        .card-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+        .card-body{padding:16px 20px 20px}
+        .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px}
+        .ch-blue{background:var(--blue-light);color:var(--blue)}
+        .ch-green{background:rgba(48,209,88,.1);color:#1A8A3A}
+        .ch-gold{background:rgba(255,214,10,.15);color:#9A7500}
+        .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+        .ph-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+        .page-hd h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.6px;margin-bottom:4px}
+        .page-hd p{font-size:14px;color:var(--text-2);font-weight:300}
+        .ph-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+        .profile-hero{background:linear-gradient(140deg,var(--blue-deep) 0%,#0B3870 55%,#0C4A92 100%);border-radius:var(--r-lg);padding:0;margin-bottom:24px;position:relative;overflow:hidden}
+        .ph-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);background-size:26px 26px;pointer-events:none}
+        .ph-blob{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none}
+        .phb1{width:350px;height:350px;background:#0A84FF;opacity:.12;top:-120px;right:-80px}
+        .phb2{width:200px;height:200px;background:var(--gold);opacity:.07;bottom:-60px;left:30%}
+        .ph-inner{padding:32px 36px;position:relative;z-index:1;display:flex;align-items:center;gap:28px}
+        .ph-avatar-wrap{position:relative;flex-shrink:0}
+        .ph-avatar{width:90px;height:90px;border-radius:100px;background:linear-gradient(135deg,#5AC8FA,var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#fff;border:3px solid rgba(255,255,255,.25);box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer;transition:transform var(--tr)}
+        .ph-avatar:hover{transform:scale(1.04)}
+        .ph-avatar-edit{position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:#fff;border-radius:100px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;box-shadow:var(--sh-sm);border:2px solid rgba(255,255,255,.8)}
+        .ph-info{flex:1}
+        .ph-name{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:5px}
+        .ph-email{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:12px}
+        .ph-chips{display:flex;gap:8px;flex-wrap:wrap}
+        .ph-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.8);font-size:11px;font-weight:500;padding:5px 11px;border-radius:100px}
+        .ph-stats{display:flex;gap:0;border-left:1px solid rgba(255,255,255,.08);flex-shrink:0}
+        .ph-stat{padding:20px 28px;text-align:center;border-right:1px solid rgba(255,255,255,.08)}
+        .ph-stat:last-child{border-right:none}
+        .ph-stat-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;line-height:1;margin-bottom:4px}
+        .ph-stat-l{font-size:11px;color:rgba(255,255,255,.4)}
+        .profile-layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+        .form-section{margin-bottom:22px}
+        .fs-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:.5px solid var(--border)}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+        .field label{display:block;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-2);margin-bottom:7px}
+        .field input,.field select,.field textarea{width:100%;padding:10px 13px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr)}
+        .field input:focus,.field select:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .field textarea{resize:vertical;min-height:70px}
+        .field input:focus,.field textarea:focus{border-color:var(--blue)}
+        .goal-btns{display:flex;gap:8px;flex-wrap:wrap}
+        .goal-btn{padding:8px 16px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border-2);background:#fff;color:var(--text-2);transition:all var(--tr)}
+        .goal-btn:hover{border-color:var(--blue);color:var(--blue)}
+        .goal-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+        .bmi-display{background:linear-gradient(135deg,var(--blue-light),#D8EEFF);border-radius:var(--r-md);padding:20px;text-align:center;margin-bottom:14px}
+        .bmi-n{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--blue);line-height:1;margin-bottom:4px}
+        .bmi-cat{font-size:13px;font-weight:600;color:var(--blue-deep);margin-bottom:10px}
+        .bmi-bar{height:10px;background:linear-gradient(90deg,var(--blue-3) 0%,var(--green) 30%,var(--orange) 70%,var(--red) 100%);border-radius:5px;position:relative;margin-bottom:4px}
+        .bmi-marker{position:absolute;top:-4px;width:18px;height:18px;background:#fff;border:3px solid var(--blue);border-radius:50%;transform:translateX(-50%);box-shadow:var(--sh-sm);transition:left .8s cubic-bezier(.22,1,.36,1)}
+        .bmi-scale{display:flex;justify-content:space-between;font-size:9px;color:var(--text-3)}
+        .stats-list{display:flex;flex-direction:column;gap:10px}
+        .stat-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--off);border-radius:var(--r);transition:background var(--tr)}
+        .stat-row:hover{background:var(--blue-light)}
+        .stat-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+        .stat-info{flex:1}
+        .stat-lbl{font-size:11px;color:var(--text-3)}
+        .stat-val{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text)}
+        .stat-unit{font-size:11px;color:var(--text-3);font-family:'DM Sans',sans-serif;font-weight:400}
+        .timeline{display:flex;flex-direction:column;gap:0}
+        .tl-item{display:flex;gap:14px;padding:12px 0;border-bottom:.5px solid var(--border)}
+        .tl-item:last-child{border-bottom:none}
+        .tl-dot{width:32px;height:32px;border-radius:100px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px}
+        .tl-info{flex:1}
+        .tl-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+        .tl-sub{font-size:11px;color:var(--text-3)}
+        .tl-time{font-size:10px;color:var(--text-3);flex-shrink:0;margin-top:4px}
+        .badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        .badge-item{text-align:center;padding:12px 8px;border-radius:var(--r);border:.5px solid var(--border);transition:background var(--tr),transform var(--tr);cursor:default}
+        .badge-item:hover{background:var(--blue-light);transform:translateY(-2px)}
+        .badge-item.locked{opacity:.4;filter:grayscale(.5)}
+        .badge-ico{font-size:28px;margin-bottom:6px}
+        .badge-name{font-size:10px;font-weight:600;color:var(--text)}
+        .badge-desc{font-size:9px;color:var(--text-3);margin-top:2px}
+        .photo-area{border:2px dashed var(--border-2);border-radius:var(--r-md);padding:28px;text-align:center;cursor:pointer;transition:border-color var(--tr),background var(--tr)}
+        .photo-area:hover{border-color:var(--blue);background:var(--blue-light)}
+        .photo-area-ico{font-size:32px;margin-bottom:10px}
+        .photo-area-t{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:4px}
+        .photo-area-s{font-size:11px;color:var(--text-3)}
+        .nt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .nt-item{background:var(--off);border-radius:var(--r);padding:12px 14px}
+        .nt-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;font-weight:600}
+        .nt-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
+        .nt-bar{height:4px;background:var(--off2);border-radius:2px;overflow:hidden}
+        .nt-fill{height:100%;border-radius:2px;transition:width 1.3s cubic-bezier(.22,1,.36,1)}
+        [data-tt]{position:relative}
+        [data-tt]::after{content:attr(data-tt);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:500}
+        [data-tt]:hover::after{opacity:1}
+        .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+        .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:13px 15px;min-width:280px;max-width:340px;pointer-events:all;transform:translateX(110%);transition:transform .38s cubic-bezier(.22,1,.36,1),opacity .38s;opacity:0}
+        .toast.show{transform:none;opacity:1}
+        .toast.hide{transform:translateX(110%);opacity:0}
+        .t-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .tg{background:rgba(48,209,88,.1)}.tb2{background:var(--blue-light)}
+        .t-info{flex:1}
+        .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+        .t-msg{font-size:11px;color:var(--text-3);line-height:1.45}
+        .t-close{background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px}
+        .t-bar{height:2px;background:var(--off2);border-radius:1px;overflow:hidden;margin-top:8px}
+        .t-bf{height:100%;border-radius:1px;animation:tbar 4s linear forwards}
+        @keyframes tbar{from{width:100%}to{width:0}}
+        /* ----- CSS Upload Foto Nou ----- */
+        .photo-upload-area {
+            position: relative; border: 2px dashed var(--border-2); border-radius: var(--r-md);
+            min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: border-color var(--tr), background var(--tr);
+            overflow: hidden; background-color: var(--off);
+        }
+        .photo-upload-area:hover { border-color: var(--blue); background: var(--blue-light); }
+        .photo-upload-area.drag-over { border-color: var(--blue); background: var(--blue-light); }
+
+        .upload-icon { color: var(--text-2); margin-bottom: 8px; }
+        .upload-title { font-size: 13px; font-weight: 600; color: var(--text); margin: 0 0 4px; }
+        .upload-subtitle { font-size: 11px; color: var(--text-3); margin: 0; }
+        #uploadPlaceholder { text-align: center; padding: 24px; }
+
+        .upload-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; font-size: 13px; font-weight: 500; gap: 8px; opacity: 0; transition: opacity var(--tr);
+        }
+        .photo-upload-area:hover .upload-overlay { opacity: 1; }
+
+        .photo-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+        .upload-status { margin-top: 10px; padding: 10px 14px; border-radius: var(--r); font-size: 12px; font-weight: 600; }
+        .upload-status.success { background: rgba(48,209,88,.15); color: #1A8A3A; }
+        .upload-status.error   { background: #fee2e2; color: #991b1b; }
+        .upload-status.loading { background: var(--blue-light); color: var(--blue); }
+        @media(max-width:1100px){.profile-layout{grid-template-columns:1fr}.ph-stats{display:none}.form-grid{grid-template-columns:1fr}}
+        @media(max-width:900px){.topbar{left:0!important}.sidebar{transform:translateX(-100%);width:var(--sw)!important}.main{margin-left:0!important;padding:16px}.ph-inner{flex-direction:column;align-items:flex-start;gap:18px}.badge-grid{grid-template-columns:repeat(3,1fr)}}
+        @media(max-width:560px){.badge-grid{grid-template-columns:1fr 1fr}.nt-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar" id="sb">
+    <a href="/home" class="sb-logo">
+        <div class="sb-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round">
+                <rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/>
+                <rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+            </svg>
+        </div>
+        <span class="sb-logo-text">SmartFit</span>
+    </a>
+    <nav class="sb-nav">
+        <div class="sb-sec">
+            <div class="sb-lbl">Principal</div>
+            <a class="sb-item" href="/dashboard" data-tip="Dashboard">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                <span class="sb-txt">Dashboard</span>
+            </a>
+            <a class="sb-item" href="/tracking" data-tip="Tracking">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+                <span class="sb-txt">Tracking</span>
+            </a>
+            <a class="sb-item" href="/jurnal-alimentar" data-tip="Jurnal">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+                <span class="sb-txt">Jurnal alimentar</span>
+            </a>
+        </div>
+        <div class="sb-sec">
+            <div class="sb-lbl">Servicii</div>
+            <a class="sb-item" href="/magazin" data-tip="Magazin">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+                <span class="sb-txt">Magazin</span><span class="sb-badge">3</span>
+            </a>
+            <a class="sb-item" href="/academie" data-tip="Academie">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                <span class="sb-txt">Academie</span><span class="sb-badge">2</span>
+            </a>
+            <a class="sb-item" href="/rapoarte" data-tip="Rapoarte">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+                <span class="sb-txt">Rapoarte &amp; PDF</span>
+            </a>
+        </div>
+        <div class="sb-sec">
+            <div class="sb-lbl">Cont</div>
+            <a class="sb-item active" href="/profil" data-tip="Profil">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span class="sb-txt">Profil</span>
+            </a>
+            <a class="sb-item" href="/setari" data-tip="Setări">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+                <span class="sb-txt">Setări</span>
+            </a>
+        </div>
+    </nav>
+    <div class="sb-bottom">
+        <button class="sb-toggle" id="sbToggle">
+            <svg id="sbArr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+    </div>
+</aside>
+
+<!-- ==================== TOPBAR ==================== -->
+<header class="topbar" id="topbar">
+    <div class="tb-search">
+        <span class="tb-sico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input type="search" placeholder="Caută în profil…"/>
+    </div>
+    <div class="tb-right">
+        <button class="btn-prim" style="font-size:12px;padding:8px 16px" onclick="saveProfile()">Salvează modificările</button>
+        <div style="width:1px;height:20px;background:var(--border-2);margin:0 4px"></div>
+        <!-- Prenumele utilizatorului din baza de date -->
+        <span class="tb-name" th:text="${user.firstName}">Alex</span>
+        <!-- Initiala prenumelui ca avatar -->
+        <div class="tb-avatar"
+             th:style="${profilePhoto != null} ? 'background-image: url(' + ${profilePhoto} + '); background-size: cover; background-position: center;' : ''"
+             th:text="${profilePhoto != null ? '' : userInitials}">A</div>
+    </div>
+</header>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main" id="main">
+
+    <div class="page-hd">
+        <div>
+            <div class="ph-tag">06 — Profil</div>
+            <h1>Profilul meu</h1>
+            <p>Date antropometrice, obiective și preferințe personale.</p>
+        </div>
+        <div class="ph-right">
+            <!-- Fit Points din baza de date -->
+            <span class="chip ch-gold">🥈 Silver · <span th:text="${user.fitPoints}">0</span> XP</span>
+            <span class="chip ch-green">🔥 12 zile streak</span>
+        </div>
+    </div>
+
+    <!-- ===== PROFILE HERO ===== -->
+    <div class="profile-hero">
+        <div class="ph-blob phb1"></div>
+        <div class="ph-blob phb2"></div>
+        <div class="ph-dots"></div>
+        <div class="ph-inner">
+            <div class="ph-avatar-wrap">
+                <!-- Avatar cu initiala prenumelui -->
+                <div class="ph-avatar" onclick="showToast('toast-photo')"
+                     th:style="${profilePhoto != null} ? 'background-image: url(' + ${profilePhoto} + '); background-size: cover; background-position: center;' : ''"
+                     th:text="${profilePhoto != null ? '' : userInitials}">A</div>
+                <div class="ph-avatar-edit" onclick="showToast('toast-photo')">📷</div>
+            </div>
+            <div class="ph-info">
+                <!-- Nume complet din baza de date -->
+                <div class="ph-name">
+                    <span th:text="${user.firstName}">Alexandru</span>
+                    <span th:text="${user.lastName}">Ionescu</span>
+                </div>
+                <!-- Email din baza de date -->
+                <div class="ph-email" th:text="${user.email}">alex@email.ro</div>
+                <div class="ph-chips">
+                    <!-- Varsta calculata din data nasterii -->
+                    <span class="ph-chip">🎂 <span th:text="${userAge}">22</span> ani</span>
+                    <!-- Genul din baza de date -->
+                    <span class="ph-chip">👨 <span th:text="${genderLabel}">Masculin</span></span>
+                    <!-- Obiectivul din baza de date -->
+                    <span class="ph-chip">💪 <span th:text="${goalLabel}">Masă musculară</span></span>
+                    <span class="ph-chip">📅 Înregistrat: Ian 2025</span>
+                </div>
+            </div>
+            <div class="ph-stats">
+                <!-- Greutatea din baza de date -->
+                <div class="ph-stat">
+                    <div class="ph-stat-n" th:text="${user.weightKg}">78.6</div>
+                    <div class="ph-stat-l">Greutate kg</div>
+                </div>
+                <!-- Inaltimea din baza de date -->
+                <div class="ph-stat">
+                    <div class="ph-stat-n" th:text="${user.heightCm}">178</div>
+                    <div class="ph-stat-l">Înălțime cm</div>
+                </div>
+                <!-- IMC calculat in controller -->
+                <div class="ph-stat">
+                    <div class="ph-stat-n" th:text="${bmi}">24.8</div>
+                    <div class="ph-stat-l">IMC</div>
+                </div>
+                <!-- BMR calculat in controller -->
+                <div class="ph-stat">
+                    <div class="ph-stat-n" th:text="${bmr}">1880</div>
+                    <div class="ph-stat-l">BMR kcal</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== LAYOUT ===== -->
+    <div class="profile-layout">
+
+        <!-- ========== COLOANA STANGA: FORMULARE ========== -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+            <!-- DATE PERSONALE -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Date personale</div>
+                        <div class="card-sub">Informații de bază despre contul tău</div>
+                    </div>
+                    <button class="btn-ghost">Editează</button>
+                </div>
+                <div class="card-body">
+                    <div class="form-section">
+                        <div class="fs-title">Informații generale</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>Prenume</label>
+                                <!-- th:value leaga campul de obiectul user -->
+                                <input type="text" th:value="${user.firstName}" name="firstName"/>
+                            </div>
+                            <div class="field">
+                                <label>Nume</label>
+                                <input type="text" th:value="${user.lastName}" name="lastName"/>
+                            </div>
+                            <div class="field">
+                                <label>Email</label>
+                                <input type="email" th:value="${user.email}" name="email"/>
+                            </div>
+                            <div class="field">
+                                <label>Telefon</label>
+                                <input type="tel" value="+40 721 234 567" name="phone"/>
+                            </div>
+                            <div class="field">
+                                <label>Data nașterii</label>
+                                <!-- th:value formateaza LocalDate in formatul corect pentru input[type=date] -->
+                                <input type="date" th:value="${user.birthDate}" name="birthDate"/>
+                            </div>
+                            <div class="field">
+                                <label>Sex</label>
+                                <select name="gender">
+                                    <!-- th:selected selecteaza optiunea corecta in functie de valoarea din DB -->
+                                    <option value="M" th:selected="${user.gender == 'M'}">Masculin</option>
+                                    <option value="F" th:selected="${user.gender == 'F'}">Feminin</option>
+                                    <option value="">Prefer să nu specific</option>
+                                </select>
+                            </div>
+                            <div class="field" style="grid-column:1/-1">
+                                <label>Adresă livrare comenzi</label>
+                                <input type="text" value="Str. Mihai Eminescu 12, Galați, 800001" name="address"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATE ANTROPOMETRICE -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Date antropometrice</div>
+                        <div class="card-sub">Folosite pentru calculul BMR și obiective</div>
+                    </div>
+                    <span class="chip ch-blue">Auto-calculat</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-section">
+                        <div class="fs-title">Compoziție corporală actuală</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>Greutate (kg)</label>
+                                <input type="number" id="weight"
+                                       th:value="${user.weightKg}"
+                                       name="weightKg"
+                                       step="0.1"
+                                       oninput="recalcBMI()"/>
+                            </div>
+                            <div class="field">
+                                <label>Înălțime (cm)</label>
+                                <input type="number" id="height"
+                                       th:value="${user.heightCm}"
+                                       name="heightCm"
+                                       oninput="recalcBMI()"/>
+                            </div>
+                            <div class="field">
+                                <label>Nivel activitate fizică</label>
+                                <select id="activity" onchange="recalcBMI()" name="activity">
+                                    <option>Sedentar</option>
+                                    <option selected>Ușor activ (1-3 zile/săpt)</option>
+                                    <option>Moderat activ (3-5 zile)</option>
+                                    <option>Foarte activ (6-7 zile)</option>
+                                    <option>Extrem activ</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Procent masă grasă (%)</label>
+                                <input type="number" value="14" step="0.5" min="3" max="50" name="bodyFatPct"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OBIECTIV PRINCIPAL — active se seteaza in functie de goal din DB -->
+                    <div class="form-section">
+                        <div class="fs-title">Obiectiv principal</div>
+                        <div class="goal-btns">
+                            <button type="button"
+                                    class="goal-btn"
+                                    th:classappend="${user.goal == 'LOSE_WEIGHT'} ? ' active' : ''"
+                                    onclick="setGoal(this)">
+                                🔻 Slăbire
+                            </button>
+                            <button type="button"
+                                    class="goal-btn"
+                                    th:classappend="${user.goal == 'GAIN_MUSCLE'} ? ' active' : ''"
+                                    onclick="setGoal(this)">
+                                💪 Masă musculară
+                            </button>
+                            <button type="button"
+                                    class="goal-btn"
+                                    th:classappend="${user.goal == 'MAINTAIN'} ? ' active' : ''"
+                                    onclick="setGoal(this)">
+                                ⚖️ Menținere
+                            </button>
+                            <button type="button" class="goal-btn" onclick="setGoal(this)">🏃 Rezistență</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="fs-title">Greutate țintă</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>Greutate țintă (kg)</label>
+                                <input type="number" value="82" step="0.5" name="targetWeight"/>
+                            </div>
+                            <div class="field">
+                                <label>Termen estimat</label>
+                                <select name="targetDeadline">
+                                    <option>3 luni</option>
+                                    <option selected>6 luni</option>
+                                    <option>1 an</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREFERINTE ALIMENTARE -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Preferințe alimentare</div>
+                        <div class="card-sub">Alergii, intoleranțe și stilul alimentar</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-section">
+                        <div class="fs-title">Stil alimentar</div>
+                        <div class="goal-btns">
+                            <button type="button" class="goal-btn active" onclick="setGoal(this)">🍗 Omnivor</button>
+                            <button type="button" class="goal-btn" onclick="setGoal(this)">🌱 Vegetarian</button>
+                            <button type="button" class="goal-btn" onclick="setGoal(this)">🌿 Vegan</button>
+                            <button type="button" class="goal-btn" onclick="setGoal(this)">🥑 Keto</button>
+                            <button type="button" class="goal-btn" onclick="setGoal(this)">🐟 Pescetarian</button>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="fs-title">Alergii / Intoleranțe</div>
+                        <div class="goal-btns">
+                            <button type="button" class="goal-btn" onclick="this.classList.toggle('active')">🥛 Lactoză</button>
+                            <button type="button" class="goal-btn" onclick="this.classList.toggle('active')">🌾 Gluten</button>
+                            <button type="button" class="goal-btn" onclick="this.classList.toggle('active')">🥜 Arahide</button>
+                            <button type="button" class="goal-btn" onclick="this.classList.toggle('active')">🐟 Pește</button>
+                            <button type="button" class="goal-btn" onclick="this.classList.toggle('active')">🥚 Ouă</button>
+                            <button type="button" class="goal-btn" onclick="this.classList.toggle('active')">🌰 Nuci</button>
+                        </div>
+                    </div>
+                    <div class="form-section" style="margin-bottom:0">
+                        <div class="fs-title">Notițe medic / mențiuni speciale</div>
+                        <div class="field">
+                            <textarea name="medicalNotes" placeholder="Ex: tratament medicamentos, condiții medicale relevante pentru nutriție…"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOTOGRAFIE PROFIL NOUA -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Fotografie profil</div>
+                        <div class="card-sub">Imagine personalizată pentru contul tău</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="photoUploadArea" class="photo-upload-area"
+                         th:style="${profilePhoto != null} ? 'background-image: url(' + ${profilePhoto} + '); background-size: cover; background-position: center;' : ''">
+                        <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" style="display:none"/>
+
+                        <div id="uploadPlaceholder" th:style="${profilePhoto != null} ? 'display:none' : ''">
+                            <div class="upload-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                    <circle cx="12" cy="13" r="4"/>
+                                </svg>
+                            </div>
+                            <p class="upload-title">Apasă pentru a încărca fotografia</p>
+                            <p class="upload-subtitle">JPG, PNG, WebP · Max 5MB · Recomandare: 400×400px</p>
+                        </div>
+
+                        <div id="uploadOverlay" class="upload-overlay" th:style="${profilePhoto != null} ? '' : 'display:none'">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            <span>Schimbă fotografia</span>
+                        </div>
+                    </div>
+
+                    <div id="uploadStatus" class="upload-status" style="display:none"></div>
+                </div>
+            </div>
+
+            <!-- BUTOANE GENERALE PROFIL -->
+            <div class="photo-actions">
+                <!-- Butonul de Ștergere adăugat nou -->
+                <button th:if="${profilePhoto != null}" type="button" id="btnDeletePhoto" class="btn-sec" style="color: var(--red); border-color: var(--red); background: rgba(255,59,48,0.05);">
+                    Șterge poza de profil
+                </button>
+
+                <button type="button" class="btn-sec" onclick="cancelPhotoChange()">Anulează modificările</button>
+                <button type="button" class="btn-prim" onclick="saveProfile()">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="2 8 6 12 14 4"/></svg>
+                    Salvează profilul
+                </button>
+            </div>
+
+        <!-- ========== COLOANA DREAPTA: STATS + BADGES ========== -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+            <!-- BMI CARD — valorile vin din controller via model -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Indicele de Masă Corporală</div>
+                        <div class="card-sub">Calculat automat din date</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="bmi-display">
+                        <!-- bmi, bmiCategory si bmiMarkerPct vin din model (calculate in controller) -->
+                        <div class="bmi-n" id="bmiVal" th:text="${bmi}">24.8</div>
+                        <div class="bmi-cat" id="bmiCat" th:text="${bmiCategory}">Normal (Greutate sănătoasă)</div>
+                        <div class="bmi-bar">
+                            <!-- th:style injecteaza pozitia marker-ului calculata in controller -->
+                            <div class="bmi-marker" id="bmiMarker"
+                                 th:style="'left:' + ${bmiMarkerPct} + '%'"></div>
+                        </div>
+                        <div class="bmi-scale">
+                            <span>Subp.</span><span>Normal</span><span>Suprap.</span><span>Obezit.</span>
+                        </div>
+                    </div>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <div class="stat-ico" style="background:#EAF3FF">🔥</div>
+                            <div class="stat-info">
+                                <div class="stat-lbl">BMR (Rata Metabolică Bazală)</div>
+                                <div class="stat-val" id="bmrVal">
+                                    <span th:text="${bmr}">1880</span>
+                                    <span class="stat-unit">kcal/zi</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-row">
+                            <div class="stat-ico" style="background:#E8F8EF">⚡</div>
+                            <div class="stat-info">
+                                <div class="stat-lbl">TDEE (cu activitate)</div>
+                                <div class="stat-val" id="tdeeVal">
+                                    <span th:text="${tdee}">2585</span>
+                                    <span class="stat-unit">kcal/zi</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-row">
+                            <div class="stat-ico" style="background:#FFF0E8">🎯</div>
+                            <div class="stat-info">
+                                <div class="stat-lbl">Țintă calorică (<span th:text="${goalLabel}">obiectiv</span>)</div>
+                                <div class="stat-val" style="color:var(--blue)">
+                                    <span th:text="${caloricTarget}">2885</span>
+                                    <span class="stat-unit">kcal/zi</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TINTE NUTRITIONALE -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Ținte nutriționale</div>
+                        <div class="card-sub">Obiective zilnice calculate</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="nt-grid">
+                        <div class="nt-item">
+                            <div class="nt-lbl">Calorii</div>
+                            <div class="nt-val" style="color:var(--blue)" th:text="${caloricTarget}">2885</div>
+                            <div class="nt-bar"><div class="nt-fill" style="width:100%;background:var(--blue)"></div></div>
+                        </div>
+                        <div class="nt-item">
+                            <div class="nt-lbl">Proteine</div>
+                            <div class="nt-val" style="color:var(--blue-2)" th:text="${proteinTarget + 'g'}">180g</div>
+                            <div class="nt-bar"><div class="nt-fill" style="width:80%;background:var(--blue-2)"></div></div>
+                        </div>
+                        <div class="nt-item">
+                            <div class="nt-lbl">Carbohidrați</div>
+                            <div class="nt-val" style="color:var(--green)" th:text="${carbTarget + 'g'}">320g</div>
+                            <div class="nt-bar"><div class="nt-fill" style="width:88%;background:var(--green)"></div></div>
+                        </div>
+                        <div class="nt-item">
+                            <div class="nt-lbl">Grăsimi</div>
+                            <div class="nt-val" style="color:var(--orange)" th:text="${fatTarget + 'g'}">90g</div>
+                            <div class="nt-bar"><div class="nt-fill" style="width:72%;background:var(--orange)"></div></div>
+                        </div>
+                        <div class="nt-item">
+                            <div class="nt-lbl">Fibre</div>
+                            <div class="nt-val" style="color:var(--purple)">30g</div>
+                            <div class="nt-bar"><div class="nt-fill" style="width:93%;background:var(--purple)"></div></div>
+                        </div>
+                        <div class="nt-item">
+                            <div class="nt-lbl">Apă</div>
+                            <div class="nt-val" style="color:var(--blue-3)">3.0L</div>
+                            <div class="nt-bar"><div class="nt-fill" style="width:70%;background:var(--blue-3)"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BADGES -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Badge-uri câștigate</div>
+                        <div class="card-sub">4 din 8 deblocate</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="badge-grid">
+                        <div class="badge-item" data-tt="Nutriționist – 10 cursuri"><div class="badge-ico">🧬</div><div class="badge-name">Nutriționist</div><div class="badge-desc">10 cursuri</div></div>
+                        <div class="badge-item" data-tt="Devotat – 12 zile streak"><div class="badge-ico">🔥</div><div class="badge-name">Devotat</div><div class="badge-desc">12 zile</div></div>
+                        <div class="badge-item" data-tt="Rapid – scor 95%"><div class="badge-ico">⚡</div><div class="badge-name">Rapid</div><div class="badge-desc">Scor 95%</div></div>
+                        <div class="badge-item" data-tt="Silver – nivel Silver"><div class="badge-ico">🥈</div><div class="badge-name">Silver</div><div class="badge-desc">Nivel Silver</div></div>
+                        <div class="badge-item locked" data-tt="Gold – necesită 1,500 XP"><div class="badge-ico">🏆</div><div class="badge-name">Gold</div><div class="badge-desc">1,500 XP</div></div>
+                        <div class="badge-item locked" data-tt="Diamond – finalizează 10 cursuri"><div class="badge-ico">💎</div><div class="badge-name">Diamond</div><div class="badge-desc">10 cursuri</div></div>
+                        <div class="badge-item locked" data-tt="Perfecționist – 100% quiz"><div class="badge-ico">🎯</div><div class="badge-name">Perfecț.</div><div class="badge-desc">100% quiz</div></div>
+                        <div class="badge-item locked" data-tt="Lider – locul 1 clasament"><div class="badge-ico">👑</div><div class="badge-name">Lider</div><div class="badge-desc">Locul #1</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVITATE RECENTA -->
+            <div class="card">
+                <div class="card-hd">
+                    <div>
+                        <div class="card-title">Activitate recentă</div>
+                        <div class="card-sub">Ultimele acțiuni</div>
+                    </div>
+                    <button class="btn-ghost">Toate →</button>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="tl-item"><div class="tl-dot" style="background:#EAF3FF">🍽</div><div class="tl-info"><div class="tl-title">Masă înregistrată – Cină</div><div class="tl-sub">Ton + avocado · 420 kcal</div></div><div class="tl-time">19:30</div></div>
+                        <div class="tl-item"><div class="tl-dot" style="background:#F0E8FF">🎓</div><div class="tl-info"><div class="tl-title">Lecție completată</div><div class="tl-sub">Vitamina D3 · +15 XP</div></div><div class="tl-time">17:00</div></div>
+                        <div class="tl-item"><div class="tl-dot" style="background:#E8F8EF">🛒</div><div class="tl-info"><div class="tl-title">Comandă plasată #SF-042</div><div class="tl-sub">Whey Protein 2kg · 149 lei</div></div><div class="tl-time">Ieri</div></div>
+                        <div class="tl-item"><div class="tl-dot" style="background:#FFF0E8">⚖️</div><div class="tl-info"><div class="tl-title">Greutate înregistrată</div><div class="tl-sub" th:text="${user.weightKg + ' kg'}">78.6 kg</div></div><div class="tl-time">Ieri</div></div>
+                        <div class="tl-item"><div class="tl-dot" style="background:#EAF3FF">🏆</div><div class="tl-info"><div class="tl-title">Quiz finalizat – Macro-uri</div><div class="tl-sub">95% · +120 XP câștigați</div></div><div class="tl-time">25 Apr</div></div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end right panel -->
+    </div><!-- end profile-layout -->
+</main>
+
+<!-- ==================== TOASTS ==================== -->
+<div class="toast-wrap">
+    <div class="toast" id="toast-save">
+        <div class="t-ico tg">✅</div>
+        <div class="t-info">
+            <div class="t-title">Profil salvat cu succes!</div>
+            <div class="t-msg">Toate modificările au fost aplicate.</div>
+            <div class="t-bar"><div class="t-bf" style="background:var(--green)"></div></div>
+        </div>
+        <button class="t-close" onclick="hideToast('toast-save')">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+        </button>
+    </div>
+    <div class="toast" id="toast-photo">
+        <div class="t-ico tb2">📷</div>
+        <div class="t-info">
+            <div class="t-title">Fotografie actualizată!</div>
+            <div class="t-msg">Imaginea de profil a fost schimbată.</div>
+            <div class="t-bar"><div class="t-bf" style="background:var(--blue)"></div></div>
+        </div>
+        <button class="t-close" onclick="hideToast('toast-photo')">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- Script AJAX pentru Upload Foto -->
+<script th:inline="javascript">
+    const csrfToken = [[${_csrf.token}]];
+    const csrfHeader = [[${_csrf.headerName}]];
+    let originalPhotoStyle = null;
+
+    const uploadArea   = document.getElementById('photoUploadArea');
+    const photoInput   = document.getElementById('photoInput');
+    const placeholder  = document.getElementById('uploadPlaceholder');
+    const overlay      = document.getElementById('uploadOverlay');
+    const statusDiv    = document.getElementById('uploadStatus');
+
+    if(uploadArea && photoInput) {
+        uploadArea.addEventListener('click', () => photoInput.click());
+
+        uploadArea.addEventListener('dragover', e => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) handlePhotoUpload(e.dataTransfer.files[0]);
+        });
+
+        photoInput.addEventListener('change', e => {
+            if (e.target.files.length > 0) handlePhotoUpload(e.target.files[0]);
+        });
+    }
+
+    function handlePhotoUpload(file) {
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            showStatus('Format invalid. Acceptat: JPG, PNG, WebP.', 'error');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showStatus('Fișierul depășește limita de 5MB.', 'error');
+            return;
+        }
+
+        // Preview local
+        const reader = new FileReader();
+        reader.onload = e => {
+            originalPhotoStyle = uploadArea.style.backgroundImage;
+            uploadArea.style.backgroundImage = `url(${e.target.result})`;
+            uploadArea.style.backgroundSize = 'cover';
+            uploadArea.style.backgroundPosition = 'center';
+            placeholder.style.display = 'none';
+            overlay.style.display = '';
+        };
+        reader.readAsDataURL(file);
+
+        // Upload AJAX
+        showStatus('Se încarcă...', 'loading');
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        const headers = {};
+        if (csrfHeader && csrfToken) {
+            headers[csrfHeader] = csrfToken;
+        }
+
+        fetch('/profil/upload-foto', {
+            method: 'POST',
+            headers: headers,
+            body: formData
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showStatus(data.error, 'error');
+                } else {
+                    showStatus('✓ Fotografia a fost salvată cu succes!', 'success');
+                    // Arătăm un toast mic in dreapta jos dacă există funcția în scriptul tău vechi
+                    if(typeof showToast === 'function') showToast('toast-photo');
+                    photoInput.value = '';
+
+                    // Actualizăm și avatarul vizual din topbar / card hero (opțional, dar arată bine!)
+                    document.querySelectorAll('.tb-avatar, .ph-avatar').forEach(el => {
+                        el.textContent = '';
+                        el.style.backgroundImage = `url(${data.url})`;
+                        el.style.backgroundSize = 'cover';
+                        el.style.backgroundPosition = 'center';
+                    });
+                }
+            })
+            .catch(() => showStatus('Eroare la comunicarea cu serverul.', 'error'));
+    }
+
+    function cancelPhotoChange() {
+        if (originalPhotoStyle !== null) {
+            uploadArea.style.backgroundImage = originalPhotoStyle;
+            if (!originalPhotoStyle || originalPhotoStyle === 'none') {
+                placeholder.style.display = '';
+                overlay.style.display = 'none';
+            }
+            originalPhotoStyle = null;
+        }
+        statusDiv.style.display = 'none';
+        if(photoInput) photoInput.value = '';
+    }
+
+    function showStatus(msg, type) {
+        statusDiv.textContent = msg;
+        statusDiv.className = 'upload-status ' + type;
+        statusDiv.style.display = 'block';
+        if (type === 'success') {
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 3500);
+        }
+    }
+
+    // Codul de Ștergere adăugat nou (folosește deja variabilele de CSRF de sus)
+    document.getElementById('btnDeletePhoto')?.addEventListener('click', function() {
+        if (confirm('Sigur dorești să ștergi poza actuală și să revii la inițialele numelui?')) {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (csrfHeader && csrfToken) {
+                headers[csrfHeader] = csrfToken;
+            }
+
+            fetch('/profil/sterge-foto', {
+                method: 'POST',
+                headers: headers
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success === "true") {
+                        location.reload(); // Reîncărcăm pagina pentru a afișa inițialele în avatar
+                    } else {
+                        alert('Eroare la ștergerea pozei.');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Eroare la comunicarea cu serverul.');
+                });
+        }
+    });
+</script>
+
+<script>
+    // Sidebar toggle
+    const sb = document.getElementById('sb');
+    const main = document.getElementById('main');
+    const topbar = document.getElementById('topbar');
+    const sbArr = document.getElementById('sbArr');
+    let sbOpen = true;
+
+    document.getElementById('sbToggle').addEventListener('click', () => {
+        sbOpen = !sbOpen;
+        sb.classList.toggle('closed', !sbOpen);
+        main.classList.toggle('sb-closed', !sbOpen);
+        topbar.classList.toggle('sb-closed', !sbOpen);
+        sbArr.style.transform = sbOpen ? '' : 'rotate(180deg)';
+    });
+
+    // Selectare obiectiv (un singur buton activ per grup)
+    function setGoal(btn) {
+        const group = btn.closest('.goal-btns');
+        group.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    // Salvare profil → toast
+    function saveProfile() { showToast('toast-save'); }
+
+    // Toast show/hide
+    function showToast(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('show', 'hide');
+        void el.offsetWidth; // reflow pentru a reseta animatia
+        el.classList.add('show');
+        setTimeout(() => hideToast(id), 4500);
+    }
+    function hideToast(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('hide');
+        setTimeout(() => el.classList.remove('show', 'hide'), 420);
+    }
+
+    // Recalculare BMI/BMR/TDEE live la modificarea campurilor
+    // Valorile initiale vin din Thymeleaf via atribute data-*
+    function recalcBMI() {
+        const w = parseFloat(document.getElementById('weight').value) || 70;
+        const h = parseFloat(document.getElementById('height').value) || 170;
+        if (h === 0) return;
+
+        const bmi = +(w / Math.pow(h / 100, 2)).toFixed(1);
+        document.getElementById('bmiVal').textContent = bmi;
+
+        let cat = '', pct = 40;
+        if (bmi < 18.5)      { cat = 'Subponderal';                   pct = 10; }
+        else if (bmi < 25)   { cat = 'Normal (Greutate sănătoasă)';   pct = Math.round((bmi - 18.5) / 6.5 * 30 + 10); }
+        else if (bmi < 30)   { cat = 'Supraponderal';                  pct = Math.round((bmi - 25) / 5 * 20 + 40); }
+        else                 { cat = 'Obezitate';                      pct = Math.round(Math.min(95, (bmi - 30) / 10 * 25 + 60)); }
+
+        document.getElementById('bmiCat').textContent = cat;
+        document.getElementById('bmiMarker').style.left = pct + '%';
+
+        // BMR Mifflin-St Jeor (sex masculin implicit — de extins cu gen real)
+        const bmr = Math.round(10 * w + 6.25 * h - 5 * 22 + 5);
+        document.getElementById('bmrVal').innerHTML = bmr.toLocaleString('ro-RO') + ' <span class="stat-unit">kcal/zi</span>';
+
+        const actMap = {
+            'Sedentar': 1.2,
+            'Ușor activ (1-3 zile/săpt)': 1.375,
+            'Moderat activ (3-5 zile)': 1.55,
+            'Foarte activ (6-7 zile)': 1.725,
+            'Extrem activ': 1.9
+        };
+        const af = actMap[document.getElementById('activity').value] || 1.375;
+        const tdee = Math.round(bmr * af);
+        document.getElementById('tdeeVal').innerHTML = tdee.toLocaleString('ro-RO') + ' <span class="stat-unit">kcal/zi</span>';
+    }
+
+    // Animatie bare nutritionale la load
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.nt-fill').forEach(el => {
+            const w = el.style.width;
+            el.style.width = '0';
+            requestAnimationFrame(() => setTimeout(() => el.style.width = w, 100));
+        });
+    });
+</script>
+</body>
+</html>

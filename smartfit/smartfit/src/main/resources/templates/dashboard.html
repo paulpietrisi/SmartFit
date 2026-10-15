@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SmartFit – Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+            --blue-light:#EAF3FF;--blue-mid:rgba(0,102,204,.08);
+            --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;
+            --white:#FFFFFF;--off:#F5F5F7;--off2:#EBEBED;
+            --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+            --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.1);
+            --sh-sm:0 2px 10px rgba(0,0,0,.06);--sh-md:0 6px 28px rgba(0,0,0,.08);--sh-lg:0 16px 56px rgba(0,0,0,.12);
+            --r:12px;--r-md:16px;--r-lg:22px;--sidebar-w:248px;--topbar-h:58px;--transition:.22s ease;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+        .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--transition)}
+        .topbar.sb-closed{left:64px}
+        .tb-search{flex:1;max-width:340px;position:relative}
+        .tb-search input{width:100%;padding:9px 14px 9px 38px;background:var(--off);border:1.5px solid transparent;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--transition),background var(--transition)}
+        .tb-search input::placeholder{color:var(--text-3)}
+        .tb-search input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .tb-search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+        .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+        .tb-icon-btn{position:relative;width:36px;height:36px;border-radius:100px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--transition);color:var(--text-2)}
+        .tb-icon-btn:hover{background:var(--off)}
+        .notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid #fff}
+        .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;border:2px solid rgba(255,255,255,.9);box-shadow:var(--sh-sm)}
+        .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--transition);overflow:hidden}
+        .sidebar.closed{width:64px}
+        .sb-logo{display:flex;align-items:center;gap:11px;padding:16px 18px;height:var(--topbar-h);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;overflow:hidden}
+        .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-logo-icon svg{width:17px;height:17px}
+        .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--transition)}
+        .sidebar.closed .sb-logo-text{opacity:0}
+        .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+        .sb-nav::-webkit-scrollbar{width:0}
+        .sb-section{margin-bottom:22px}
+        .sb-section-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;white-space:nowrap;transition:opacity var(--transition)}
+        .sidebar.closed .sb-section-lbl{opacity:0}
+        .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--transition),color var(--transition);position:relative}
+        .sb-item:hover{background:var(--off);color:var(--text)}
+        .sb-item.active{background:var(--blue-light);color:var(--blue)}
+        .sb-item.active .sb-ico{background:rgba(0,102,204,.12)}
+        .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-item-txt{opacity:1;transition:opacity var(--transition)}
+        .sidebar.closed .sb-item-txt{opacity:0}
+        .sb-badge{font-size:10px;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;border-radius:100px;margin-left:auto;flex-shrink:0;transition:opacity var(--transition)}
+        .sidebar.closed .sb-badge{opacity:0}
+        .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+        .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);transition:color var(--transition);border-radius:8px}
+        .sb-toggle:hover{color:var(--text);background:var(--off)}
+        .sidebar.closed .sb-toggle{justify-content:center}
+        .sidebar.closed .sb-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:400}
+        .sidebar.closed .sb-item:hover::after{opacity:1}
+        .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:28px;transition:margin-left var(--transition);min-height:calc(100vh - var(--topbar-h))}
+        .main.sb-closed{margin-left:64px}
+        .welcome{background:linear-gradient(130deg,var(--blue-deep) 0%,#0B3870 50%,#0C4A92 100%);border-radius:var(--r-lg);padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between}
+        .welcome::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+        .wblob{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none}
+        .wb1{width:320px;height:320px;background:#0A84FF;opacity:.15;top:-120px;right:-80px}
+        .wb2{width:200px;height:200px;background:#5AC8FA;opacity:.1;bottom:-80px;right:200px}
+        .w-left{position:relative;z-index:1}
+        .w-greeting{font-size:12px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.3px;margin-bottom:6px}
+        .w-name{font-family:'Syne',sans-serif;font-size:clamp(22px,2.5vw,30px);font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:8px}
+        .w-sub{font-size:13px;color:rgba(255,255,255,.5);max-width:320px;line-height:1.55;font-weight:300}
+        .w-chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+        .wchip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.8);font-size:11px;font-weight:500;padding:5px 11px;border-radius:100px}
+        .wchip-dot{width:5px;height:5px;border-radius:50%}
+        .w-right{position:relative;z-index:1;flex-shrink:0;text-align:right}
+        .w-streak{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 20px;display:inline-flex;flex-direction:column;align-items:center;gap:4px}
+        .w-streak-n{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#FFD60A;line-height:1}
+        .w-streak-l{font-size:11px;color:rgba(255,255,255,.5)}
+        .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+        .kcard{background:#fff;border-radius:var(--r-md);padding:20px;border:.5px solid var(--border);box-shadow:var(--sh-sm);transition:transform var(--transition),box-shadow var(--transition);cursor:default}
+        .kcard:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
+        .kc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+        .kc-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+        .kci-blue{background:var(--blue-light)}.kci-green{background:rgba(48,209,88,.1)}.kci-orange{background:rgba(255,159,10,.1)}.kci-purple{background:rgba(191,90,242,.1)}
+        .kc-trend{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:100px}
+        .trend-up{background:rgba(48,209,88,.1);color:#1A8A3A}.trend-dn{background:rgba(255,59,48,.1);color:#D93025}.trend-na{background:var(--off);color:var(--text-3)}
+        .kc-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
+        .kc-lbl{font-size:12px;color:var(--text-3);margin-bottom:10px}
+        .kc-prog{height:4px;background:var(--off2);border-radius:2px;overflow:hidden}
+        .kc-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+        .g3{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-bottom:24px}
+        .card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden}
+        .card-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+        .card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+        .card-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+        .card-body{padding:16px 20px 20px}
+        .card-action{font-size:12px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;transition:opacity var(--transition)}
+        .card-action:hover{opacity:.65}
+        .nutr-wrap{display:flex;align-items:center;gap:22px}
+        .donut-wrap{position:relative;flex-shrink:0;width:120px;height:120px}
+        .donut-wrap svg{transform:rotate(-90deg)}
+        .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .donut-n{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);line-height:1}
+        .donut-l{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+        .macros-list{flex:1;display:flex;flex-direction:column;gap:11px}
+        .macro-row{display:flex;flex-direction:column;gap:5px}
+        .macro-top{display:flex;justify-content:space-between;align-items:center}
+        .macro-nm{font-size:12px;color:var(--text-2);font-weight:500}
+        .macro-v{font-size:12px;font-weight:600;color:var(--text)}
+        .macro-bar{height:5px;background:var(--off2);border-radius:3px;overflow:hidden}
+        .macro-fill{height:100%;border-radius:3px;transition:width 1.4s cubic-bezier(.22,1,.36,1)}
+        .meal-list{display:flex;flex-direction:column;gap:0}
+        .meal-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:.5px solid var(--border)}
+        .meal-item:last-child{border-bottom:none}
+        .meal-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+        .meal-info{flex:1;min-width:0}
+        .meal-n{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .meal-d{font-size:10px;color:var(--text-3);margin-top:1px}
+        .meal-kcal{font-size:13px;font-weight:600;color:var(--blue);flex-shrink:0}
+        .add-meal-btn{width:100%;margin-top:12px;padding:9px;background:var(--off);border:1.5px dashed var(--off2);border-radius:var(--r);font-size:12px;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color var(--transition),color var(--transition),background var(--transition);font-family:'DM Sans',sans-serif}
+        .add-meal-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+        .chart-container{padding:4px 0 0;position:relative;overflow:hidden}
+        .chart-svg{width:100%;height:160px;display:block}
+        .chart-tooltip-box{position:absolute;background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:6px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:10}
+        .tbl-wrap{overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:0 0 10px;text-align:left;border-bottom:.5px solid var(--border-2)}
+        td{padding:12px 0;border-bottom:.5px solid var(--border);vertical-align:middle;color:var(--text)}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:rgba(0,102,204,.02)}
+        .tbl-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px}
+        .b-green{background:rgba(48,209,88,.1);color:#1A8A3A}.b-orange{background:rgba(255,159,10,.1);color:#C07000}.b-blue{background:var(--blue-light);color:var(--blue)}
+        .tbl-prod{display:flex;align-items:center;gap:9px}
+        .tbl-prod-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .ac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+        .ac-card{border-radius:var(--r);border:.5px solid var(--border);padding:14px;transition:box-shadow var(--transition),transform var(--transition);cursor:pointer}
+        .ac-card:hover{box-shadow:var(--sh-md);transform:translateY(-2px)}
+        .ac-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+        .ac-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px}
+        .ac-xp{font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:rgba(255,159,10,.12);color:#C07000}
+        .ac-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.35}
+        .ac-meta{font-size:10px;color:var(--text-3);margin-bottom:10px}
+        .ac-prog-bar{height:4px;background:var(--off2);border-radius:2px;overflow:hidden;margin-bottom:5px}
+        .ac-prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-2));border-radius:2px;transition:width 1.5s cubic-bezier(.22,1,.36,1)}
+        .ac-pct{font-size:10px;font-weight:600;color:var(--text-3)}
+        .qs-list{display:flex;flex-direction:column;gap:10px}
+        .qs-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--off);border-radius:var(--r);transition:background var(--transition)}
+        .qs-item:hover{background:var(--blue-light)}
+        .qs-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+        .qs-info{flex:1}
+        .qs-lbl{font-size:11px;color:var(--text-3);margin-bottom:2px}
+        .qs-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
+        .qs-unit{font-size:11px;color:var(--text-3);font-family:'DM Sans',sans-serif;font-weight:400}
+        .qs-bar{width:60px;flex-shrink:0}
+        .qb{height:4px;background:var(--off2);border-radius:2px;overflow:hidden}
+        .qbf{height:100%;border-radius:2px;transition:width 1.4s cubic-bezier(.22,1,.36,1)}
+        .xp-banner{background:linear-gradient(120deg,#0A2540,#0B3870);border-radius:var(--r-md);padding:18px 20px;display:flex;align-items:center;gap:14px;border:.5px solid rgba(255,255,255,.06);margin-bottom:24px}
+        .xp-ico{font-size:28px;flex-shrink:0}
+        .xp-info{flex:1}
+        .xp-top{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}
+        .xp-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#FFD60A;line-height:1}
+        .xp-lbl{font-size:11px;color:rgba(255,255,255,.45)}
+        .xp-bar{height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-bottom:4px}
+        .xp-fill{height:100%;background:linear-gradient(90deg,#FFD60A,#FF9F0A);border-radius:3px;transition:width 1.5s cubic-bezier(.22,1,.36,1)}
+        .xp-next{font-size:10px;color:rgba(255,255,255,.35)}
+        .xp-disc{background:rgba(255,214,10,.15);border:1px solid rgba(255,214,10,.25);border-radius:10px;padding:10px 16px;text-align:center;flex-shrink:0}
+        .xp-disc-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#FFD60A;line-height:1}
+        .xp-disc-l{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px}
+        .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+        .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:14px 16px;min-width:300px;max-width:360px;pointer-events:all;transform:translateX(110%);transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0}
+        .toast.show{transform:none;opacity:1}
+        .toast.hide{transform:translateX(110%);opacity:0}
+        .t-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+        .t-green{background:rgba(48,209,88,.1)}.t-blue{background:var(--blue-light)}.t-orange{background:rgba(255,159,10,.1)}
+        .t-info{flex:1}
+        .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+        .t-msg{font-size:12px;color:var(--text-3);line-height:1.45}
+        .t-close{background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px;flex-shrink:0}
+        .t-bar{height:2px;background:var(--off2);border-radius:1px;overflow:hidden;margin-top:10px}
+        .t-bar-fill{height:100%;border-radius:1px;animation:tbar 4s linear forwards}
+        @keyframes tbar{from{width:100%}to{width:0}}
+        [data-tooltip]{position:relative}
+        [data-tooltip]::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:400;font-family:'DM Sans',sans-serif}
+        [data-tooltip]:hover::after{opacity:1}
+        .sect-lbl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+        .sect-lbl::after{content:'';flex:1;height:.5px;background:var(--border-2)}
+        @media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.ac-grid{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:900px){.g3{grid-template-columns:1fr}.topbar{left:0!important;padding:0 16px}.sidebar{transform:translateX(-100%);width:var(--sidebar-w)!important}.main{margin-left:0!important;padding:16px}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:560px){.kpi-grid{grid-template-columns:1fr}.ac-grid{grid-template-columns:1fr}.welcome{flex-direction:column;gap:16px;align-items:flex-start}}
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sb">
+    <a th:href="@{/home}" class="sb-logo">
+        <div class="sb-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round">
+                <rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/>
+                <rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+            </svg>
+        </div>
+        <span class="sb-logo-text">SmartFit</span>
+    </a>
+    <nav class="sb-nav">
+        <div class="sb-section">
+            <div class="sb-section-lbl">Principal</div>
+            <a class="sb-item active" th:href="@{/dashboard}" data-tip="Dashboard">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                <span class="sb-item-txt">Dashboard</span>
+            </a>
+            <a class="sb-item" th:href="@{/tracking}" data-tip="Tracking">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+                <span class="sb-item-txt">Tracking</span>
+            </a>
+            <a class="sb-item" th:href="@{/jurnal-alimentar}" data-tip="Jurnal">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+                <span class="sb-item-txt">Jurnal alimentar</span>
+            </a>
+        </div>
+        <div class="sb-section">
+            <div class="sb-section-lbl">Servicii</div>
+            <a class="sb-item" th:href="@{/magazin}" data-tip="Magazin">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+                <span class="sb-item-txt">Magazin</span><span class="sb-badge">3</span>
+            </a>
+            <a class="sb-item" th:href="@{/academie}" data-tip="Academie">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                <span class="sb-item-txt">Academie</span><span class="sb-badge">2</span>
+            </a>
+            <a class="sb-item" th:href="@{/rapoarte}" data-tip="Rapoarte">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+                <span class="sb-item-txt">Rapoarte &amp; PDF</span>
+            </a>
+        </div>
+        <div class="sb-section">
+            <div class="sb-section-lbl">Cont</div>
+            <a class="sb-item" th:href="@{/profil}" data-tip="Profil">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span class="sb-item-txt">Profil</span>
+            </a>
+            <a class="sb-item" th:href="@{/setari}" data-tip="Setări">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+                <span class="sb-item-txt">Setări</span>
+            </a>
+            <!-- Logout -->
+            <form th:action="@{/logout}" method="post" style="margin:0">
+                <button type="submit" class="sb-item" style="width:100%;border:none;background:none;text-align:left;cursor:pointer;color:var(--red)" data-tip="Ieșire">
+                    <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span>
+                    <span class="sb-item-txt">Deconectare</span>
+                </button>
+            </form>
+        </div>
+    </nav>
+    <div class="sb-bottom">
+        <button class="sb-toggle" id="sbToggle">
+            <svg id="sbArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+    </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar" id="topbar">
+    <div class="tb-search">
+        <span class="tb-search-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input type="search" placeholder="Caută alimente, produse, cursuri…"/>
+    </div>
+    <div class="tb-right">
+        <button class="tb-icon-btn" data-tooltip="Notificări" onclick="showToast('info')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <span class="notif-dot"></span>
+        </button>
+        <div style="width:1px;height:20px;background:var(--border-2);margin:0 4px"></div>
+        <span class="tb-name" th:text="${user.firstName}">Alex</span>
+        <!-- Initiala din controller (getInitials) -->
+        <div class="tb-avatar" th:text="${userInitials}">A</div>
+    </div>
+</header>
+
+<!-- MAIN -->
+<main class="main" id="main">
+
+    <!-- WELCOME BANNER -->
+    <div class="welcome">
+        <div class="wblob wb1"></div>
+        <div class="wblob wb2"></div>
+        <div class="w-left">
+            <div class="w-greeting" id="wGreeting">Bună, <span th:text="${user.firstName}">Alex</span> 👋</div>
+            <h1 class="w-name">Azi e o zi bună<br>pentru obiectivele tale.</h1>
+            <p class="w-sub">Bine ai revenit! Verifică-ți progresul și continuă spre obiectivul tău.</p>
+            <div class="w-chips">
+                <span class="wchip">
+                    <span class="wchip-dot" style="background:#30D158"></span>
+                    Obiectiv: <span th:text="${goalLabel}">Menținere</span>
+                </span>
+                <span class="wchip">
+                    <span class="wchip-dot" style="background:#FFD60A"></span>
+                    <span th:text="${xpLevel}">Silver</span>
+                </span>
+                <span class="wchip">
+                    <span class="wchip-dot" style="background:#5AC8FA"></span>
+                    <span th:text="${todayFormatted}">01 Ian 2025</span>
+                </span>
+            </div>
+        </div>
+        <div class="w-right">
+            <div class="w-streak">
+                <span style="font-size:22px">🔥</span>
+                <span class="w-streak-n">12</span>
+                <span class="w-streak-l">zile consecutiv</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+        <div class="kcard" data-tooltip="Tinta ta calorica zilnica">
+            <div class="kc-top">
+                <div class="kc-ico kci-blue">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066CC" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
+                </div>
+                <span class="kc-trend trend-up">↑ TDEE</span>
+            </div>
+            <div class="kc-val" th:text="${caloricTarget}">2500</div>
+            <div class="kc-lbl">Calorii țintă / zi</div>
+            <div class="kc-prog"><div class="kc-fill" style="width:100%;background:linear-gradient(90deg,#0066CC,#0A84FF)"></div></div>
+        </div>
+
+        <div class="kcard" data-tooltip="Greutatea inregistrata in profil">
+            <div class="kc-top">
+                <div class="kc-ico kci-purple">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BF5AF2" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18M18 9l-5 5-4-4-3 3"/></svg>
+                </div>
+                <span class="kc-trend trend-na">→ actual</span>
+            </div>
+            <div class="kc-val">
+                <span th:text="${user.weightKg}">78.6</span>
+                <span style="font-size:14px;font-weight:500;color:var(--text-3)">kg</span>
+            </div>
+            <div class="kc-lbl">Greutate curentă</div>
+            <div class="kc-prog"><div class="kc-fill" style="width:62%;background:linear-gradient(90deg,#BF5AF2,#9B59B6)"></div></div>
+        </div>
+
+        <div class="kcard" data-tooltip="Calorii arse in repaus complet (Mifflin-St Jeor)">
+            <div class="kc-top">
+                <div class="kc-ico kci-orange">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+                </div>
+                <span class="kc-trend trend-na">→ BMR</span>
+            </div>
+            <div class="kc-val" th:text="${bmr}">1880</div>
+            <div class="kc-lbl">Metabol. bazal (kcal/zi)</div>
+            <div class="kc-prog"><div class="kc-fill" style="width:78%;background:linear-gradient(90deg,#FF9F0A,#FF6B00)"></div></div>
+        </div>
+
+        <div class="kcard" data-tooltip="Puncte XP acumulate din cursuri si activitate">
+            <div class="kc-top">
+                <div class="kc-ico kci-green">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#30D158" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+                <span class="kc-trend trend-up" th:text="'↑ ' + ${xpLevel}">↑ Silver</span>
+            </div>
+            <div class="kc-val" th:text="${user.fitPoints}">1240</div>
+            <div class="kc-lbl">Puncte XP câștigate</div>
+            <div class="kc-prog">
+                <div class="kc-fill"
+                     th:style="'width:' + ${xpProgressPct} + '%;background:linear-gradient(90deg,#30D158,#34C759)'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- XP BANNER -->
+    <div class="xp-banner">
+        <span class="xp-ico">🏆</span>
+        <div class="xp-info">
+            <div class="xp-top">
+                <span class="xp-n" th:text="${user.fitPoints} + ' XP'">1240 XP</span>
+                <span class="xp-lbl">câștigați total · nivel <span th:text="${xpLevel}">Silver</span></span>
+            </div>
+            <div class="xp-bar">
+                <div class="xp-fill" th:style="'width:' + ${xpProgressPct} + '%'"></div>
+            </div>
+            <div class="xp-next">Încă <span th:text="${xpToNextLevel}">260</span> XP până la nivel <span th:text="${nextLevel}">Gold</span></div>
+        </div>
+        <div class="xp-disc">
+            <div class="xp-disc-v" th:text="${discount} + '%'">12%</div>
+            <div class="xp-disc-l">discount activ<br>în magazin</div>
+        </div>
+    </div>
+
+    <!-- NUTRITIE + STATISTICI -->
+    <div class="sect-lbl">Nutriție azi</div>
+    <div class="g3">
+        <div class="card">
+            <div class="card-hd">
+                <div><div class="card-title">Macro-nutrienți</div><div class="card-sub">Distribuție calorii · date demo (jurnal în development)</div></div>
+                <button class="card-action" onclick="showToast('info')">
+                    Adaugă masă
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="nutr-wrap">
+                    <div class="donut-wrap">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="46" stroke="#F0F0F2" stroke-width="12" fill="none"/>
+                            <circle cx="60" cy="60" r="46" stroke="#0066CC" stroke-width="12" fill="none" stroke-dasharray="289.0" stroke-dashoffset="0" stroke-linecap="round" opacity=".9"/>
+                            <circle cx="60" cy="60" r="46" stroke="#30D158" stroke-width="12" fill="none" stroke-dasharray="138.7 289.0" stroke-dashoffset="-95.4" stroke-linecap="round"/>
+                            <circle cx="60" cy="60" r="46" stroke="#FF9F0A" stroke-width="12" fill="none" stroke-dasharray="54.9 289.0" stroke-dashoffset="-234.2" stroke-linecap="round"/>
+                        </svg>
+                        <div class="donut-center">
+                            <span class="donut-n">1,847</span>
+                            <span class="donut-l">kcal azi</span>
+                        </div>
+                    </div>
+                    <div class="macros-list">
+                        <div class="macro-row">
+                            <div class="macro-top">
+                                <span class="macro-nm">🔵 Proteine</span>
+                                <span class="macro-v">145g / <span th:text="${proteinTarget}">180</span>g</span>
+                            </div>
+                            <div class="macro-bar"><div class="macro-fill" style="width:80%;background:#0066CC"></div></div>
+                        </div>
+                        <div class="macro-row">
+                            <div class="macro-top">
+                                <span class="macro-nm">🟢 Carbohidrați</span>
+                                <span class="macro-v">210g / <span th:text="${carbTarget}">240</span>g</span>
+                            </div>
+                            <div class="macro-bar"><div class="macro-fill" style="width:88%;background:#30D158"></div></div>
+                        </div>
+                        <div class="macro-row">
+                            <div class="macro-top">
+                                <span class="macro-nm">🟠 Grăsimi</span>
+                                <span class="macro-v">65g / <span th:text="${fatTarget}">90</span>g</span>
+                            </div>
+                            <div class="macro-bar"><div class="macro-fill" style="width:72%;background:#FF9F0A"></div></div>
+                        </div>
+                        <div class="macro-row">
+                            <div class="macro-top"><span class="macro-nm">🟣 Fibre</span><span class="macro-v">28g / 30g</span></div>
+                            <div class="macro-bar"><div class="macro-fill" style="width:93%;background:#BF5AF2"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="meal-list" style="margin-top:16px">
+                    <div class="meal-item"><div class="meal-ico" style="background:#EAF3FF">🥣</div><div class="meal-info"><div class="meal-n">Mic dejun · Fulgi ovăz cu fructe</div><div class="meal-d">08:30 · P:22g C:65g G:8g</div></div><span class="meal-kcal">420 kcal</span></div>
+                    <div class="meal-item"><div class="meal-ico" style="background:#E8F8EF">🍗</div><div class="meal-info"><div class="meal-n">Prânz · Piept pui + orez brun</div><div class="meal-d">13:15 · P:58g C:92g G:14g</div></div><span class="meal-kcal">680 kcal</span></div>
+                    <div class="meal-item"><div class="meal-ico" style="background:#F0E8FF">🥤</div><div class="meal-info"><div class="meal-n">Gustare · Shake proteic + banană</div><div class="meal-d">16:00 · P:35g C:42g G:3g</div></div><span class="meal-kcal">327 kcal</span></div>
+                    <div class="meal-item"><div class="meal-ico" style="background:#FFF0E8">🥗</div><div class="meal-info"><div class="meal-n">Cină · Salată ton + avocado</div><div class="meal-d">19:30 · P:30g C:11g G:40g</div></div><span class="meal-kcal">420 kcal</span></div>
+                </div>
+                <a th:href="@{/jurnal-alimentar}">
+                    <button class="add-meal-btn">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                        Adaugă masă / aliment
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-hd"><div><div class="card-title">Statistici rapide</div><div class="card-sub">Activitate &amp; sănătate</div></div></div>
+            <div class="card-body">
+                <div class="qs-list">
+                    <div class="qs-item">
+                        <div class="qs-ico" style="background:#EAF3FF">💧</div>
+                        <div class="qs-info"><div class="qs-lbl">Hidratare</div><div class="qs-val">2.1 <span class="qs-unit">/ 3L</span></div></div>
+                        <div class="qs-bar"><div class="qb"><div class="qbf" style="width:70%;background:#0A84FF"></div></div></div>
+                    </div>
+                    <div class="qs-item">
+                        <div class="qs-ico" style="background:#E8F8EF">🏃</div>
+                        <div class="qs-info"><div class="qs-lbl">Pași</div><div class="qs-val">7,432 <span class="qs-unit">/ 10k</span></div></div>
+                        <div class="qs-bar"><div class="qb"><div class="qbf" style="width:74%;background:#30D158"></div></div></div>
+                    </div>
+                    <div class="qs-item">
+                        <div class="qs-ico" style="background:#FFF0E8">🔥</div>
+                        <div class="qs-info"><div class="qs-lbl">Calorii arse (TDEE)</div>
+                            <div class="qs-val"><span th:text="${tdee}">2585</span> <span class="qs-unit">kcal</span></div>
+                        </div>
+                        <div class="qs-bar"><div class="qb"><div class="qbf" style="width:88%;background:#FF9F0A"></div></div></div>
+                    </div>
+                    <div class="qs-item">
+                        <div class="qs-ico" style="background:#F0E8FF">😴</div>
+                        <div class="qs-info"><div class="qs-lbl">Somn</div><div class="qs-val">7h 20m <span class="qs-unit">/ 8h</span></div></div>
+                        <div class="qs-bar"><div class="qb"><div class="qbf" style="width:92%;background:#BF5AF2"></div></div></div>
+                    </div>
+                    <div class="qs-item">
+                        <div class="qs-ico" style="background:#EAF3FF">💪</div>
+                        <div class="qs-info"><div class="qs-lbl">BMR calculat</div>
+                            <div class="qs-val"><span th:text="${bmr}">1880</span> <span class="qs-unit">kcal/zi</span></div>
+                        </div>
+                        <div class="qs-bar"><div class="qb"><div class="qbf" style="width:100%;background:#0066CC"></div></div></div>
+                    </div>
+                    <div class="qs-item">
+                        <div class="qs-ico" style="background:#E8F8EF">⚖️</div>
+                        <div class="qs-info"><div class="qs-lbl">Greutate</div>
+                            <div class="qs-val"><span th:text="${user.weightKg}">78.6</span> <span class="qs-unit">kg</span></div>
+                        </div>
+                        <div class="qs-bar"><div class="qb"><div class="qbf" style="width:62%;background:#30D158"></div></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRAFIC GREUTATE -->
+    <div class="sect-lbl">Evoluție greutate · 30 zile</div>
+    <div class="card" style="margin-bottom:24px">
+        <div class="card-hd">
+            <div><div class="card-title">Evoluție greutate</div><div class="card-sub">Ultimele 30 de zile · tendință descendentă</div></div>
+            <div style="display:flex;gap:16px;align-items:center">
+                <span style="font-size:12px;color:var(--text-3)">Min: <b style="color:var(--blue)">77.8kg</b></span>
+                <span style="font-size:12px;color:var(--text-3)">Max: <b style="color:var(--text)">80.2kg</b></span>
+                <a th:href="@{/rapoarte}"><button class="card-action">Exportă PDF</button></a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="padding:10px 40px 10px 44px">
+                <div class="chart-tooltip-box" id="chartTip"></div>
+                <svg class="chart-svg" id="weightChart" viewBox="0 0 700 160" preserveAspectRatio="none"></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMENZI RECENTE -->
+    <div class="sect-lbl">Comenzi recente</div>
+    <div class="card" style="margin-bottom:24px">
+        <div class="card-hd">
+            <div><div class="card-title">Comenzile mele</div><div class="card-sub">Ultimele comenzi plasate</div></div>
+            <a th:href="@{/magazin}"><button class="card-action">Vezi toate →</button></a>
+        </div>
+        <div class="card-body">
+            <div class="tbl-wrap">
+                <table>
+                    <thead><tr><th>Produs</th><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    <tr>
+                        <td><div class="tbl-prod"><div class="tbl-prod-ico" style="background:#EAF3FF">🥛</div><div><div style="font-weight:500">Whey Protein Gold 2kg</div><div style="font-size:10px;color:var(--text-3)">Suplimente · ×1</div></div></div></td>
+                        <td style="color:var(--text-3);font-size:12px">24 Apr 2025</td>
+                        <td style="font-weight:600;color:var(--blue)">149 lei</td>
+                        <td><span class="tbl-badge b-green">● Livrat</span></td>
+                        <td><button class="card-action" style="font-size:11px">Factură</button></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tbl-prod"><div class="tbl-prod-ico" style="background:#F0E8FF">💊</div><div><div style="font-weight:500">Omega-3 Complex · Vitamina D3</div><div style="font-size:10px;color:var(--text-3)">Suplimente · ×2</div></div></div></td>
+                        <td style="color:var(--text-3);font-size:12px">20 Apr 2025</td>
+                        <td style="font-weight:600;color:var(--blue)">134 lei</td>
+                        <td><span class="tbl-badge b-orange">◌ În tranzit</span></td>
+                        <td><button class="card-action" style="font-size:11px">Track</button></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACADEMIE -->
+    <div class="sect-lbl">Cursuri în progres</div>
+    <div class="card" style="margin-bottom:28px">
+        <div class="card-hd">
+            <div><div class="card-title">Academia SmartFit</div><div class="card-sub">Continuă unde ai rămas · câștigă XP</div></div>
+            <a th:href="@{/academie}" class="card-action">Toate cursurile →</a>
+        </div>
+        <div class="card-body">
+            <div class="ac-grid">
+                <div class="ac-card" style="background:#F8FBFF">
+                    <div class="ac-card-top"><div class="ac-ico" style="background:#EAF3FF">🧬</div><span class="ac-xp">+120 XP</span></div>
+                    <div class="ac-title">Nutriție fundamentală</div>
+                    <div class="ac-meta">8 lecții · ~2h · Nivel Începător</div>
+                    <div class="ac-prog-bar"><div class="ac-prog-fill" style="width:75%"></div></div>
+                    <div class="ac-pct">75% completat</div>
+                </div>
+                <div class="ac-card" style="background:#F8FFF9">
+                    <div class="ac-card-top"><div class="ac-ico" style="background:rgba(48,209,88,.1)">💪</div><span class="ac-xp">+200 XP</span></div>
+                    <div class="ac-title">Proteine &amp; Recuperare Musculară</div>
+                    <div class="ac-meta">6 lecții · ~1h30 · Nivel Mediu</div>
+                    <div class="ac-prog-bar"><div class="ac-prog-fill" style="width:40%"></div></div>
+                    <div class="ac-pct">40% completat</div>
+                </div>
+                <div class="ac-card" style="background:#FFFBF0">
+                    <div class="ac-card-top"><div class="ac-ico" style="background:rgba(255,159,10,.1)">⚡</div><span class="ac-xp">+350 XP</span></div>
+                    <div class="ac-title">Suplimentare avansată</div>
+                    <div class="ac-meta">10 lecții · ~3h · Nivel Avansat</div>
+                    <div class="ac-prog-bar"><div class="ac-prog-fill" style="width:10%"></div></div>
+                    <div class="ac-pct">10% completat</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast-wrap">
+    <div class="toast" id="t-info">
+        <div class="t-ico t-blue">🔔</div>
+        <div class="t-info">
+            <div class="t-title">2 notificări noi</div>
+            <div class="t-msg">Comanda ta este în tranzit · Quiz nou disponibil în Academie</div>
+            <div class="t-bar"><div class="t-bar-fill" style="background:#0A84FF"></div></div>
+        </div>
+        <button class="t-close" onclick="hideToast('t-info')">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Sidebar toggle
+    const sb = document.getElementById('sb');
+    const main = document.getElementById('main');
+    const topbar = document.getElementById('topbar');
+    const sbArrow = document.getElementById('sbArrow');
+    let sbOpen = true;
+
+    document.getElementById('sbToggle').addEventListener('click', () => {
+        sbOpen = !sbOpen;
+        sb.classList.toggle('closed', !sbOpen);
+        main.classList.toggle('sb-closed', !sbOpen);
+        topbar.classList.toggle('sb-closed', !sbOpen);
+        sbArrow.style.transform = sbOpen ? '' : 'rotate(180deg)';
+    });
+
+    // Salut dinamic bazat pe ora zilei
+    (function() {
+        const h = new Date().getHours();
+        const prefix = h < 12 ? 'Bună dimineața' : h < 18 ? 'Bună ziua' : 'Bună seara';
+        const greetEl = document.getElementById('wGreeting');
+        const nameSpan = greetEl.querySelector('span');
+        greetEl.textContent = prefix + ', ';
+        greetEl.appendChild(nameSpan);
+        greetEl.appendChild(document.createTextNode(' 👋'));
+    })();
+
+    // Toast
+    function showToast(type) {
+        const el = document.getElementById('t-' + type);
+        if (!el) return;
+        el.classList.remove('show', 'hide');
+        void el.offsetWidth;
+        el.classList.add('show');
+        setTimeout(() => hideToast('t-' + type), 4500);
+    }
+    function hideToast(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('hide');
+        setTimeout(() => el.classList.remove('show', 'hide'), 450);
+    }
+
+    // Grafic greutate (date demo)
+    (function() {
+        const weights = [80.2,80.0,79.8,79.7,80.1,79.9,79.6,79.4,79.5,79.3,79.2,79.0,79.1,78.9,78.8,79.0,78.7,78.6,78.8,78.5,78.7,78.4,78.6,78.5,78.3,78.6,78.4,78.7,78.6,78.6];
+        const svg = document.getElementById('weightChart');
+        const W = 700, H = 160, pad = {t:14, b:28, l:4, r:4};
+        const min = Math.min(...weights) - 0.3, max = Math.max(...weights) + 0.3;
+        const xs = i => (i / (weights.length - 1)) * (W - pad.l - pad.r) + pad.l;
+        const ys = v => pad.t + (1 - (v - min) / (max - min)) * (H - pad.t - pad.b);
+
+        [78.5,79,79.5,80,80.5].forEach(v => {
+            const y = ys(v);
+            const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute('x1',pad.l);line.setAttribute('x2',W-pad.r);
+            line.setAttribute('y1',y);line.setAttribute('y2',y);
+            line.setAttribute('stroke','#EBEBED');line.setAttribute('stroke-width','1');
+            svg.appendChild(line);
+            const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+            txt.setAttribute('x',pad.l-2);txt.setAttribute('y',y+3.5);
+            txt.setAttribute('font-size','8');txt.setAttribute('fill','#86868B');txt.setAttribute('text-anchor','end');
+            txt.textContent = v.toFixed(1);
+            svg.appendChild(txt);
+        });
+
+        const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+        const grad = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+        grad.id='ag';grad.setAttribute('x1','0');grad.setAttribute('x2','0');grad.setAttribute('y1','0');grad.setAttribute('y2','1');
+        const s1 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+        s1.setAttribute('offset','0');s1.setAttribute('stop-color','#0066CC');s1.setAttribute('stop-opacity','0.22');
+        const s2 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+        s2.setAttribute('offset','1');s2.setAttribute('stop-color','#0066CC');s2.setAttribute('stop-opacity','0');
+        grad.appendChild(s1);grad.appendChild(s2);defs.appendChild(grad);svg.appendChild(defs);
+
+        const area = document.createElementNS('http://www.w3.org/2000/svg','path');
+        let aD = `M${xs(0)},${H-pad.b}`;
+        weights.forEach((_,i) => aD += ` L${xs(i)},${ys(weights[i])}`);
+        aD += ` L${xs(weights.length-1)},${H-pad.b} Z`;
+        area.setAttribute('d',aD);area.setAttribute('fill','url(#ag)');area.setAttribute('opacity','.45');
+        svg.appendChild(area);
+
+        const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+        poly.setAttribute('points', weights.map((_,i) => `${xs(i)},${ys(weights[i])}`).join(' '));
+        poly.setAttribute('fill','none');poly.setAttribute('stroke','#0066CC');
+        poly.setAttribute('stroke-width','2');poly.setAttribute('stroke-linecap','round');poly.setAttribute('stroke-linejoin','round');
+        svg.appendChild(poly);
+
+        const tip = document.getElementById('chartTip');
+        const cont = svg.closest('.chart-container');
+        weights.forEach((w,i) => {
+            const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+            dot.setAttribute('cx',xs(i));dot.setAttribute('cy',ys(w));
+            dot.setAttribute('r','3.5');dot.setAttribute('fill','#0066CC');
+            dot.setAttribute('stroke','#fff');dot.setAttribute('stroke-width','2');
+            dot.style.cursor='pointer';
+            dot.addEventListener('mouseenter',function(e){
+                this.setAttribute('r','5.5');
+                const rect = cont.getBoundingClientRect();
+                tip.textContent=`Zi ${i+1}: ${w} kg`;
+                tip.style.opacity='1';
+                tip.style.left=(e.clientX-rect.left-60)+'px';
+                tip.style.top=(e.clientY-rect.top-36)+'px';
+            });
+            dot.addEventListener('mouseleave',function(){this.setAttribute('r','3.5');tip.style.opacity='0';});
+            svg.appendChild(dot);
+        });
+
+        [0,5,10,15,20,25,29].forEach(i => {
+            const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+            t.setAttribute('x',xs(i));t.setAttribute('y',H-4);
+            t.setAttribute('font-size','8');t.setAttribute('fill','#86868B');t.setAttribute('text-anchor','middle');
+            t.textContent='Z'+(i+1);
+            svg.appendChild(t);
+        });
+    })();
+
+    // Animatie bare progres la incarcare
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.kc-fill,.macro-fill,.qbf,.ac-prog-fill,.xp-fill').forEach(el => {
+            const w = el.style.width;
+            el.style.width = '0';
+            requestAnimationFrame(() => setTimeout(() => el.style.width = w, 120));
+        });
+    });
+
+    setTimeout(() => showToast('info'), 900);
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     SMARTFIT AI CHAT WIDGET
+     Lipește acest bloc ÎNAINTE de </body> în dashboard.html
+     ═══════════════════════════════════════════════════════ -->
+
+<style>
+    /* ── Buton flotant ─────────────────────────────────── */
+    .chat-fab {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0066CC, #0A84FF);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(0, 102, 204, .4);
+        z-index: 900;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .chat-fab:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 28px rgba(0, 102, 204, .5);
+    }
+    .chat-fab svg { transition: opacity .2s; }
+    .chat-fab .ico-close { position: absolute; opacity: 0; }
+    .chat-fab.open .ico-chat  { opacity: 0; }
+    .chat-fab.open .ico-close { opacity: 1; }
+
+    /* ── Fereastra chat ─────────────────────────────────── */
+    .chat-window {
+        position: fixed;
+        bottom: 92px;
+        right: 28px;
+        width: 360px;
+        max-height: 520px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 16px 56px rgba(0, 0, 0, .15);
+        border: .5px solid rgba(0, 0, 0, .08);
+        display: flex;
+        flex-direction: column;
+        z-index: 900;
+        overflow: hidden;
+        transform: scale(.92) translateY(16px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform .25s cubic-bezier(.22,1,.36,1),
+        opacity .25s cubic-bezier(.22,1,.36,1);
+    }
+    .chat-window.open {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .chat-header {
+        background: linear-gradient(130deg, #0A2540, #0B3870);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+    .chat-header-ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .chat-header-info { flex: 1; }
+    .chat-header-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+    }
+    .chat-header-status {
+        font-size: 10px;
+        color: rgba(255,255,255,.5);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 1px;
+    }
+    .chat-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #30D158;
+        flex-shrink: 0;
+    }
+    .chat-clear-btn {
+        background: rgba(255,255,255,.1);
+        border: none;
+        border-radius: 8px;
+        color: rgba(255,255,255,.6);
+        font-size: 10px;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        transition: background .15s;
+    }
+    .chat-clear-btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+    /* ── Mesaje ─────────────────────────────────────────── */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 14px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        scroll-behavior: smooth;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,.1);
+        border-radius: 2px;
+    }
+
+    .chat-msg {
+        display: flex;
+        gap: 8px;
+        animation: msgIn .2s ease;
+    }
+    @keyframes msgIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: none; }
+    }
+    .chat-msg.user { flex-direction: row-reverse; }
+
+    .chat-msg-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        margin-top: 2px;
+    }
+    .msg-ai-avatar {
+        background: linear-gradient(135deg, #0066CC, #0A84FF);
+        color: #fff;
+        font-size: 14px;
+    }
+    .msg-user-avatar {
+        background: linear-gradient(135deg, #0A2540, #0066CC);
+        color: #fff;
+        font-family: 'Syne', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .chat-bubble {
+        max-width: 240px;
+        padding: 9px 13px;
+        border-radius: 16px;
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: #1D1D1F;
+    }
+    .chat-msg.ai .chat-bubble {
+        background: #F5F5F7;
+        border-bottom-left-radius: 5px;
+    }
+    .chat-msg.user .chat-bubble {
+        background: linear-gradient(135deg, #0066CC, #0A84FF);
+        color: #fff;
+        border-bottom-right-radius: 5px;
+    }
+
+    /* ── Typing indicator ───────────────────────────────── */
+    .typing-dots {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 10px 14px;
+    }
+    .typing-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #86868B;
+        animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-5px); }
+    }
+
+    /* ── Suggestions ────────────────────────────────────── */
+    .chat-suggestions {
+        padding: 0 14px 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .chat-sug {
+        background: #EAF3FF;
+        color: #0066CC;
+        border: none;
+        border-radius: 100px;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 5px 11px;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        transition: background .15s;
+        white-space: nowrap;
+    }
+    .chat-sug:hover { background: #D0E8FF; }
+
+    /* ── Input ──────────────────────────────────────────── */
+    .chat-input-row {
+        padding: 10px 12px;
+        border-top: .5px solid rgba(0,0,0,.07);
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        flex-shrink: 0;
+    }
+    .chat-input {
+        flex: 1;
+        border: 1.5px solid #EBEBED;
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-size: 12.5px;
+        font-family: 'DM Sans', sans-serif;
+        color: #1D1D1F;
+        resize: none;
+        outline: none;
+        max-height: 80px;
+        line-height: 1.45;
+        transition: border-color .2s;
+    }
+    .chat-input:focus { border-color: #0066CC; }
+    .chat-input::placeholder { color: #86868B; }
+
+    .chat-send {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0066CC, #0A84FF);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: transform .15s, opacity .15s;
+    }
+    .chat-send:hover { transform: scale(1.08); }
+    .chat-send:disabled { opacity: .4; cursor: default; transform: none; }
+
+    @media (max-width: 480px) {
+        .chat-window { width: calc(100vw - 32px); right: 16px; bottom: 80px; }
+        .chat-fab    { right: 16px; bottom: 16px; }
+    }
+</style>
+
+<!-- ── BUTON FLOTANT ──────────────────────────────────────── -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="SmartFit AI">
+    <!-- Icona chat -->
+    <svg class="ico-chat" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+    </svg>
+    <!-- Icona close -->
+    <svg class="ico-close" width="20" height="20" viewBox="0 0 24 24"
+         fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+</button>
+
+<!-- ── FEREASTRA CHAT ─────────────────────────────────────── -->
+<div class="chat-window" id="chatWindow">
+
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="chat-header-ico">🤖</div>
+        <div class="chat-header-info">
+            <div class="chat-header-name">SmartFit AI</div>
+            <div class="chat-header-status">
+                <span class="chat-status-dot"></span>
+                Asistent personal fitness &amp; nutriție
+            </div>
+        </div>
+        <button class="chat-clear-btn" onclick="clearChat()">Șterge</button>
+    </div>
+
+    <!-- Mesaje -->
+    <div class="chat-messages" id="chatMessages">
+        <!-- Mesaj de bun venit injectat de JS -->
+    </div>
+
+    <!-- Suggestions rapide -->
+    <div class="chat-suggestions" id="chatSuggestions">
+        <button class="chat-sug" onclick="sendSuggestion(this)">🏋️ Plan antrenament</button>
+        <button class="chat-sug" onclick="sendSuggestion(this)">🥗 Ce să mănânc azi?</button>
+        <button class="chat-sug" onclick="sendSuggestion(this)">💊 Suplimente recomandate</button>
+        <button class="chat-sug" onclick="sendSuggestion(this)">📚 Ce curs să încep?</button>
+        <button class="chat-sug" onclick="sendSuggestion(this)">🛒 Produse recomandate</button>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput"
+                  placeholder="Întreabă-mă orice despre fitness…"
+                  rows="1"
+                  onkeydown="handleKey(event)"
+                  oninput="autoResize(this)"></textarea>
+        <button class="chat-send" id="chatSendBtn" onclick="sendMessage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="white" stroke-width="2.5" stroke-linecap="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ── State ──────────────────────────────────────────────────
+        let chatOpen   = false;
+        let isLoading  = false;
+        let messages   = [];           // [{role, content}]
+
+        // Initiale user din Thymeleaf (injectate inline)
+        const userInitial = document.querySelector('.tb-avatar')?.textContent?.trim() || '?';
+
+        // ── Toggle fereastra ───────────────────────────────────────
+        window.toggleChat = function() {
+            chatOpen = !chatOpen;
+            document.getElementById('chatFab').classList.toggle('open', chatOpen);
+            document.getElementById('chatWindow').classList.toggle('open', chatOpen);
+
+            if (chatOpen && messages.length === 0) {
+                showWelcome();
+            }
+            if (chatOpen) {
+                setTimeout(() => document.getElementById('chatInput').focus(), 300);
+            }
+        };
+
+        function showWelcome() {
+            const firstName = document.querySelector('.tb-name')?.textContent?.trim() || '';
+            addBubble('ai',
+                `Salut${firstName ? ', ' + firstName : ''}! 👋 Sunt SmartFit AI, asistentul tău personal ` +
+                `de fitness și nutriție.\n\nÎți pot recomanda produse, cursuri sau planuri de ` +
+                `antrenament personalizate. Cu ce te pot ajuta azi?`
+            );
+        }
+
+        // ── Trimite mesaj ──────────────────────────────────────────
+        window.sendMessage = async function() {
+            const input = document.getElementById('chatInput');
+            const text  = input.value.trim();
+            if (!text || isLoading) return;
+
+            // Ascunde suggestions dupa primul mesaj
+            document.getElementById('chatSuggestions').style.display = 'none';
+
+            addBubble('user', text);
+            messages.push({ role: 'user', content: text });
+            input.value = '';
+            autoResize(input);
+            setLoading(true);
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ messages })
+                });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                const reply = data.reply || 'Îmi pare rău, nu am putut genera un răspuns.';
+
+                addBubble('ai', reply);
+                messages.push({ role: 'assistant', content: reply });
+
+            } catch (err) {
+                addBubble('ai', '⚠️ Eroare de conexiune. Verifică rețeaua și încearcă din nou.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        window.sendSuggestion = function(btn) {
+            const text = btn.textContent.replace(/^[^\s]+\s/, '').trim();  // scoate emoji-ul
+            document.getElementById('chatInput').value = btn.textContent.trim();
+            sendMessage();
+        };
+
+        // ── Utilities ──────────────────────────────────────────────
+        function addBubble(role, text) {
+            const container = document.getElementById('chatMessages');
+
+            // Sterge typing indicator daca exista
+            const typing = container.querySelector('.typing-indicator');
+            if (typing) typing.remove();
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg ' + role;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'chat-msg-avatar ' + (role === 'ai' ? 'msg-ai-avatar' : 'msg-user-avatar');
+            avatar.textContent = role === 'ai' ? '🤖' : userInitial;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            // Converteste newline-urile in <br>
+            bubble.innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
+
+            msgDiv.appendChild(avatar);
+            msgDiv.appendChild(bubble);
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function setLoading(state) {
+            isLoading = state;
+            document.getElementById('chatSendBtn').disabled = state;
+
+            const container = document.getElementById('chatMessages');
+            if (state) {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'chat-msg ai typing-indicator';
+                typingDiv.innerHTML =
+                    '<div class="chat-msg-avatar msg-ai-avatar">🤖</div>' +
+                    '<div class="chat-bubble" style="padding:0;background:#F5F5F7">' +
+                    '<div class="typing-dots">' +
+                    '<span></span><span></span><span></span>' +
+                    '</div>' +
+                    '</div>';
+                container.appendChild(typingDiv);
+                container.scrollTop = container.scrollHeight;
+            } else {
+                const typing = container.querySelector('.typing-indicator');
+                if (typing) typing.remove();
+            }
+        }
+
+        window.clearChat = function() {
+            messages = [];
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('chatSuggestions').style.display = 'flex';
+            showWelcome();
+        };
+
+        window.handleKey = function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+
+        window.autoResize = function(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+        };
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+    })();
+</script>
+<!-- ═══════════════════════════════════════════════════════ -->
+
+</body>
+</html>

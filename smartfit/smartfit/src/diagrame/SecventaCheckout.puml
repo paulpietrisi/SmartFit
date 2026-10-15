@@ -1,0 +1,49 @@
+@startuml
+actor "Utilizator (Bonser)" as User
+participant "Browser (Frontend)" as FE
+participant "CheckoutController" as Controller
+participant "Stripe API" as Stripe
+participant "OrderService" as Service
+database "Bază de Date" as DB
+
+User -> FE: Introduce date livrare și apasă "Plătește"
+activate FE
+
+FE -> Controller: POST /checkout/stripe/prepare (CheckoutFormDto)
+activate Controller
+
+Controller -> Controller: Calculează total sumă (în bani/RON)
+Controller -> Stripe: PaymentIntent.create(amount, currency="ron")
+activate Stripe
+Stripe --> Controller: Returnează PaymentIntent (contine clientSecret)
+deactivate Stripe
+
+Controller --> FE: Returnează clientSecret
+deactivate Controller
+
+FE -> Stripe: Stripe SDK confirmă plata direct cu cardul
+activate Stripe
+Stripe --> FE: redirect_status = "succeeded" (Plată aprobată)
+deactivate Stripe
+
+FE -> Controller: GET /checkout/stripe/complete (payment_intent, status)
+activate Controller
+
+Controller -> Stripe: PaymentIntent.retrieve(paymentIntentId)
+activate Stripe
+Stripe --> Controller: status = "succeeded"
+deactivate Stripe
+
+Controller -> Service: createOrder(user, cartItems, form, "CARD", paymentIntentId)
+activate Service
+Service -> DB: Salvează Order și OrderItems \n(scade stoc produse, adaugă XP la User)
+DB --> Service: OK
+Service --> Controller: order (Comanda creată)
+deactivate Service
+
+Controller --> FE: Redirecționare la /order-success/{id}
+deactivate Controller
+
+FE -> User: Afișează ecranul de succes al comenzii
+deactivate FE
+@enduml

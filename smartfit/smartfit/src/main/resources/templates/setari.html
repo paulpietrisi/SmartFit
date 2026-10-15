@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-theme=${settings != null and settings.theme != null ? settings.theme : 'light'}">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartFit – Setări</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --progress:40%;
+      --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+      --blue-light:#EAF3FF;--blue-mid:rgba(0,102,204,.07);
+      --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;
+      --white:#fff;--off:#F5F5F7;--off2:#EBEBED;
+      --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+      --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.10);
+      --sh-sm:0 2px 10px rgba(0,0,0,.06);--sh-md:0 6px 28px rgba(0,0,0,.09);--sh-lg:0 16px 56px rgba(0,0,0,.13);
+      --r:12px;--r-md:16px;--r-lg:22px;--sw:248px;--th:58px;--tr:.22s ease;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--tr);overflow:hidden}
+    .sidebar.closed{width:64px}
+    .sb-logo{display:flex;align-items:center;gap:11px;padding:14px 18px;height:var(--th);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;overflow:hidden}
+    .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sb-logo-icon svg{width:17px;height:17px}
+    .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--tr)}
+    .sidebar.closed .sb-logo-text{opacity:0}
+    .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+    .sb-nav::-webkit-scrollbar{width:0}
+    .sb-sec{margin-bottom:22px}
+    .sb-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;white-space:nowrap;transition:opacity var(--tr)}
+    .sidebar.closed .sb-lbl{opacity:0}
+    .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--tr),color var(--tr);position:relative}
+    .sb-item:hover{background:var(--off);color:var(--text)}
+    .sb-item.active{background:var(--blue-light);color:var(--blue)}
+    .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sb-item.active .sb-ico{background:rgba(0,102,204,.12)}
+    .sb-txt{opacity:1;transition:opacity var(--tr)}
+    .sidebar.closed .sb-txt{opacity:0}
+    .sb-badge{font-size:10px;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;border-radius:100px;margin-left:auto;flex-shrink:0;transition:opacity var(--tr)}
+    .sidebar.closed .sb-badge{opacity:0}
+    .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+    .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);border-radius:8px;transition:color var(--tr)}
+    .sb-toggle:hover{color:var(--text);background:var(--off)}
+    .sidebar.closed .sb-toggle{justify-content:center}
+    .sidebar.closed .sb-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:400}
+    .sidebar.closed .sb-item:hover::after{opacity:1}
+    .topbar{position:fixed;top:0;left:var(--sw);right:0;height:var(--th);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--tr)}
+    .topbar.sb-closed{left:64px}
+    .tb-search{flex:1;max-width:380px;position:relative}
+    .tb-search input{width:100%;padding:9px 14px 9px 38px;background:var(--off);border:1.5px solid transparent;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr)}
+    .tb-search input::placeholder{color:var(--text-3)}
+    .tb-search input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+    .tb-sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+    .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+    .tb-icon-btn{width:36px;height:36px;border-radius:100px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:background var(--tr)}
+    .tb-icon-btn:hover{background:var(--off)}
+    .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;border:2px solid rgba(255,255,255,.9);box-shadow:var(--sh-sm)}
+    .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+    .main{margin-left:var(--sw);margin-top:var(--th);padding:28px;transition:margin-left var(--tr);min-height:calc(100vh - var(--th))}
+    .main.sb-closed{margin-left:64px}
+    .btn-prim{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--tr),transform .15s;box-shadow:0 3px 14px rgba(0,102,204,.25);white-space:nowrap}
+    .btn-prim:hover{background:#0055AA;transform:translateY(-1px)}
+    .btn-prim:active{transform:scale(.97)}
+    .btn-sec{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all var(--tr);box-shadow:var(--sh-sm);white-space:nowrap}
+    .btn-sec:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+    .btn-danger{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:rgba(255,59,48,.08);color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid rgba(255,59,48,.2);border-radius:var(--r);cursor:pointer;transition:all var(--tr);white-space:nowrap}
+    .btn-danger:hover{background:rgba(255,59,48,.15);border-color:rgba(255,59,48,.35)}
+    .btn-ghost{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;transition:opacity var(--tr)}
+    .btn-ghost:hover{opacity:.65}
+    .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px}
+    .ch-blue{background:var(--blue-light);color:var(--blue)}
+    .ch-green{background:rgba(48,209,88,.1);color:#1A8A3A}
+    .ch-orange{background:rgba(255,159,10,.1);color:#C07000}
+    .ch-red{background:rgba(255,59,48,.08);color:#D93025}
+    [data-tt]{position:relative}
+    [data-tt]::after{content:attr(data-tt);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:500}
+    [data-tt]:hover::after{opacity:1}
+    .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:14px;flex-wrap:wrap}
+    .ph-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+    .page-hd h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.6px;margin-bottom:4px}
+    .page-hd p{font-size:14px;color:var(--text-2);font-weight:300}
+    .ph-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .settings-layout{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start}
+    .s-nav{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;position:sticky;top:calc(var(--th) + 14px)}
+    .s-nav-hd{padding:14px 18px;border-bottom:.5px solid var(--border);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:1px;text-transform:uppercase}
+    .s-nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;transition:background var(--tr),color var(--tr);font-size:13px;font-weight:500;color:var(--text-2);border-bottom:.5px solid var(--border);position:relative}
+    .s-nav-item:last-child{border-bottom:none}
+    .s-nav-item:hover{background:var(--off);color:var(--text)}
+    .s-nav-item.active{background:var(--blue-light);color:var(--blue)}
+    .s-nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue);border-radius:0 2px 2px 0}
+    .s-nav-ico{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--off)}
+    .s-nav-item.active .s-nav-ico{background:rgba(0,102,204,.12)}
+    .s-panel{display:none}
+    .s-panel.active{display:flex;flex-direction:column;gap:16px}
+    .s-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden}
+    .s-card-hd{padding:18px 22px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .s-card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+    .s-card-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+    .s-card-body{padding:0}
+    .s-row{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:.5px solid var(--border);transition:background var(--tr)}
+    .s-row:hover{background:rgba(0,102,204,.025)}
+    .s-row:last-child{border-bottom:none}
+    .s-row-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .s-row-info{flex:1;min-width:0}
+    .s-row-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .s-row-desc{font-size:11px;color:var(--text-3);line-height:1.5}
+    .s-row-ctrl{flex-shrink:0;display:flex;align-items:center;gap:8px}
+    .toggle-sw{position:relative;width:42px;height:24px;flex-shrink:0}
+    .toggle-sw input{opacity:0;width:0;height:0;position:absolute}
+    .toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--off2);border-radius:12px;transition:background .25s}
+    .toggle-slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 5px rgba(0,0,0,.25)}
+    .toggle-sw input:checked+.toggle-slider{background:var(--blue)}
+    .toggle-sw input:checked+.toggle-slider::before{transform:translateX(18px)}
+    .s-inp{padding:9px 13px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr);width:100%}
+    .s-inp:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+    .s-inp::placeholder{color:var(--text-3)}
+    .s-sel{padding:9px 13px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer;transition:border-color var(--tr);-webkit-appearance:none}
+    .s-sel:focus{border-color:var(--blue)}
+    .s-sel option{background:#fff}
+    .field-sm label{display:block;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+    .form-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px 22px}
+    .theme-opt{border-radius:var(--r);border:2px solid transparent;cursor:pointer;overflow:hidden;transition:border-color var(--tr),transform var(--tr)}
+    .theme-opt:hover{transform:translateY(-2px)}
+    .theme-opt.active{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,102,204,.15)}
+    .theme-preview{height:56px;display:flex}
+    .th-sb{width:30%;background:var(--blue-deep)}
+    .th-main{flex:1;display:flex;flex-direction:column;gap:4px;padding:6px}
+    .th-bar{height:6px;border-radius:3px;background:rgba(0,0,0,.1)}
+    .th-bar.accent{background:var(--blue);width:60%}
+    .theme-name{font-size:11px;font-weight:600;color:var(--text);text-align:center;padding:7px 6px}
+    .theme-opt.t-dark .th-sb{background:#1a1a2e}
+    .theme-opt.t-dark .th-main{background:#111827}
+    .theme-opt.t-dark .th-bar{background:rgba(255,255,255,.08)}
+    .theme-opt.t-dark .th-bar.accent{background:var(--blue-2)}
+    .theme-opt.t-navy .th-sb{background:#0A1628}
+    .theme-opt.t-navy .th-main{background:#0D2042}
+    .theme-opt.t-navy .th-bar{background:rgba(255,255,255,.08)}
+    .theme-opt.t-navy .th-bar.accent{background:var(--blue-3)}
+    .theme-opt.t-minimal .th-sb{background:#F5F5F7}
+    .theme-opt.t-minimal .th-main{background:#fff}
+    .theme-opt.t-minimal .th-bar{background:#e0e0e0}
+    .theme-opt.t-minimal .th-bar.accent{background:#555}
+    .accent-row{display:flex;gap:10px;padding:16px 22px;flex-wrap:wrap}
+    .accent-opt{width:32px;height:32px;border-radius:100px;cursor:pointer;border:3px solid transparent;transition:transform var(--tr),border-color var(--tr)}
+    .accent-opt:hover{transform:scale(1.15)}
+    .accent-opt.active{border-color:rgba(0,0,0,.35);transform:scale(1.1)}
+    .font-slider-wrap{padding:16px 22px;display:flex;align-items:center;gap:16px}
+    .font-slider{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:2px;background:linear-gradient(to right,var(--blue) var(--progress,40%),var(--off2) var(--progress,40%));outline:none;cursor:pointer}
+    .font-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,102,204,.3)}
+    .font-size-demo{font-size:13px;color:var(--text-2);flex-shrink:0;min-width:40px}
+    .notif-group{padding:16px 22px;border-bottom:.5px solid var(--border)}
+    .notif-group:last-child{border-bottom:none}
+    .ng-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .ng-title::after{content:'';flex:1;height:.5px;background:var(--border)}
+    .ng-item{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+    .ng-item:last-child{margin-bottom:0}
+    .ng-info{flex:1}
+    .ng-lbl{font-size:13px;font-weight:500;color:var(--text)}
+    .ng-sub{font-size:11px;color:var(--text-3)}
+    .priv-row{display:flex;align-items:flex-start;gap:14px;padding:16px 22px;border-bottom:.5px solid var(--border)}
+    .priv-row:last-child{border-bottom:none}
+    .priv-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .priv-info{flex:1}
+    .priv-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .priv-desc{font-size:11px;color:var(--text-3);line-height:1.55}
+    .sec-row{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:.5px solid var(--border);transition:background var(--tr)}
+    .sec-row:hover{background:rgba(0,102,204,.025)}
+    .sec-row:last-child{border-bottom:none}
+    .sec-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .sec-info{flex:1}
+    .sec-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .sec-sub{font-size:11px;color:var(--text-3)}
+    .sec-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px;flex-shrink:0}
+    .ss-on{background:rgba(48,209,88,.1);color:#1A8A3A}
+    .ss-off{background:var(--off);color:var(--text-3)}
+    .ss-warn{background:rgba(255,159,10,.1);color:#C07000}
+    .ses-table{width:100%;border-collapse:collapse;font-size:12px}
+    .ses-table th{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:0 0 9px;text-align:left;border-bottom:.5px solid var(--border-2)}
+    .ses-table td{padding:11px 0;border-bottom:.5px solid var(--border);vertical-align:middle;color:var(--text-2)}
+    .ses-table tr:last-child td{border-bottom:none}
+    .ses-table tr:hover td{background:rgba(0,102,204,.018)}
+    .ses-device{display:flex;align-items:center;gap:8px}
+    .ses-device-ico{width:28px;height:28px;border-radius:7px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+    .ses-current{font-size:9px;font-weight:700;background:var(--blue-light);color:var(--blue);padding:2px 7px;border-radius:100px;margin-left:6px}
+    .audit-row:not(:last-child){border-bottom:.5px solid var(--border)}
+    .export-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px 22px}
+    .exp-opt{border:.5px solid var(--border);border-radius:var(--r-md);padding:16px;text-align:center;cursor:pointer;transition:border-color var(--tr),transform var(--tr),box-shadow var(--tr)}
+    .exp-opt:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--sh-md)}
+    .exp-ico{font-size:28px;margin-bottom:8px}
+    .exp-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+    .exp-desc{font-size:10px;color:var(--text-3)}
+    .exp-fmt{display:inline-flex;font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;margin-top:8px}
+    .danger-zone{background:rgba(255,59,48,.04);border:.5px solid rgba(255,59,48,.18);border-radius:var(--r-md);overflow:hidden}
+    .dz-hd{padding:16px 22px;border-bottom:.5px solid rgba(255,59,48,.12);display:flex;align-items:center;gap:10px}
+    .dz-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--red)}
+    .dz-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 22px;border-bottom:.5px solid rgba(255,59,48,.08)}
+    .dz-row:last-child{border-bottom:none}
+    .dz-info-t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+    .dz-info-s{font-size:11px;color:var(--text-3)}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(5px);z-index:900;display:none;align-items:center;justify-content:center;padding:16px}
+    .modal-bg.open{display:flex}
+    .modal{background:#fff;border-radius:var(--r-lg);width:100%;max-width:480px;box-shadow:var(--sh-lg);overflow:hidden;animation:mIn .25s ease}
+    @keyframes mIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+    .modal-hd{padding:20px 22px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .modal-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text)}
+    .modal-close{width:28px;height:28px;border-radius:100px;border:none;background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:background var(--tr)}
+    .modal-close:hover{background:var(--off2)}
+    .modal-body{padding:22px;display:flex;flex-direction:column;gap:14px}
+    .modal-footer{padding:0 22px 22px;display:flex;gap:10px;justify-content:flex-end}
+    .modal-warn{background:rgba(255,59,48,.07);border:.5px solid rgba(255,59,48,.2);border-radius:var(--r);padding:13px 16px;font-size:12px;color:var(--red);line-height:1.55}
+    .modal-info{background:var(--blue-light);border:.5px solid rgba(0,102,204,.2);border-radius:var(--r);padding:13px 16px;font-size:12px;color:var(--blue);line-height:1.55}
+    .pw-strength{height:4px;border-radius:2px;overflow:hidden;margin-top:6px;background:var(--off2)}
+    .pw-bar{height:100%;border-radius:2px;transition:width .4s ease,background .4s}
+    .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+    .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:13px 15px;min-width:280px;max-width:340px;pointer-events:all;transform:translateX(110%);transition:transform .38s cubic-bezier(.22,1,.36,1),opacity .38s;opacity:0}
+    .toast.show{transform:none;opacity:1}
+    .toast.hide{transform:translateX(110%);opacity:0}
+    .t-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .tg{background:rgba(48,209,88,.1)}.tb2{background:var(--blue-light)}.to{background:rgba(255,159,10,.1)}.tr{background:rgba(255,59,48,.08)}
+    .t-info{flex:1}
+    .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .t-msg{font-size:11px;color:var(--text-3);line-height:1.45}
+    .t-close{background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px;flex-shrink:0}
+    .t-bar{height:2px;background:var(--off2);border-radius:1px;overflow:hidden;margin-top:8px}
+    .t-bf{height:100%;border-radius:1px;animation:tbar 4s linear forwards}
+    @keyframes tbar{from{width:100%}to{width:0}}
+    .save-bar{position:fixed;bottom:0;left:var(--sw);right:0;background:#fff;border-top:.5px solid var(--border-2);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.07);transform:translateY(100%);transition:transform .3s ease,left var(--tr)}
+    .save-bar.visible{transform:none}
+    .save-bar.sb-closed{left:64px}
+    .save-bar-msg{font-size:13px;color:var(--text-2)}
+    .save-bar-msg strong{color:var(--text)}
+    .save-bar-actions{display:flex;gap:10px}
+    @media(max-width:1100px){.settings-layout{grid-template-columns:1fr}.s-nav{position:static;display:flex;overflow-x:auto}.s-nav-hd{display:none}.s-nav-item{border-bottom:none;border-right:.5px solid var(--border);white-space:nowrap;flex-shrink:0}.export-opts{grid-template-columns:1fr 1fr}}
+    @media(max-width:900px){.topbar{left:0!important}.sidebar{transform:translateX(-100%);width:var(--sw)!important}.main{margin-left:0!important;padding:16px}.save-bar{left:0}}
+    @media(max-width:560px){.export-opts,.form-pair{grid-template-columns:1fr}.theme-grid{grid-template-columns:1fr 1fr}}
+    [data-theme="dark"]{--white:#1a1a2e;--off:#111827;--off2:#1f2937;--text:#F5F5F7;--text-2:#a1a1aa;--text-3:#71717a;--border:rgba(255,255,255,.07);--border-2:rgba(255,255,255,.10);--sh-sm:0 2px 10px rgba(0,0,0,.25);--sh-md:0 6px 28px rgba(0,0,0,.35);--blue-light:rgba(0,102,204,.15);--blue-mid:rgba(0,102,204,.10)}
+    [data-theme="dark"] body{background:#0f172a}
+    [data-theme="dark"] .sidebar,[data-theme="dark"] .s-card,[data-theme="dark"] .s-nav,[data-theme="dark"] .modal,[data-theme="dark"] .topbar,[data-theme="dark"] .save-bar{background:#1e293b;border-color:rgba(255,255,255,.08)}
+    [data-theme="dark"] .s-inp,[data-theme="dark"] .s-sel,[data-theme="dark"] .tb-search input{background:#0f172a;color:#F5F5F7}
+    [data-theme="dark"] .s-row:hover,[data-theme="dark"] .sec-row:hover{background:rgba(255,255,255,.04)}
+    [data-theme="dark"] .btn-sec{background:#1e293b;color:#e2e8f0;border-color:rgba(255,255,255,.12)}
+    [data-theme="dark"] .theme-name{color:#e2e8f0}
+    [data-theme="navy"]{--off:#0a1628;--off2:#0e2950;--text:#e2e8f0;--text-2:#94a3b8;--text-3:#64748b;--border:rgba(90,200,250,.08);--border-2:rgba(90,200,250,.12);--blue:#5AC8FA;--blue-light:rgba(90,200,250,.12)}
+    [data-theme="navy"] body{background:#060f1e}
+    [data-theme="navy"] .sidebar,[data-theme="navy"] .s-card,[data-theme="navy"] .s-nav,[data-theme="navy"] .modal,[data-theme="navy"] .topbar,[data-theme="navy"] .save-bar{background:#0d2042;border-color:rgba(90,200,250,.1)}
+    [data-theme="navy"] .s-inp,[data-theme="navy"] .s-sel,[data-theme="navy"] .tb-search input{background:#060f1e;color:#e2e8f0}
+    [data-theme="navy"] .btn-sec{background:#0d2042;color:#e2e8f0;border-color:rgba(90,200,250,.15)}
+    [data-theme="navy"] .theme-name{color:#e2e8f0}
+    [data-theme="minimal"]{--blue:#1D1D1F;--blue-light:#F5F5F7;--blue-mid:#EBEBED}
+    [data-theme="minimal"] .btn-prim{background:#1D1D1F;box-shadow:none}
+    [data-theme="minimal"] .s-nav-item.active{background:#EBEBED;color:#1D1D1F}
+    [data-theme="minimal"] .s-nav-item.active::before{background:#1D1D1F}
+  </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sb">
+  <a th:href="@{/home}" class="sb-logo">
+    <div class="sb-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round"><rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/><line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/></svg></div>
+    <span class="sb-logo-text">SmartFit</span>
+  </a>
+  <nav class="sb-nav">
+    <div class="sb-sec">
+      <div class="sb-lbl">Principal</div>
+      <a class="sb-item" th:href="@{/dashboard}" data-tip="Dashboard">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+        <span class="sb-txt">Dashboard</span>
+      </a>
+      <a class="sb-item" th:href="@{/tracking}" data-tip="Tracking">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+        <span class="sb-txt">Tracking</span>
+      </a>
+      <a class="sb-item" th:href="@{/jurnal-alimentar}" data-tip="Jurnal alimentar">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+        <span class="sb-txt">Jurnal alimentar</span>
+      </a>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Servicii</div>
+      <a class="sb-item" th:href="@{/magazin}" data-tip="Magazin">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+        <span class="sb-txt">Magazin</span><span class="sb-badge">3</span>
+      </a>
+      <a class="sb-item" th:href="@{/academie}" data-tip="Academie">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+        <span class="sb-txt">Academie</span><span class="sb-badge">2</span>
+      </a>
+      <a class="sb-item" th:href="@{/rapoarte}" data-tip="Rapoarte">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+        <span class="sb-txt">Rapoarte &amp; PDF</span>
+      </a>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Cont</div>
+      <a class="sb-item" th:href="@{/profil}" data-tip="Profil">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        <span class="sb-txt">Profil</span>
+      </a>
+      <a class="sb-item active" th:href="@{/setari}" data-tip="Setări">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+        <span class="sb-txt">Setări</span>
+      </a>
+    </div>
+  </nav>
+  <div class="sb-bottom">
+    <button type="button" class="sb-toggle" id="sbToggle">
+      <svg id="sbArr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar" id="topbar">
+  <div class="tb-search">
+    <span class="tb-sico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input type="search" id="settingsSearch" placeholder="Caută în setări…" oninput="searchSettings(this.value)"/>
+  </div>
+  <div class="tb-right">
+    <button type="button" class="tb-icon-btn" data-tt="Notificări">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+    </button>
+    <div style="width:1px;height:20px;background:var(--border-2);margin:0 4px"></div>
+    <span class="tb-name" th:text="${user.firstName + ' ' + user.lastName}">Alex</span>
+    <div class="tb-avatar" th:text="${#strings.substring(user.firstName,0,1)}">A</div>
+  </div>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main" id="main">
+  <!-- ══ FORM PRINCIPAL — înconjoară TOATE setările ══ -->
+  <form id="settingsForm" th:action="@{/setari}" method="post" th:object="${settings}">
+
+    <div class="page-hd">
+      <div>
+        <div class="ph-tag">07 — Setări</div>
+        <h1>Setări</h1>
+        <p>Personalizează experiența SmartFit după preferințele tale.</p>
+      </div>
+      <div class="ph-right">
+        <span class="chip ch-green">✓ Cont verificat</span>
+      </div>
+    </div>
+
+    <div class="settings-layout">
+
+      <!-- ── NAVIGARE SETĂRI (fără Integrări) ── -->
+      <div class="s-nav">
+        <div class="s-nav-hd">Categorii</div>
+        <div class="s-nav-item active" onclick="switchPanel('general')"><div class="s-nav-ico">⚙️</div><span class="sb-txt">General</span></div>
+        <div class="s-nav-item" onclick="switchPanel('appearance')"><div class="s-nav-ico">🎨</div><span class="sb-txt">Aspect &amp; Temă</span></div>
+        <div class="s-nav-item" onclick="switchPanel('notifications')"><div class="s-nav-ico">🔔</div><span class="sb-txt">Notificări</span></div>
+        <div class="s-nav-item" onclick="switchPanel('privacy')"><div class="s-nav-ico">🛡</div><span class="sb-txt">Confidențialitate</span></div>
+        <div class="s-nav-item" onclick="switchPanel('security')"><div class="s-nav-ico">🔐</div><span class="sb-txt">Securitate</span></div>
+        <div class="s-nav-item" onclick="switchPanel('data')"><div class="s-nav-ico">📦</div><span class="sb-txt">Date &amp; Export</span></div>
+        <div class="s-nav-item" onclick="switchPanel('account')"><div class="s-nav-ico">👤</div><span class="sb-txt">Cont</span></div>
+      </div>
+
+      <div>
+
+        <!-- ════ GENERAL ════ -->
+        <div class="s-panel active" id="panel-general">
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Preferințe generale</div><div class="s-card-sub">Limbă, unități de măsură și comportament aplicație</div></div></div>
+            <div class="s-card-body">
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">🌐</div>
+                <div class="s-row-info"><div class="s-row-title">Limbă interfață</div><div class="s-row-desc">Limba folosită în toată aplicația</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:140px" th:field="*{language}" onchange="markDirty()">
+                    <option value="Română">Română</option>
+                    <option value="English">English</option>
+                    <option value="Français">Français</option>
+                    <option value="Deutsch">Deutsch</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#E8F8EF">📐</div>
+                <div class="s-row-info"><div class="s-row-title">Sistem de unități</div><div class="s-row-desc">Metric (kg, cm) sau Imperial (lbs, in)</div></div>
+                <div class="s-row-ctrl">
+                  <!-- hidden input legat de form; valoarea e actualizata de JS -->
+                  <input type="hidden" id="unitHidden" name="unitSystem" th:value="${settings.unitSystem}"/>
+                  <div style="display:flex;background:var(--off);border-radius:var(--r);overflow:hidden;border:.5px solid var(--border-2)">
+                    <button type="button" class="btn-prim" id="unitMetric" style="border-radius:0;box-shadow:none;font-size:12px;padding:7px 14px" onclick="setUnit('metric')">Metric</button>
+                    <button type="button" class="btn-sec"  id="unitImperial" style="border-radius:0;border:none;box-shadow:none;font-size:12px;padding:7px 14px" onclick="setUnit('imperial')">Imperial</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#FFF0E8">🕐</div>
+                <div class="s-row-info"><div class="s-row-title">Fus orar</div><div class="s-row-desc">Folosit pentru rapoarte și statistici</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:220px" th:field="*{timezone}" onchange="markDirty()">
+                    <option value="Europe/Bucharest (UTC+3)">Europe/Bucharest (UTC+3)</option>
+                    <option value="Europe/London (UTC+1)">Europe/London (UTC+1)</option>
+                    <option value="America/New_York (UTC-4)">America/New_York (UTC-4)</option>
+                    <option value="America/Los_Angeles (UTC-7)">America/Los_Angeles (UTC-7)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#F0E8FF">📅</div>
+                <div class="s-row-info"><div class="s-row-title">Prima zi a săptămânii</div><div class="s-row-desc">Luni sau Duminică</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:140px" th:field="*{weekStart}" onchange="markDirty()">
+                    <option value="Luni">Luni</option>
+                    <option value="Duminică">Duminică</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">🔢</div>
+                <div class="s-row-info"><div class="s-row-title">Format dată</div><div class="s-row-desc">Modul în care sunt afișate datele calendaristice</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:180px" th:field="*{dateFormat}" onchange="markDirty()">
+                    <option value="DD / MM / YYYY">DD / MM / YYYY</option>
+                    <option value="MM / DD / YYYY">MM / DD / YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Tracking &amp; jurnal</div><div class="s-card-sub">Comportament implicit al funcțiilor de monitorizare</div></div></div>
+            <div class="s-card-body">
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#E8F8EF">🎯</div>
+                <div class="s-row-info"><div class="s-row-title">Memento zilnic jurnal</div><div class="s-row-desc">Notificare la ora selectată dacă nu ai înregistrat nimic</div></div>
+                <div class="s-row-ctrl">
+                  <input type="time" class="s-sel" style="width:110px" th:field="*{dailyReminderTime}" onchange="markDirty()"/>
+                  <label class="toggle-sw"><input type="checkbox" th:field="*{dailyReminderEnabled}" onchange="markDirty()"/><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#FFF9EC">⚖️</div>
+                <div class="s-row-info"><div class="s-row-title">Memento greutate dimineață</div><div class="s-row-desc">Notificare pentru înregistrarea greutății la trezire</div></div>
+                <div class="s-row-ctrl">
+                  <input type="time" class="s-sel" style="width:110px" th:field="*{weightReminderTime}" onchange="markDirty()"/>
+                  <label class="toggle-sw"><input type="checkbox" th:field="*{weightReminderEnabled}" onchange="markDirty()"/><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">💧</div>
+                <div class="s-row-info"><div class="s-row-title">Mementouri hidratare</div><div class="s-row-desc">Notificări periodice pentru a bea apă pe parcursul zilei</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:130px" th:field="*{hydrationInterval}" onchange="markDirty()">
+                    <option value="La 2 ore">La 2 ore</option>
+                    <option value="La 90 minute">La 90 minute</option>
+                    <option value="La 60 minute">La 60 minute</option>
+                    <option value="La 45 minute">La 45 minute</option>
+                  </select>
+                  <label class="toggle-sw"><input type="checkbox" th:field="*{hydrationEnabled}" onchange="markDirty()"/><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#E8F8EF">📊</div>
+                <div class="s-row-info"><div class="s-row-title">Macro-uri afișate implicit</div><div class="s-row-desc">Ce macro-uri să apară în sumar zilnic</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:160px" th:field="*{defaultMacros}" onchange="markDirty()">
+                    <option value="P + C + G + Fibre">P + C + G + Fibre</option>
+                    <option value="P + C + G">P + C + G</option>
+                    <option value="Doar calorii">Doar calorii</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#F0E8FF">🔥</div>
+                <div class="s-row-info"><div class="s-row-title">Streak — notificare pierdere</div><div class="s-row-desc">Alertă când ești pe cale să pierzi seria zilnică</div></div>
+                <div class="s-row-ctrl">
+                  <label class="toggle-sw"><input type="checkbox" th:field="*{streakNotification}" onchange="markDirty()"/><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Obiective calorice &amp; macro</div><div class="s-card-sub">Ținte zilnice personalizate (suprascriere calcul BMR)</div></div><span class="chip ch-blue">Opțional</span></div>
+            <div class="s-card-body" style="padding:16px 22px 20px">
+              <div class="form-pair" style="margin-bottom:12px">
+                <div class="field-sm"><label>Calorii zilnice (kcal)</label><input class="s-inp" type="number" th:field="*{dailyCalories}" onchange="markDirty()"/></div>
+                <div class="field-sm"><label>Proteine (g)</label><input class="s-inp" type="number" th:field="*{dailyProtein}" onchange="markDirty()"/></div>
+                <div class="field-sm"><label>Carbohidrați (g)</label><input class="s-inp" type="number" th:field="*{dailyCarbs}" onchange="markDirty()"/></div>
+                <div class="field-sm"><label>Grăsimi (g)</label><input class="s-inp" type="number" th:field="*{dailyFat}" onchange="markDirty()"/></div>
+                <div class="field-sm"><label>Fibre (g)</label><input class="s-inp" type="number" th:field="*{dailyFiber}" onchange="markDirty()"/></div>
+                <div class="field-sm"><label>Apă (L)</label><input class="s-inp" type="number" step="0.1" th:field="*{dailyWater}" onchange="markDirty()"/></div>
+              </div>
+              <p style="font-size:11px;color:var(--text-3)">Valorile introduse manual vor suprascrie calculul automat BMR.</p>
+            </div>
+          </div>
+
+        </div><!-- /panel-general -->
+
+        <!-- ════ ASPECT ════ -->
+        <div class="s-panel" id="panel-appearance">
+
+          <!-- hidden inputs controlate de JS -->
+          <input type="hidden" id="themeHidden" name="theme" th:value="${settings.theme}"/>
+          <input type="hidden" id="accentHidden" name="accentColor" th:value="${settings.accentColor}"/>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Temă</div><div class="s-card-sub">Aspect vizual al aplicației</div></div></div>
+            <div class="theme-grid">
+              <div class="theme-opt" th:classappend="${settings.theme == 'light'} ? 'active' : ''" onclick="selectTheme(this,'light')" id="t-light">
+                <div class="theme-preview" style="background:#F5F5F7">
+                  <div class="th-sb"></div>
+                  <div class="th-main"><div class="th-bar" style="background:#ddd"></div><div class="th-bar accent"></div><div class="th-bar" style="background:#ddd;width:80%"></div></div>
+                </div>
+                <div class="theme-name">Luminos</div>
+              </div>
+              <div class="theme-opt t-dark" th:classappend="${settings.theme == 'dark'} ? 'active' : ''" onclick="selectTheme(this,'dark')" id="t-dark">
+                <div class="theme-preview">
+                  <div class="th-sb"></div>
+                  <div class="th-main"><div class="th-bar"></div><div class="th-bar accent"></div><div class="th-bar" style="width:80%"></div></div>
+                </div>
+                <div class="theme-name">Întunecat</div>
+              </div>
+              <div class="theme-opt t-navy" th:classappend="${settings.theme == 'navy'} ? 'active' : ''" onclick="selectTheme(this,'navy')" id="t-navy">
+                <div class="theme-preview">
+                  <div class="th-sb"></div>
+                  <div class="th-main"><div class="th-bar"></div><div class="th-bar accent"></div><div class="th-bar" style="width:80%"></div></div>
+                </div>
+                <div class="theme-name">Navy</div>
+              </div>
+              <div class="theme-opt t-minimal" th:classappend="${settings.theme == 'minimal'} ? 'active' : ''" onclick="selectTheme(this,'minimal')" id="t-minimal">
+                <div class="theme-preview">
+                  <div class="th-sb"></div>
+                  <div class="th-main"><div class="th-bar"></div><div class="th-bar accent"></div><div class="th-bar" style="width:80%"></div></div>
+                </div>
+                <div class="theme-name">Minimal</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Culoare accent</div><div class="s-card-sub">Culoarea principală a interfeței</div></div></div>
+            <div class="accent-row">
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#0066CC'} ? 'active' : ''" style="background:#0066CC" onclick="setAccent(this,'#0066CC')" data-tt="Albastru (implicit)"></div>
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#0A84FF'} ? 'active' : ''" style="background:#0A84FF" onclick="setAccent(this,'#0A84FF')" data-tt="Albastru deschis"></div>
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#5AC8FA'} ? 'active' : ''" style="background:#5AC8FA" onclick="setAccent(this,'#5AC8FA')" data-tt="Cyan"></div>
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#30D158'} ? 'active' : ''" style="background:#30D158" onclick="setAccent(this,'#30D158')" data-tt="Verde"></div>
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#FF9F0A'} ? 'active' : ''" style="background:#FF9F0A" onclick="setAccent(this,'#FF9F0A')" data-tt="Portocaliu"></div>
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#FF3B30'} ? 'active' : ''" style="background:#FF3B30" onclick="setAccent(this,'#FF3B30')" data-tt="Roșu"></div>
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#BF5AF2'} ? 'active' : ''" style="background:#BF5AF2" onclick="setAccent(this,'#BF5AF2')" data-tt="Violet"></div>
+              <div class="accent-opt" th:classappend="${settings.accentColor == '#1D1D1F'} ? 'active' : ''" style="background:#1D1D1F" onclick="setAccent(this,'#1D1D1F')" data-tt="Negru"></div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Dimensiune font</div><div class="s-card-sub">Scala textului în întreaga interfață</div></div></div>
+            <div class="font-slider-wrap">
+              <span style="font-size:11px;color:var(--text-3)">A</span>
+              <input class="font-slider" type="range" min="12" max="18"
+                     id="fontSlider"
+                     name="fontSize"
+                     th:value="${settings.fontSize}"
+                     th:style="'--progress:' + ${(settings.fontSize - 12) * 100 / 6} + '%'"
+                     oninput="updateFontSize(this.value)"/>
+              <span style="font-size:16px;color:var(--text-3)">A</span>
+              <span class="font-size-demo" id="fontSizeDemo" th:text="${settings.fontSize} + 'px'">14px</span>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Opțiuni vizuale</div><div class="s-card-sub">Animații, efecte și comportament UI</div></div></div>
+            <div class="s-card-body">
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">✨</div>
+                <div class="s-row-info"><div class="s-row-title">Animații interfață</div><div class="s-row-desc">Tranziții și micro-animații la interacțiuni</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{animationsEnabled}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#E8F8EF">🌫</div>
+                <div class="s-row-info"><div class="s-row-title">Blur / Frosted glass</div><div class="s-row-desc">Efecte de transparență pe navbar și sidebar</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{blurEffect}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#FFF0E8">📊</div>
+                <div class="s-row-info"><div class="s-row-title">Grafice animate</div><div class="s-row-desc">Animație la încărcarea barelor de progres și graficelor</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{animatedCharts}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#F0E8FF">🗜</div>
+                <div class="s-row-info"><div class="s-row-title">Mod compact</div><div class="s-row-desc">Spațiere redusă pentru mai mult conținut vizibil</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{compactMode}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">🖱</div>
+                <div class="s-row-info"><div class="s-row-title">Tooltip-uri la hover</div><div class="s-row-desc">Afișează explicații la trecerea cursorului</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{tooltipsEnabled}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-appearance -->
+
+        <!-- ════ NOTIFICĂRI ════ -->
+        <div class="s-panel" id="panel-notifications">
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Canale de notificare</div><div class="s-card-sub">Cum dorești să primești alertele SmartFit</div></div></div>
+            <div class="s-card-body">
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">📧</div>
+                <div class="s-row-info"><div class="s-row-title">Notificări email</div><div class="s-row-desc" th:text="'Rezumate săptămânale, comenzi, rapoarte la ' + ${user.email}">Rezumate săptămânale</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{emailNotifications}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#E8F8EF">📱</div>
+                <div class="s-row-info"><div class="s-row-title">Notificări push (browser)</div><div class="s-row-desc">Alerte directe în browser când aplicația e deschisă</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{pushNotifications}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#FFF0E8">💬</div>
+                <div class="s-row-info"><div class="s-row-title">SMS / WhatsApp</div><div class="s-row-desc">Alerte urgente (doar comenzi)</div></div>
+                <div class="s-row-ctrl"><label class="toggle-sw"><input type="checkbox" th:field="*{smsNotifications}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd">
+              <div><div class="s-card-title">Tipuri de notificări</div><div class="s-card-sub">Alege exact ce vrei să primești</div></div>
+              <button type="button" class="btn-ghost" onclick="toggleAllNotifs(false)">Dezactivează toate</button>
+            </div>
+            <div class="s-card-body">
+
+              <div class="notif-group">
+                <div class="ng-title">🍽 Tracking &amp; Jurnal</div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Memento jurnal zilnic</div><div class="ng-sub">Dacă nu ai înregistrat nicio masă până la ora setată</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifDailyJournal}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Obiectiv caloric atins</div><div class="ng-sub">Când ai atins 100% din ținta zilnică</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifCalorieGoal}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Depășire calorii</div><div class="ng-sub">Alertă dacă depășești cu &gt;200 kcal obiectivul</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifCalorieExceed}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Memento hidratare</div><div class="ng-sub">Periodic pe parcursul zilei</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifHydration}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+
+              <div class="notif-group">
+                <div class="ng-title">🛒 Comenzi &amp; Magazin</div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Confirmare comandă</div><div class="ng-sub">Email + push imediat după plasare</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifOrderConfirm}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Actualizare livrare</div><div class="ng-sub">Tranzit, out for delivery, livrat</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifDelivery}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Produse favorite reapărute</div><div class="ng-sub">Stoc restaurat pentru produsele din wishlist</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifFavoriteBack}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Oferte personalizate</div><div class="ng-sub">Reduceri pe baza istoricului de cumpărături</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifOffers}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+
+              <div class="notif-group">
+                <div class="ng-title">🎓 Academie &amp; XP</div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Curs nou disponibil</div><div class="ng-sub">Conținut nou adăugat în categoriile tale</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifNewCourse}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Avertizare pierdere streak</div><div class="ng-sub">Cu 2 ore înainte de miezul nopții</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifStreakWarning}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Nivel nou deblocat</div><div class="ng-sub">Trecere la un nou nivel XP</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifNewLevel}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Rezumat săptămânal academie</div><div class="ng-sub">Duminică: XP câștigat, lecții parcurse, clasament</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifAcademySummary}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+
+              <div class="notif-group" style="border-bottom:none">
+                <div class="ng-title">📊 Rapoarte &amp; Sistem</div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Rezumat săptămânal nutriție</div><div class="ng-sub">Email cu grafice și evoluție</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifNutritionSummary}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Raport generat gata</div><div class="ng-sub">Când exportul PDF sau CSV este finalizat</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifReportReady}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+                <div class="ng-item"><div class="ng-info"><div class="ng-lbl">Autentificare nouă detectată</div><div class="ng-sub">Login de pe un dispozitiv sau locație nouă</div></div><label class="toggle-sw"><input type="checkbox" th:field="*{notifNewLogin}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd">
+              <div><div class="s-card-title">Program silențios</div><div class="s-card-sub">Nu deranja în intervalul selectat</div></div>
+              <label class="toggle-sw" style="flex-shrink:0"><input type="checkbox" th:field="*{quietMode}" onchange="markDirty()"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="s-card-body" style="padding:16px 22px 20px">
+              <div class="form-pair">
+                <div class="field-sm"><label>De la</label><input class="s-inp" type="time" th:field="*{quietFrom}" onchange="markDirty()"/></div>
+                <div class="field-sm"><label>Până la</label><input class="s-inp" type="time" th:field="*{quietTo}" onchange="markDirty()"/></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-notifications -->
+
+        <!-- ════ CONFIDENȚIALITATE ════ -->
+        <div class="s-panel" id="panel-privacy">
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Vizibilitate profil</div><div class="s-card-sub">Cine îți poate vedea activitatea</div></div></div>
+            <div class="s-card-body">
+              <div class="priv-row">
+                <div class="priv-ico" style="background:#EAF3FF">👤</div>
+                <div class="priv-info"><div class="priv-title">Profil public</div><div class="priv-desc">Alți utilizatori pot vedea profilul tău, badge-urile și locul din clasament</div></div>
+                <div style="flex-shrink:0">
+                  <select class="s-sel" style="width:130px" th:field="*{profileVisibility}" onchange="markDirty()">
+                    <option value="Public">Public</option>
+                    <option value="Prieteni">Prieteni</option>
+                    <option value="Privat">Privat</option>
+                  </select>
+                </div>
+              </div>
+              <div class="priv-row">
+                <div class="priv-ico" style="background:#E8F8EF">🏆</div>
+                <div class="priv-info"><div class="priv-title">Apariție în clasament</div><div class="priv-desc">Afișarea numelui și XP-ului în leaderboard-ul public SmartFit</div></div>
+                <div style="flex-shrink:0"><label class="toggle-sw"><input type="checkbox" th:field="*{leaderboardVisible}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="priv-row">
+                <div class="priv-ico" style="background:#FFF0E8">📊</div>
+                <div class="priv-info"><div class="priv-title">Distribuire statistici</div><div class="priv-desc">Permite prietenilor să vadă evoluția ta de greutate și calorii</div></div>
+                <div style="flex-shrink:0"><label class="toggle-sw"><input type="checkbox" th:field="*{shareStats}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Date &amp; Analytics</div><div class="s-card-sub">Conform GDPR — controlezi tot</div></div></div>
+            <div class="s-card-body">
+              <div class="priv-row">
+                <div class="priv-ico" style="background:#EAF3FF">📈</div>
+                <div class="priv-info"><div class="priv-title">Analytics de utilizare</div><div class="priv-desc">Date anonime despre cum folosești aplicația. Nu include date personale sau alimentare.</div></div>
+                <div style="flex-shrink:0"><label class="toggle-sw"><input type="checkbox" th:field="*{usageAnalytics}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="priv-row">
+                <div class="priv-ico" style="background:#E8F8EF">🍪</div>
+                <div class="priv-info"><div class="priv-title">Cookie-uri de personalizare</div><div class="priv-desc">Memorarea preferințelor de interfață și filtrelor de căutare între sesiuni</div></div>
+                <div style="flex-shrink:0"><label class="toggle-sw"><input type="checkbox" th:field="*{personalizationCookies}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="priv-row">
+                <div class="priv-ico" style="background:#FFF0E8">🎯</div>
+                <div class="priv-info"><div class="priv-title">Recomandări personalizate</div><div class="priv-desc">Sugestii de produse și cursuri bazate pe istoricul tău</div></div>
+                <div style="flex-shrink:0"><label class="toggle-sw"><input type="checkbox" th:field="*{personalizedRecommendations}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+              <div class="priv-row">
+                <div class="priv-ico" style="background:#F0E8FF">🤖</div>
+                <div class="priv-info"><div class="priv-title">Îmbunătățire modele AI</div><div class="priv-desc">Datele anonimizate contribuie la îmbunătățirea calculatoarelor nutriționale. Nicio informație identificabilă nu este partajată.</div></div>
+                <div style="flex-shrink:0"><label class="toggle-sw"><input type="checkbox" th:field="*{aiImprovement}" onchange="markDirty()"/><span class="toggle-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Drepturi GDPR</div><div class="s-card-sub">Exercitarea drepturilor conform legislației europene</div></div></div>
+            <div class="s-card-body" style="padding:16px 22px 20px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--off);border-radius:var(--r)">
+                <div><div style="font-size:13px;font-weight:600;color:var(--text)">Accesează datele tale</div><div style="font-size:11px;color:var(--text-3)">Descarcă toate datele stocate despre tine</div></div>
+                <button type="button" class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="showToast('toast-gdpr')">Solicită export</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--off);border-radius:var(--r)">
+                <div><div style="font-size:13px;font-weight:600;color:var(--text)">Rectifică datele</div><div style="font-size:11px;color:var(--text-3)">Corectează informații inexacte din profilul tău</div></div>
+                <a th:href="@{/profil}" class="btn-sec" style="font-size:12px;padding:7px 14px;text-decoration:none">Mergi la profil</a>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,59,48,.05);border:.5px solid rgba(255,59,48,.15);border-radius:var(--r)">
+                <div><div style="font-size:13px;font-weight:600;color:var(--red)">Ștergere cont GDPR</div><div style="font-size:11px;color:var(--text-3)">Toate datele vor fi șterse ireversibil în 30 zile</div></div>
+                <button type="button" class="btn-danger" style="font-size:12px;padding:7px 14px" onclick="switchPanel('account');setTimeout(()=>openModal('modal-delete'),150)">Solicită ștergere</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-privacy -->
+
+        <!-- ════ SECURITATE (fără 2FA și biometrie) ════ -->
+        <div class="s-panel" id="panel-security">
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Autentificare</div><div class="s-card-sub">Securizează accesul la contul tău</div></div></div>
+            <div class="s-card-body">
+
+              <!-- Parolă -->
+              <div class="sec-row">
+                <div class="sec-ico" style="background:#EAF3FF">🔑</div>
+                <div class="sec-info"><div class="sec-title">Parolă cont</div><div class="sec-sub">Ultima schimbare: recent</div></div>
+                <span class="sec-status ss-warn">⚠ Schimbă</span>
+                <button type="button" class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="openModal('modal-pw')">Schimbă parola</button>
+              </div>
+
+              <!-- Chei recuperare -->
+              <div class="sec-row">
+                <div class="sec-ico" style="background:#FFF0E8">🔐</div>
+                <div class="sec-info"><div class="sec-title">Chei de recuperare</div><div class="sec-sub">8 chei disponibile (nu le-ai folosit niciodată)</div></div>
+                <span class="sec-status ss-on">● OK</span>
+                <button type="button" class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="showToast('toast-info')">Vizualizează</button>
+              </div>
+
+              <!-- Blocare sesiune -->
+              <div class="sec-row">
+                <div class="sec-ico" style="background:#EAF3FF">🔒</div>
+                <div class="sec-info"><div class="sec-title">Blocare automată sesiune</div><div class="sec-sub">Deconectare după inactivitate</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:150px" th:field="*{sessionTimeout}" onchange="markDirty()">
+                    <option value="15 minute">15 minute</option>
+                    <option value="1 oră">1 oră</option>
+                    <option value="4 ore">4 ore</option>
+                    <option value="Niciodată">Niciodată</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd">
+              <div><div class="s-card-title">Sesiuni active</div><div class="s-card-sub">Dispozitive autentificate în contul tău</div></div>
+              <button type="button" class="btn-danger" style="font-size:12px;padding:6px 12px" onclick="showToast('toast-sessions')">Deconectează-le pe toate</button>
+            </div>
+            <div class="s-card-body" style="padding:16px 22px 20px">
+              <table class="ses-table">
+                <thead><tr><th>Dispozitiv</th><th>Locație</th><th>Ultima activitate</th><th></th></tr></thead>
+                <tbody>
+                <tr>
+                  <td><div class="ses-device"><div class="ses-device-ico">💻</div><span style="font-weight:500;color:var(--text)">Browser curent<span class="ses-current">Activ</span></span></div></td>
+                  <td>România</td><td>Acum</td>
+                  <td><span style="font-size:11px;color:var(--text-3)">—</span></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Jurnal de securitate</div><div class="s-card-sub">Ultimele evenimente din contul tău</div></div></div>
+            <div class="s-card-body" style="padding:16px 22px 4px">
+              <div style="display:flex;flex-direction:column;gap:0" th:if="${!auditLogs.isEmpty()}">
+                <div class="audit-row" th:each="log : ${auditLogs}" style="display:flex;gap:12px;padding:11px 0">
+                  <span style="font-size:13px" th:switch="${log.actionType}">
+                    <th:block th:case="'LOGIN'">✅</th:block>
+                    <th:block th:case="'LOGOUT'">🚪</th:block>
+                    <th:block th:case="'DELETE'">🗑</th:block>
+                    <th:block th:case="'ERROR'">⚠️</th:block>
+                    <th:block th:case="'EXPORT'">📦</th:block>
+                    <th:block th:case="*">⚙️</th:block>
+                  </span>
+                  <div>
+                    <div style="font-size:12px;font-weight:600;color:var(--text)" th:text="${log.actionDescription}">Acțiune</div>
+                    <div style="font-size:10px;color:var(--text-3)">
+                      <span th:text="${#temporals.format(log.loggedAt, 'dd MMM yyyy, HH:mm')}">data</span>
+                      <span th:if="${log.ipAddress != null}" th:text="' · ' + ${log.ipAddress}"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p th:if="${auditLogs.isEmpty()}" style="font-size:12px;color:var(--text-3);padding:8px 0 16px">Niciun eveniment înregistrat încă.</p>
+            </div>
+          </div>
+
+        </div><!-- /panel-security -->
+
+        <!-- ════ DATE & EXPORT ════ -->
+        <div class="s-panel" id="panel-data">
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Export date personale</div><div class="s-card-sub">Descarcă o copie completă a datelor tale SmartFit</div></div></div>
+            <div class="export-opts">
+              <div class="exp-opt" style="cursor:default">
+                <div class="exp-ico">🍽</div><div class="exp-name">Jurnal alimentar</div><div class="exp-desc">Toate mesele și macro-urile înregistrate</div>
+                <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+                  <span class="exp-fmt" style="background:rgba(255,59,48,.1);color:var(--red);cursor:pointer" onclick="window.location.href='/setari/export/jurnal.pdf'">PDF</span>
+                  <span class="exp-fmt" style="background:var(--blue-light);color:var(--blue);cursor:pointer" onclick="window.location.href='/setari/export/jurnal.csv'">CSV</span>
+                </div>
+              </div>
+              <div class="exp-opt" style="cursor:default">
+                <div class="exp-ico">🛒</div><div class="exp-name">Comenzi &amp; Facturi</div><div class="exp-desc">Istoricul complet al achizițiilor</div>
+                <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+                  <span class="exp-fmt" style="background:var(--blue-light);color:var(--blue);cursor:pointer" onclick="window.location.href='/setari/export/comenzi.pdf'">PDF</span>
+                </div>
+              </div>
+              <div class="exp-opt" style="cursor:default">
+                <div class="exp-ico">🎓</div><div class="exp-name">Academie &amp; XP</div><div class="exp-desc">Cursuri, înscrieri, scoruri, XP câștigat</div>
+                <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+                  <span class="exp-fmt" style="background:rgba(191,90,242,.1);color:var(--purple);cursor:pointer" onclick="window.location.href='/setari/export/academie.pdf'">PDF</span>
+                  <span class="exp-fmt" style="background:rgba(191,90,242,.1);color:var(--purple);cursor:pointer" onclick="window.location.href='/setari/export/academie.csv'">CSV</span>
+                </div>
+              </div>
+              <div class="exp-opt" style="cursor:pointer" onclick="window.location.href='/setari/export/complet.zip'">
+                <div class="exp-ico">📊</div><div class="exp-name">Date complete</div><div class="exp-desc">Tot ce ai în aplicație într-o singură arhivă</div>
+                <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+                  <span class="exp-fmt" style="background:rgba(48,209,88,.1);color:#1A8A3A">ZIP</span>
+                </div>
+              </div>
+              <div class="exp-opt" style="cursor:default">
+                <div class="exp-ico">⚖️</div><div class="exp-name">Greutate &amp; IMC</div><div class="exp-desc">Evoluție greutate și IMC calculat</div>
+                <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+                  <span class="exp-fmt" style="background:rgba(48,209,88,.1);color:#1A8A3A;cursor:pointer" onclick="window.location.href='/setari/export/greutate.csv'">CSV</span>
+                  <span class="exp-fmt" style="background:rgba(48,209,88,.1);color:#1A8A3A;cursor:pointer" onclick="window.location.href='/setari/export/greutate.json'">JSON</span>
+                </div>
+              </div>
+              <div class="exp-opt" style="cursor:pointer" onclick="window.location.href='/setari/export/profil'">
+                <div class="exp-ico">👤</div><div class="exp-name">Profil &amp; Setări</div><div class="exp-desc">Date personale, preferințe, setări cont</div>
+                <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+                  <span class="exp-fmt" style="background:var(--off);color:var(--text-3)">JSON</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Import date</div><div class="s-card-sub">Importă date din alte aplicații</div></div></div>
+            <div class="s-card-body" style="padding:16px 22px 20px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--off);border-radius:var(--r)">
+                <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">📋</span><div><div style="font-size:13px;font-weight:600;color:var(--text)">Importă din MyFitnessPal</div><div style="font-size:11px;color:var(--text-3)">Jurnal alimentar · CSV sau MFP export</div></div></div>
+                <button type="button" class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="showToast('toast-import')">Selectează fișier</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--off);border-radius:var(--r)">
+                <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">📊</span><div><div style="font-size:13px;font-weight:600;color:var(--text)">Importă CSV personalizat</div><div style="font-size:11px;color:var(--text-3)">Format: data, masă, aliment, kcal, P, C, G</div></div></div>
+                <button type="button" class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="showToast('toast-import')">Selectează fișier</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Retenție date</div><div class="s-card-sub">Controlează cât timp se păstrează datele tale</div></div></div>
+            <div class="s-card-body">
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">📅</div>
+                <div class="s-row-info"><div class="s-row-title">Jurnal alimentar</div><div class="s-row-desc">Cât timp să se păstreze înregistrările de mese</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:140px" th:field="*{journalRetention}" onchange="markDirty()">
+                    <option value="1 an">1 an</option>
+                    <option value="3 ani">3 ani</option>
+                    <option value="Forever">Forever</option>
+                  </select>
+                </div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#E8F8EF">📦</div>
+                <div class="s-row-info"><div class="s-row-title">Istoricul comenzilor</div><div class="s-row-desc">Facturi și detalii achiziții</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:140px" th:field="*{ordersRetention}" onchange="markDirty()">
+                    <option value="5 ani">5 ani</option>
+                    <option value="Forever">Forever</option>
+                  </select>
+                </div>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#FFF0E8">📊</div>
+                <div class="s-row-info"><div class="s-row-title">Rapoarte generate</div><div class="s-row-desc">Fișierele PDF și CSV exportate</div></div>
+                <div class="s-row-ctrl">
+                  <select class="s-sel" style="width:140px" th:field="*{reportsRetention}" onchange="markDirty()">
+                    <option value="30 zile">30 zile</option>
+                    <option value="90 zile">90 zile</option>
+                    <option value="1 an">1 an</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-data -->
+
+        <!-- ════ CONT ════ -->
+        <div class="s-panel" id="panel-account">
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Informații cont</div><div class="s-card-sub">Detalii despre abonamentul și contul tău</div></div></div>
+            <div class="s-card-body">
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#EAF3FF">🆔</div>
+                <div class="s-row-info">
+                  <div class="s-row-title">ID Utilizator</div>
+                  <div class="s-row-desc" th:text="'#SF-' + ${user.id}">ID</div>
+                </div>
+                <span class="chip ch-blue" style="font-size:10px">Standard</span>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#E8F8EF">📧</div>
+                <div class="s-row-info">
+                  <div class="s-row-title">Email cont</div>
+                  <div class="s-row-desc"><span th:text="${user.email}">email</span> · <span style="color:var(--green);font-weight:600">✓ Verificat</span></div>
+                </div>
+                <button type="button" class="btn-sec" style="font-size:12px;padding:6px 12px" onclick="openModal('modal-email')">Schimbă</button>
+              </div>
+              <div class="s-row">
+                <div class="s-row-ico" style="background:#F0E8FF">🔑</div>
+                <div class="s-row-info"><div class="s-row-title">Metodă autentificare</div><div class="s-row-desc">Email + parolă</div></div>
+                <span class="chip ch-green" style="font-size:10px">Securizat</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-card">
+            <div class="s-card-hd"><div><div class="s-card-title">Tip cont &amp; Upgrade</div><div class="s-card-sub">Planul tău curent și avantajele disponibile</div></div></div>
+            <div class="s-card-body" style="padding:16px 22px 20px">
+              <div style="background:var(--blue-light);border:.5px solid rgba(0,102,204,.18);border-radius:var(--r-md);padding:18px 20px;display:flex;align-items:center;gap:16px;margin-bottom:16px">
+                <div style="font-size:36px">⭐</div>
+                <div style="flex:1">
+                  <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--blue);margin-bottom:3px">Cont Standard</div>
+                  <div style="font-size:12px;color:var(--text-2)">Acces complet la toate funcțiile de bază · Tracking, Magazin, Academie</div>
+                </div>
+                <button type="button" class="btn-prim" style="font-size:12px;padding:9px 16px" onclick="showToast('toast-premium')">Upgrade Premium</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2)"><span style="color:var(--green)">✓</span>Jurnal alimentar nelimitat</div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2)"><span style="color:var(--green)">✓</span>Magazin cu discount XP</div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2)"><span style="color:var(--green)">✓</span>Academie &amp; 12 cursuri</div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2)"><span style="color:var(--green)">✓</span>Export PDF rapoarte</div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-3)"><span>○</span>Consultații nutriționist</div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-3)"><span>○</span>Plan alimentar personalizat AI</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ZONĂ PERICULOASĂ -->
+          <div class="danger-zone">
+            <div class="dz-hd">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>
+              <div class="dz-title">Zonă periculoasă</div>
+            </div>
+            <div class="dz-row">
+              <div><div class="dz-info-t">Resetează toate setările</div><div class="dz-info-s">Revine la valorile implicite ale setărilor, profilul rămâne intact</div></div>
+              <button type="button" class="btn-danger" onclick="openModal('modal-reset')">Resetează setările</button>
+            </div>
+            <div class="dz-row">
+              <div><div class="dz-info-t">Șterge tot istoricul alimentar</div><div class="dz-info-s">Toate jurnalele, greutatea și statisticile vor fi șterse ireversibil</div></div>
+              <button type="button" class="btn-danger" onclick="openModal('modal-delete-data')">Șterge istoricul</button>
+            </div>
+            <div class="dz-row">
+              <div><div class="dz-info-t">Dezactivează contul</div><div class="dz-info-s">Contul va fi dezactivat temporar. Datele se păstrează 90 de zile.</div></div>
+              <button type="button" class="btn-danger" onclick="openModal('modal-deactivate')">Dezactivează</button>
+            </div>
+            <div class="dz-row">
+              <div><div class="dz-info-t">Ștergere cont permanentă</div><div class="dz-info-s">Acțiune ireversibilă. Toate datele, comenzile și XP vor fi șterse definitiv.</div></div>
+              <button type="button" class="btn-danger" style="background:rgba(255,59,48,.15);font-weight:700" onclick="openModal('modal-delete')">Șterge contul</button>
+            </div>
+          </div>
+
+        </div><!-- /panel-account -->
+
+      </div><!-- /panels wrapper -->
+    </div><!-- /settings-layout -->
+  </form><!-- /settingsForm -->
+</main>
+
+<!-- ═══════════════════════════════════════════
+     MODALURI — fiecare are propriul <form>
+     (sunt în afara #settingsForm principal)
+════════════════════════════════════════════ -->
+
+<!-- Modal: Schimbă parola -->
+<div class="modal-bg" id="modal-pw" onclick="if(event.target===this)closeModal('modal-pw')">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">🔑 Schimbă parola</span>
+      <button type="button" class="modal-close" onclick="closeModal('modal-pw')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <form th:action="@{/setari/schimba-parola}" method="post">
+      <div class="modal-body">
+        <div th:if="${pwError}" class="modal-warn" th:text="${pwError}"></div>
+        <div class="field-sm"><label>Parola actuală</label><input class="s-inp" type="password" name="currentPassword" required placeholder="Parola curentă"/></div>
+        <div class="field-sm">
+          <label>Parola nouă</label>
+          <input class="s-inp" type="password" name="newPassword" id="pwNew" placeholder="Cel puțin 8 caractere" required oninput="checkPwStrength(this.value)"/>
+          <div class="pw-strength"><div class="pw-bar" id="pwBar" style="width:0%;background:var(--red)"></div></div>
+          <div id="pwLabel" style="font-size:10px;color:var(--text-3);margin-top:4px">Introdu o parolă nouă</div>
+        </div>
+        <div class="field-sm"><label>Confirmă parola nouă</label><input class="s-inp" type="password" name="confirmPassword" required placeholder="Repetă parola nouă"/></div>
+        <div class="modal-warn">Parola trebuie să aibă cel puțin 8 caractere, o majusculă, un număr și un caracter special (@, #, !, etc.).</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sec" onclick="closeModal('modal-pw')">Anulează</button>
+        <button type="submit" class="btn-prim">Salvează parola</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Schimbă email -->
+<div class="modal-bg" id="modal-email" onclick="if(event.target===this)closeModal('modal-email')">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">📧 Schimbă adresa de email</span>
+      <button type="button" class="modal-close" onclick="closeModal('modal-email')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <form th:action="@{/setari/schimba-email}" method="post">
+      <div class="modal-body">
+        <div th:if="${emailError}" class="modal-warn" th:text="${emailError}"></div>
+        <div class="field-sm"><label>Email curent</label><input class="s-inp" type="email" th:value="${user.email}" disabled style="opacity:.6"/></div>
+        <div class="field-sm"><label>Email nou</label><input class="s-inp" type="email" name="newEmail" required placeholder="email.nou@exemplu.ro"/></div>
+        <div class="field-sm"><label>Confirmă cu parola</label><input class="s-inp" type="password" name="confirmPassword" required placeholder="Parola ta SmartFit"/></div>
+        <div class="modal-info">Vei fi deconectat după schimbarea email-ului. Autentifică-te cu noua adresă.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sec" onclick="closeModal('modal-email')">Anulează</button>
+        <button type="submit" class="btn-prim">Confirmă schimbarea</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Ștergere cont -->
+<div class="modal-bg" id="modal-delete" onclick="if(event.target===this)closeModal('modal-delete')">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" style="color:var(--red)">⚠ Ștergere cont permanentă</span>
+      <button type="button" class="modal-close" onclick="closeModal('modal-delete')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <form id="deleteAccountForm" th:action="@{/setari/sterge-cont}" method="post">
+      <div class="modal-body">
+        <div th:if="${deleteError}" class="modal-warn" th:text="${deleteError}"></div>
+        <div class="modal-warn">Această acțiune este <strong>ireversibilă</strong>. Se vor șterge: jurnalul alimentar, comenzile, XP, certificatele și toate setările.</div>
+        <div class="field-sm">
+          <label>Motivul ștergerii (opțional)</label>
+          <select class="s-sel" name="deleteReason" style="width:100%">
+            <option value="">Selectează un motiv…</option>
+            <option value="unused">Nu mai folosesc aplicația</option>
+            <option value="other_app">Prefer o altă aplicație</option>
+            <option value="privacy">Probleme de confidențialitate</option>
+            <option value="other">Altul</option>
+          </select>
+        </div>
+        <div class="field-sm">
+          <label>Scrie "ȘTERGE CONTUL" pentru confirmare</label>
+          <input class="s-inp" type="text" name="deleteConfirm" id="deleteConfirm" placeholder="ȘTERGE CONTUL"/>
+        </div>
+        <div class="field-sm"><label>Parola contului</label><input class="s-inp" type="password" name="password" required placeholder="Parola ta SmartFit"/></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sec" onclick="closeModal('modal-delete')">Renunță</button>
+        <button type="button" class="btn-danger" style="padding:9px 18px" onclick="checkDeleteConfirm()">Șterge contul definitiv</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Resetare setări -->
+<div class="modal-bg" id="modal-reset" onclick="if(event.target===this)closeModal('modal-reset')">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">🔄 Resetează setările</span>
+      <button type="button" class="modal-close" onclick="closeModal('modal-reset')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <form th:action="@{/setari/reseteaza}" method="post">
+      <div class="modal-body">
+        <div class="modal-warn">Toate setările (notificări, aspect, preferințe) vor reveni la valorile implicite. <strong>Profilul și datele alimentare nu sunt afectate.</strong></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sec" onclick="closeModal('modal-reset')">Anulează</button>
+        <button type="submit" class="btn-danger">Resetează setările</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Dezactivare cont -->
+<div class="modal-bg" id="modal-deactivate" onclick="if(event.target===this)closeModal('modal-deactivate')">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">⏸ Dezactivare cont</span>
+      <button type="button" class="modal-close" onclick="closeModal('modal-deactivate')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <form th:action="@{/setari/dezactiveaza}" method="post">
+      <div class="modal-body">
+        <div class="modal-warn">Contul tău va fi dezactivat. Datele se păstrează 90 de zile, după care sunt șterse definitiv dacă nu te reautentifici.</div>
+        <div class="field-sm"><label>Confirmă cu parola</label><input class="s-inp" type="password" name="password" required placeholder="Parola ta SmartFit"/></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sec" onclick="closeModal('modal-deactivate')">Anulează</button>
+        <button type="submit" class="btn-danger">Dezactivează contul</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Ștergere istoric alimentar -->
+<div class="modal-bg" id="modal-delete-data" onclick="if(event.target===this)closeModal('modal-delete-data')">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" style="color:var(--red)">🗑 Șterge istoricul alimentar</span>
+      <button type="button" class="modal-close" onclick="closeModal('modal-delete-data')"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <form th:action="@{/setari/sterge-istoric}" method="post">
+      <div class="modal-body">
+        <div class="modal-warn">Vor fi șterse ireversibil: toate mesele înregistrate, evoluția greutății, statistici și grafice. <strong>Contul și comenzile rămân intacte.</strong></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sec" onclick="closeModal('modal-delete-data')">Anulează</button>
+        <button type="submit" class="btn-danger">Șterge istoricul</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ TOASTURI ═══ -->
+<div class="toast-wrap">
+  <div class="toast" id="toast-save"><div class="t-ico tg">✅</div><div class="t-info"><div class="t-title">Setări salvate!</div><div class="t-msg">Toate modificările au fost aplicate cu succes.</div><div class="t-bar"><div class="t-bf" style="background:var(--green)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-save')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-sessions"><div class="t-ico tg">🔒</div><div class="t-info"><div class="t-title">Sesiune deconectată</div><div class="t-msg">Dispozitivul a fost deconectat din contul tău.</div><div class="t-bar"><div class="t-bf" style="background:var(--green)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-sessions')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-export"><div class="t-ico tg">📦</div><div class="t-info"><div class="t-title">Export în curs…</div><div class="t-msg">Fișierul va fi disponibil în câteva secunde.</div><div class="t-bar"><div class="t-bf" style="background:var(--green)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-export')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-import"><div class="t-ico to">📋</div><div class="t-info"><div class="t-title">Import înregistrat</div><div class="t-msg">Fișierul este procesat. Datele apar în jurnal în max 2 minute.</div><div class="t-bar"><div class="t-bf" style="background:var(--orange)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-import')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-reset"><div class="t-ico to">🔄</div><div class="t-info"><div class="t-title">Setări resetate</div><div class="t-msg">S-au restaurat valorile implicite SmartFit.</div><div class="t-bar"><div class="t-bf" style="background:var(--orange)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-reset')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-gdpr"><div class="t-ico tb2">🛡</div><div class="t-info"><div class="t-title">Cerere GDPR înregistrată</div><div class="t-msg">Exportul datelor va fi trimis pe email în max 72h.</div><div class="t-bar"><div class="t-bf" style="background:var(--blue)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-gdpr')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-premium"><div class="t-ico to">⭐</div><div class="t-info"><div class="t-title">Upgrade Premium</div><div class="t-msg">Pagina de upgrade va fi disponibilă în curând!</div><div class="t-bar"><div class="t-bf" style="background:var(--orange)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-premium')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-info"><div class="t-ico tb2">ℹ️</div><div class="t-info"><div class="t-title">Cheile de recuperare</div><div class="t-msg">Funcționalitate disponibilă în curând în panoul de securitate.</div><div class="t-bar"><div class="t-bf" style="background:var(--blue)"></div></div></div><button type="button" class="t-close" onclick="hideToast('toast-info')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+</div>
+
+<!-- ═══ BARA DE SALVARE ═══ -->
+<div class="save-bar" id="saveBar">
+  <span class="save-bar-msg"><strong>Modificări nesalvate</strong> — apasă Salvează pentru a le aplica</span>
+  <div class="save-bar-actions">
+    <button type="button" class="btn-sec" onclick="discardChanges()">Renunță</button>
+    <button type="submit" form="settingsForm" class="btn-prim">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="2 8 6 12 14 4"/></svg>
+      Salvează setările
+    </button>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  /* ══ SIDEBAR ══ */
+  const sb = document.getElementById('sb');
+  const mainEl = document.getElementById('main');
+  const topbar = document.getElementById('topbar');
+  const sbArr = document.getElementById('sbArr');
+  const saveBar = document.getElementById('saveBar');
+  let sbOpen = true;
+
+  document.getElementById('sbToggle').addEventListener('click', () => {
+    sbOpen = !sbOpen;
+    sb.classList.toggle('closed', !sbOpen);
+    mainEl.classList.toggle('sb-closed', !sbOpen);
+    topbar.classList.toggle('sb-closed', !sbOpen);
+    saveBar.classList.toggle('sb-closed', !sbOpen);
+    sbArr.style.transform = sbOpen ? '' : 'rotate(180deg)';
+  });
+
+  /* ══ SCHIMBARE PANEL ══ */
+  function switchPanel(id) {
+    document.querySelectorAll('.s-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.s-nav-item').forEach(i => i.classList.remove('active'));
+    const panel = document.getElementById('panel-' + id);
+    if (panel) panel.classList.add('active');
+    document.querySelectorAll('.s-nav-item').forEach(item => {
+      const oc = item.getAttribute('onclick') || '';
+      if (oc.includes("'" + id + "'")) item.classList.add('active');
+    });
+  }
+
+  /* ══ DIRTY STATE ══ */
+  let isDirty = false;
+  function markDirty() {
+    if (!isDirty) { isDirty = true; saveBar.classList.add('visible'); }
+  }
+  function discardChanges() {
+    isDirty = false;
+    saveBar.classList.remove('visible');
+    window.location.reload();
+  }
+
+  /* ══ TEMĂ ══ */
+  function selectTheme(el, theme) {
+    document.querySelectorAll('.theme-opt').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('themeHidden').value = theme;
+    document.documentElement.setAttribute('data-theme', theme === 'light' ? '' : theme);
+    markDirty();
+  }
+
+  /* ══ CULOARE ACCENT ══ */
+  function setAccent(el, color) {
+    document.querySelectorAll('.accent-opt').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+    document.documentElement.style.setProperty('--blue', color);
+    document.getElementById('accentHidden').value = color;
+    markDirty();
+  }
+
+  /* ══ SISTEM UNITĂȚI ══ */
+  function setUnit(u) {
+    document.getElementById('unitHidden').value = u;
+    applyUnitButtons(u);
+    markDirty();
+  }
+  function applyUnitButtons(u) {
+    const m = document.getElementById('unitMetric');
+    const i = document.getElementById('unitImperial');
+    if (!m || !i) return;
+    const baseStyle = 'border-radius:0;box-shadow:none;font-size:12px;padding:7px 14px';
+    if (u === 'imperial') {
+      i.className = 'btn-prim'; i.style.cssText = baseStyle;
+      m.className = 'btn-sec';  m.style.cssText = baseStyle + ';border:none';
+    } else {
+      m.className = 'btn-prim'; m.style.cssText = baseStyle;
+      i.className = 'btn-sec';  i.style.cssText = baseStyle + ';border:none';
+    }
+  }
+
+  /* ══ DIMENSIUNE FONT ══ */
+  function updateFontSize(v) {
+    const pct = Math.round((v - 12) / (18 - 12) * 100);
+    document.getElementById('fontSizeDemo').textContent = v + 'px';
+    document.getElementById('fontSlider').style.setProperty('--progress', pct + '%');
+    markDirty();
+  }
+
+  /* ══ NOTIFICĂRI — dezactivează toate ══ */
+  function toggleAllNotifs(state) {
+    document.querySelectorAll('#panel-notifications .toggle-sw input').forEach(t => t.checked = state);
+    markDirty();
+  }
+
+  /* ══ PUTERE PAROLĂ ══ */
+  function checkPwStrength(pw) {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const bar = document.getElementById('pwBar');
+    const lbl = document.getElementById('pwLabel');
+    const colors = ['', '#FF3B30', '#FF9F0A', '#0066CC', '#30D158'];
+    const labels = ['', 'Slabă', 'Medie', 'Bună', 'Excelentă'];
+    bar.style.width = (score * 25) + '%';
+    bar.style.background = colors[score] || 'transparent';
+    lbl.textContent = labels[score] || '';
+    lbl.style.color = colors[score] || 'var(--text-3)';
+  }
+
+  /* ══ CONFIRMARE ȘTERGERE CONT ══ */
+  function checkDeleteConfirm() {
+    const v = document.getElementById('deleteConfirm').value;
+    if (v === 'ȘTERGE CONTUL') {
+      document.getElementById('deleteAccountForm').submit();
+    } else {
+      const inp = document.getElementById('deleteConfirm');
+      inp.style.borderColor = 'var(--red)';
+      inp.style.boxShadow = '0 0 0 3px rgba(255,59,48,.12)';
+      setTimeout(() => { inp.style.borderColor = ''; inp.style.boxShadow = ''; }, 1500);
+    }
+  }
+
+  /* ══ CĂUTARE ÎN SETĂRI ══ */
+  function searchSettings(q) {
+    if (!q) { document.querySelectorAll('.s-row,.priv-row,.sec-row,.ng-item').forEach(r => r.style.display = ''); return; }
+    const ql = q.toLowerCase();
+    document.querySelectorAll('.s-row,.priv-row,.sec-row,.ng-item').forEach(r => {
+      r.style.display = r.textContent.toLowerCase().includes(ql) ? '' : 'none';
+    });
+  }
+
+  /* ══ MODALURI ══ */
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  /* ══ TOASTURI ══ */
+  function showToast(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('show', 'hide');
+    void el.offsetWidth;
+    el.classList.add('show');
+    setTimeout(() => hideToast(id), 4500);
+  }
+  function hideToast(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('hide');
+    setTimeout(() => el.classList.remove('show', 'hide'), 420);
+  }
+
+  /* ══ INIȚIALIZARE LA ÎNCĂRCARE ══ */
+  document.addEventListener('DOMContentLoaded', function () {
+
+    // Comută la panoul activ (ex: după redirect din schimbare parolă)
+    var activePanel = /*[[${activePanel}]]*/ 'general';
+    switchPanel(activePanel);
+
+    // Deschide modal dacă există eroare din redirect
+    var openPwModal = /*[[${openPwModal}]]*/ false;
+    if (openPwModal) setTimeout(function () { openModal('modal-pw'); }, 100);
+
+    var openEmailModal = /*[[${openEmailModal}]]*/ false;
+    if (openEmailModal) setTimeout(function () { openModal('modal-email'); }, 100);
+
+    var openDeleteModal = /*[[${openDeleteModal}]]*/ false;
+    if (openDeleteModal) setTimeout(function () { openModal('modal-delete'); }, 100);
+
+    // Toasturi success din redirect
+    var settingsSaved = /*[[${settingsSaved}]]*/ false;
+    if (settingsSaved) setTimeout(function () { showToast('toast-save'); }, 200);
+
+    var settingsReset = /*[[${settingsReset}]]*/ false;
+    if (settingsReset) setTimeout(function () { showToast('toast-reset'); }, 200);
+
+    // Inițializare controale UI
+    var unit = document.getElementById('unitHidden') ? document.getElementById('unitHidden').value : 'metric';
+    applyUnitButtons(unit);
+
+    var savedTheme = document.getElementById('themeHidden') ? document.getElementById('themeHidden').value : 'light';
+    if (savedTheme && savedTheme !== 'light') {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+    var accent = document.getElementById('accentHidden') ? document.getElementById('accentHidden').value : '#0066CC';
+    if (accent) document.documentElement.style.setProperty('--blue', accent);
+
+    var sl = document.getElementById('fontSlider');
+    if (sl) {
+      var pct = Math.round((sl.value - 12) / (18 - 12) * 100);
+      sl.style.setProperty('--progress', pct + '%');
+      document.getElementById('fontSizeDemo').textContent = sl.value + 'px';
+    }
+  });
+</script>
+</body>
+</html>

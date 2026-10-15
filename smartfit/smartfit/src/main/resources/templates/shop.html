@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SmartFit – Magazin</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+            --blue-light:#EAF3FF;--blue-mid:rgba(0,102,204,.07);
+            --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;
+            --white:#FFFFFF;--off:#F5F5F7;--off2:#EBEBED;
+            --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+            --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.10);
+            --sh-sm:0 2px 10px rgba(0,0,0,.06);--sh-md:0 6px 28px rgba(0,0,0,.09);--sh-lg:0 16px 56px rgba(0,0,0,.13);
+            --r:12px;--r-md:16px;--r-lg:22px;
+            --sw:248px;--th:58px;--cart-w:360px;--tr:.22s ease;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+
+        /* ══════════════ SIDEBAR ══════════════ */
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--tr);overflow:hidden}
+        .sidebar.closed{width:64px}
+        .sb-logo{display:flex;align-items:center;gap:11px;padding:14px 18px;height:var(--th);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;overflow:hidden}
+        .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-logo-icon svg{width:17px;height:17px}
+        .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--tr)}
+        .sidebar.closed .sb-logo-text{opacity:0}
+        .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+        .sb-nav::-webkit-scrollbar{width:0}
+        .sb-sec{margin-bottom:22px}
+        .sb-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;white-space:nowrap;transition:opacity var(--tr)}
+        .sidebar.closed .sb-lbl{opacity:0}
+        .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--tr),color var(--tr);position:relative}
+        .sb-item:hover{background:var(--off);color:var(--text)}
+        .sb-item.active{background:var(--blue-light);color:var(--blue)}
+        .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-item.active .sb-ico{background:rgba(0,102,204,.12)}
+        .sb-txt{opacity:1;transition:opacity var(--tr)}
+        .sidebar.closed .sb-txt{opacity:0}
+        .sb-badge{font-size:10px;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;border-radius:100px;margin-left:auto;flex-shrink:0;transition:opacity var(--tr)}
+        .sidebar.closed .sb-badge{opacity:0}
+        .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+        .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);border-radius:8px;transition:color var(--tr)}
+        .sb-toggle:hover{color:var(--text);background:var(--off)}
+        .sidebar.closed .sb-toggle{justify-content:center}
+        .sidebar.closed .sb-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:400}
+        .sidebar.closed .sb-item:hover::after{opacity:1}
+
+        /* ══════════════ TOPBAR ══════════════ */
+        .topbar{position:fixed;top:0;left:var(--sw);right:0;height:var(--th);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--tr)}
+        .topbar.sb-closed{left:64px}
+        .tb-search{flex:1;max-width:400px;position:relative}
+        .tb-search input{width:100%;padding:9px 14px 9px 38px;background:var(--off);border:1.5px solid transparent;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr),background var(--tr)}
+        .tb-search input::placeholder{color:var(--text-3)}
+        .tb-search input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .tb-sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+        .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+        .tb-icon-btn{position:relative;width:36px;height:36px;border-radius:100px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:background var(--tr)}
+        .tb-icon-btn:hover{background:var(--off)}
+        .tb-cart-btn{position:relative;display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:100px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;transition:background var(--tr),transform .15s;box-shadow:0 3px 14px rgba(0,102,204,.28)}
+        .tb-cart-btn:hover{background:#0055AA}
+        .tb-cart-btn:active{transform:scale(.97)}
+        .cart-count-badge{background:rgba(255,255,255,.25);border-radius:100px;padding:1px 7px;font-size:11px;font-weight:700}
+        .ndot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid #fff}
+        .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;border:2px solid rgba(255,255,255,.9);box-shadow:var(--sh-sm)}
+        .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+
+        /* ══════════════ MAIN ══════════════ */
+        .main{margin-left:var(--sw);margin-top:var(--th);padding:28px;transition:margin-left var(--tr);min-height:calc(100vh - var(--th))}
+        .main.sb-closed{margin-left:64px}
+        .main.cart-open{margin-right:var(--cart-w)}
+
+        /* ══════════════ UTILITIES ══════════════ */
+        .btn-prim{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--tr),transform .15s;box-shadow:0 3px 14px rgba(0,102,204,.25);text-decoration:none;white-space:nowrap}
+        .btn-prim:hover{background:#0055AA;transform:translateY(-1px)}
+        .btn-prim:active{transform:scale(.97)}
+        .btn-sec{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all var(--tr);box-shadow:var(--sh-sm);text-decoration:none;white-space:nowrap}
+        .btn-sec:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+        .btn-ghost{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;transition:opacity var(--tr)}
+        .btn-ghost:hover{opacity:.65}
+        .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px}
+        .ch-blue{background:var(--blue-light);color:var(--blue)}
+        .ch-green{background:rgba(48,209,88,.1);color:#1A8A3A}
+        .ch-orange{background:rgba(255,159,10,.1);color:#C07000}
+        .ch-red{background:rgba(255,59,48,.08);color:#D93025}
+        .ch-purple{background:rgba(191,90,242,.1);color:#8A3DBF}
+        .sect-lbl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+        .sect-lbl::after{content:'';flex:1;height:.5px;background:var(--border-2)}
+        [data-tt]{position:relative}
+        [data-tt]::after{content:attr(data-tt);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:500}
+        [data-tt]:hover::after{opacity:1}
+
+        /* ══════════════ PAGE HEADER ══════════════ */
+        .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+        .ph-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+        .page-hd h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.6px;line-height:1.05;margin-bottom:4px}
+        .page-hd p{font-size:14px;color:var(--text-2);font-weight:300}
+        .ph-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+        /* ══════════════ HERO BANNER ══════════════ */
+        .shop-hero{background:linear-gradient(130deg,var(--blue-deep) 0%,#0B3870 55%,#0C4A92 100%);border-radius:var(--r-lg);padding:0;margin-bottom:24px;position:relative;overflow:hidden;min-height:160px;display:flex;align-items:stretch}
+        .sh-blob{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none}
+        .shb1{width:350px;height:350px;background:#0A84FF;opacity:.13;top:-120px;right:-80px}
+        .shb2{width:200px;height:200px;background:#5AC8FA;opacity:.09;bottom:-60px;left:28%}
+        .sh-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:26px 26px;pointer-events:none}
+        .sh-left{padding:28px 36px;flex:1;position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center}
+        .sh-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.75);font-size:11px;font-weight:500;letter-spacing:.5px;padding:5px 12px;border-radius:100px;margin-bottom:14px;width:fit-content}
+        .sh-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:dp 2s infinite}
+        @keyframes dp{0%,100%{opacity:1}50%{opacity:.25}}
+        .sh-title{font-family:'Syne',sans-serif;font-size:clamp(22px,2.8vw,34px);font-weight:800;color:#fff;line-height:1.08;letter-spacing:-.5px;margin-bottom:10px}
+        .sh-title span{color:var(--blue-3)}
+        .sh-sub{font-size:14px;font-weight:300;color:rgba(255,255,255,.55);max-width:360px;line-height:1.6;margin-bottom:18px}
+        .sh-chips{display:flex;gap:8px;flex-wrap:wrap}
+        .sh-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.75);font-size:11px;font-weight:500;padding:5px 11px;border-radius:100px}
+        .sh-right{padding:28px 36px;display:flex;flex-direction:column;justify-content:center;gap:12px;border-left:1px solid rgba(255,255,255,.07);position:relative;z-index:1;min-width:220px}
+        .sh-stat{display:flex;align-items:center;gap:11px}
+        .sh-stat-ico{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+        .sh-stat-n{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;line-height:1}
+        .sh-stat-l{font-size:11px;color:rgba(255,255,255,.45)}
+
+        /* ══════════════ XP DISCOUNT BANNER ══════════════ */
+        .xp-bar{background:linear-gradient(120deg,#1A3A1A,#0D3020);border:.5px solid rgba(48,209,88,.2);border-radius:var(--r-md);padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:24px}
+        .xp-bar-ico{font-size:22px;flex-shrink:0}
+        .xp-bar-info{flex:1}
+        .xp-bar-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:3px}
+        .xp-bar-sub{font-size:11px;color:rgba(255,255,255,.45)}
+        .xp-prog{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;max-width:200px}
+        .xp-prog-fill{height:100%;background:linear-gradient(90deg,var(--green),#30D158);border-radius:3px;transition:width 1.4s cubic-bezier(.22,1,.36,1)}
+        .xp-badge{background:rgba(48,209,88,.15);border:1px solid rgba(48,209,88,.3);border-radius:var(--r);padding:10px 18px;text-align:center;flex-shrink:0}
+        .xp-badge-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);line-height:1}
+        .xp-badge-l{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+
+        /* ══════════════ TOOLBAR ══════════════ */
+        .shop-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+        .shop-search{position:relative;flex:1;max-width:340px}
+        .shop-search input{width:100%;padding:10px 14px 10px 40px;background:#fff;border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;box-shadow:var(--sh-sm);transition:border-color var(--tr)}
+        .shop-search input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .shop-search input::placeholder{color:var(--text-3)}
+        .shop-search-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+        .sort-select{padding:9px 14px;background:#fff;border:.5px solid var(--border-2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;box-shadow:var(--sh-sm);cursor:pointer;transition:border-color var(--tr)}
+        .sort-select:focus{border-color:var(--blue)}
+        .view-toggle{display:flex;background:#fff;border:.5px solid var(--border-2);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-sm)}
+        .vt-btn{padding:9px 13px;background:none;border:none;cursor:pointer;color:var(--text-3);display:flex;align-items:center;transition:background var(--tr),color var(--tr)}
+        .vt-btn.active{background:var(--blue);color:#fff}
+        .vt-btn:hover:not(.active){background:var(--off)}
+        .result-count{font-size:13px;color:var(--text-3);margin-left:auto;white-space:nowrap}
+
+        /* ══════════════ CATEGORY FILTERS ══════════════ */
+        .cat-strip{display:flex;gap:10px;margin-bottom:22px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+        .cat-strip::-webkit-scrollbar{display:none}
+        .cat-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;background:#fff;border:.5px solid var(--border-2);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;white-space:nowrap;transition:all var(--tr);box-shadow:var(--sh-sm);flex-shrink:0}
+        .cat-btn:hover{border-color:var(--blue);color:var(--blue)}
+        .cat-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 3px 14px rgba(0,102,204,.25)}
+        .cat-ico{font-size:16px}
+        .cat-cnt{font-size:10px;font-weight:700;opacity:.6}
+
+        /* ══════════════ LAYOUT ══════════════ */
+        .shop-layout{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:start}
+
+        /* ══════════════ FILTER SIDEBAR ══════════════ */
+        .filter-panel{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;position:sticky;top:calc(var(--th) + 14px)}
+        .fp-hd{padding:16px 18px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+        .fp-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+        .fp-section{padding:16px 18px;border-bottom:.5px solid var(--border)}
+        .fp-section:last-child{border-bottom:none}
+        .fp-section-title{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:11px}
+        .fp-check{display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;font-size:13px;color:var(--text-2);transition:color var(--tr)}
+        .fp-check:hover{color:var(--text)}
+        .fp-check input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
+        .fp-check-label{flex:1}
+        .fp-check-cnt{font-size:11px;color:var(--text-3);margin-left:auto}
+        .price-range{display:flex;flex-direction:column;gap:9px}
+        .price-row{display:flex;gap:8px}
+        .price-inp{flex:1;padding:8px 10px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr)}
+        .price-inp:focus{border-color:var(--blue);background:#fff}
+        .range-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:linear-gradient(to right,var(--blue) 65%,var(--off2) 65%);outline:none;cursor:pointer}
+        .range-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,102,204,.3)}
+        .rating-row{display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;font-size:13px;color:var(--text-2)}
+        .rating-row:hover{color:var(--text)}
+        .stars-disp{color:var(--orange);font-size:14px;letter-spacing:1px}
+
+        /* ══════════════ PRODUCT GRID ══════════════ */
+        .products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+        .products-grid.list-view{grid-template-columns:1fr}
+
+        /* ══════════════ PRODUCT CARD ══════════════ */
+        .pcard{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;transition:transform var(--tr),box-shadow var(--tr);cursor:pointer;position:relative}
+        .pcard:hover{transform:translateY(-4px);box-shadow:var(--sh-md)}
+        .pcard:hover .pc-actions{opacity:1;transform:translateY(0)}
+        .pc-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;overflow:hidden}
+        .pc-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(0,0,0,.04) 100%)}
+        .pc-badges{position:absolute;top:10px;left:10px;display:flex;gap:5px;flex-direction:column;z-index:2}
+        .pcb{font-size:9px;font-weight:700;padding:3px 8px;border-radius:100px}
+        .pcb-sale{background:var(--red);color:#fff}
+        .pcb-new{background:var(--blue);color:#fff}
+        .pcb-hot{background:var(--orange);color:#fff}
+        .pcb-xp{background:linear-gradient(90deg,#FFD60A,#FF9F0A);color:var(--blue-deep)}
+        .pc-wish{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:100px;background:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-sm);z-index:2;transition:background var(--tr),transform var(--tr)}
+        .pc-wish:hover{background:var(--off);transform:scale(1.1)}
+        .pc-wish.active svg{fill:var(--red);stroke:var(--red)}
+        .pc-body{padding:13px 14px}
+        .pc-cat{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;font-weight:500}
+        .pc-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .pc-desc{font-size:11px;color:var(--text-3);margin-bottom:9px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .pc-rating{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+        .stars{color:var(--orange);font-size:12px;letter-spacing:.5px}
+        .pc-rating-n{font-size:11px;font-weight:600;color:var(--text)}
+        .pc-rating-cnt{font-size:10px;color:var(--text-3)}
+        .pc-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+        .pc-price-wrap{display:flex;flex-direction:column;gap:2px}
+        .pc-price{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--blue);line-height:1}
+        .pc-price-old{font-size:11px;color:var(--text-3);text-decoration:line-through}
+        .pc-price-save{font-size:10px;font-weight:700;color:var(--green)}
+        .pc-add{width:36px;height:36px;background:var(--blue);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background var(--tr),transform .15s;flex-shrink:0;box-shadow:0 2px 8px rgba(0,102,204,.3)}
+        .pc-add:hover{background:#0055AA}
+        .pc-add:active{transform:scale(.92)}
+        .pc-actions{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(to top,rgba(255,255,255,1) 60%,rgba(255,255,255,0));display:flex;gap:7px;opacity:0;transform:translateY(6px);transition:opacity var(--tr),transform var(--tr);z-index:3}
+
+        /* LIST VIEW card */
+        .products-grid.list-view .pcard{display:grid;grid-template-columns:140px 1fr auto;gap:0}
+        .products-grid.list-view .pc-img{height:auto;min-height:120px;border-radius:0;font-size:44px}
+        .products-grid.list-view .pc-body{padding:16px 18px;display:flex;flex-direction:column;justify-content:center}
+        .products-grid.list-view .pc-actions{position:static;opacity:1;transform:none;background:none;padding:0;flex-direction:column;justify-content:center;padding:16px 16px 16px 0;gap:8px}
+        .products-grid.list-view .pcard:hover{transform:none;box-shadow:var(--sh-md)}
+
+        /* ══════════════ CART PANEL ══════════════ */
+        .cart-panel{position:fixed;top:var(--th);right:-var(--cart-w);width:var(--cart-w);bottom:0;background:#fff;border-left:.5px solid var(--border-2);box-shadow:-8px 0 40px rgba(0,0,0,.08);z-index:150;display:flex;flex-direction:column;transition:right var(--tr);right:calc(-1 * var(--cart-w))}
+        .cart-panel.open{right:0;z-index:200}
+        .cart-hd{padding:18px 20px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .cart-hd-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
+        .cart-hd-count{font-size:12px;color:var(--text-3)}
+        .cart-close{width:30px;height:30px;background:var(--off);border:none;border-radius:100px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:background var(--tr)}
+        .cart-close:hover{background:var(--off2)}
+        .cart-body{flex:1;overflow-y:auto;padding:16px 20px}
+        .cart-body::-webkit-scrollbar{width:4px}
+        .cart-body::-webkit-scrollbar-thumb{background:var(--off2);border-radius:2px}
+        .cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;gap:12px;padding:40px}
+        .cart-empty-ico{font-size:44px}
+        .cart-empty-t{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text-2)}
+        .cart-empty-s{font-size:13px;color:var(--text-3);line-height:1.6}
+        .cart-item{display:flex;gap:11px;padding:12px 0;border-bottom:.5px solid var(--border);align-items:flex-start}
+        .cart-item:last-child{border-bottom:none}
+        .ci-img{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+        .ci-info{flex:1;min-width:0}
+        .ci-cat{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px}
+        .ci-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;line-height:1.3}
+        .ci-price{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--blue)}
+        .ci-qty{display:flex;align-items:center;gap:0;background:var(--off);border-radius:var(--r);overflow:hidden;margin-top:7px;width:fit-content;border:.5px solid var(--border)}
+        .cq-btn{width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:15px;transition:background var(--tr),color var(--tr)}
+        .cq-btn:hover{background:var(--blue-light);color:var(--blue)}
+        .cq-val{font-size:13px;font-weight:600;color:var(--text);padding:0 10px;line-height:28px;min-width:28px;text-align:center}
+        .ci-del{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px;border-radius:6px;transition:color var(--tr),background var(--tr);flex-shrink:0;margin-top:2px}
+        .ci-del:hover{color:var(--red);background:rgba(255,59,48,.07)}
+        .cart-footer{padding:16px 20px;border-top:.5px solid var(--border);flex-shrink:0;position:relative;z-index:10;background:#fff}
+        .coupon-row{display:flex;gap:8px;margin-bottom:14px}
+        .coupon-inp{flex:1;padding:9px 12px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr)}
+        .coupon-inp:focus{border-color:var(--blue);background:#fff}
+        .coupon-inp::placeholder{color:var(--text-3)}
+        .summary-rows{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+        .sum-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text-2)}
+        .sum-row.total{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);border-top:.5px solid var(--border);padding-top:10px;margin-top:3px}
+        .sum-row .disc{color:var(--green);font-weight:600}
+        .checkout-btn{width:100%;padding:15px;background:var(--blue);border:none;border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:background var(--tr),transform .15s;box-shadow:0 4px 18px rgba(0,102,204,.3)}
+        .checkout-btn:hover{background:#0055AA}
+        .checkout-btn:active{transform:scale(.98)}
+        .secure-note{text-align:center;font-size:11px;color:var(--text-3);margin-top:10px;display:flex;align-items:center;justify-content:center;gap:5px}
+
+        /* ══════════════ PRODUCT MODAL ══════════════ */
+        .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.32);backdrop-filter:blur(5px);z-index:900;display:none;align-items:center;justify-content:center;padding:16px}
+        .modal-bg.open{display:flex}
+        .prod-modal{background:#fff;border-radius:var(--r-lg);width:100%;max-width:700px;max-height:90vh;overflow:hidden;box-shadow:var(--sh-lg);display:flex;animation:mIn .25s ease}
+        @keyframes mIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+        .pm-img{width:280px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:80px;position:relative}
+        .pm-body{flex:1;padding:28px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+        .pm-body::-webkit-scrollbar{width:3px}
+        .pm-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:100px;background:rgba(0,0,0,.08);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);transition:background var(--tr)}
+        .pm-close:hover{background:rgba(0,0,0,.16)}
+        .pm-cat{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
+        .pm-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px;line-height:1.1;margin-bottom:10px}
+        .pm-rating{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+        .pm-desc{font-size:13px;color:var(--text-2);line-height:1.68;margin-bottom:16px}
+        .pm-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+        .pm-spec{background:var(--off);border-radius:var(--r);padding:9px 12px}
+        .pm-spec-l{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+        .pm-spec-v{font-size:13px;font-weight:600;color:var(--text)}
+        .pm-price-row{display:flex;align-items:baseline;gap:10px;margin-bottom:18px}
+        .pm-price{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue);line-height:1}
+        .pm-price-old{font-size:15px;color:var(--text-3);text-decoration:line-through}
+        .pm-save{font-size:12px;font-weight:700;color:var(--green)}
+        .pm-qty-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+        .pm-qty-label{font-size:12px;font-weight:600;color:var(--text-2)}
+        .qty-ctrl{display:flex;align-items:center;background:var(--off);border-radius:var(--r);overflow:hidden;border:.5px solid var(--border)}
+        .qty-btn{width:34px;height:34px;background:none;border:none;cursor:pointer;font-size:17px;color:var(--text);display:flex;align-items:center;justify-content:center;transition:background var(--tr)}
+        .qty-btn:hover{background:var(--blue-light);color:var(--blue)}
+        .qty-num{font-size:14px;font-weight:700;color:var(--text);padding:0 14px;line-height:34px;min-width:34px;text-align:center}
+        .pm-actions{display:flex;gap:10px}
+        .pm-add-btn{flex:1;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background var(--tr);box-shadow:0 3px 14px rgba(0,102,204,.25)}
+        .pm-add-btn:hover{background:#0055AA}
+        .pm-wish-btn{width:46px;height:46px;background:var(--off);border:.5px solid var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);flex-shrink:0}
+        .pm-wish-btn:hover{border-color:var(--red);background:rgba(255,59,48,.06)}
+        .pm-tab-bar{display:flex;gap:0;border-bottom:.5px solid var(--border);margin:18px -28px 0;padding:0 28px}
+        .pm-tab{padding:10px 0;margin-right:20px;font-size:13px;font-weight:500;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:color var(--tr),border-color var(--tr)}
+        .pm-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+        .pm-tab-content{padding-top:16px}
+        .review-item{padding:11px 0;border-bottom:.5px solid var(--border)}
+        .review-item:last-child{border-bottom:none}
+        .rev-hd{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+        .rev-avatar{width:28px;height:28px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+        .rev-name{font-size:13px;font-weight:600;color:var(--text)}
+        .rev-date{font-size:10px;color:var(--text-3);margin-left:auto}
+        .rev-text{font-size:12px;color:var(--text-2);line-height:1.55}
+        .nutr-table{width:100%;border-collapse:collapse;font-size:12px}
+        .nutr-table tr{border-bottom:.5px solid var(--border)}
+        .nutr-table tr:last-child{border-bottom:none}
+        .nutr-table td{padding:8px 0;color:var(--text-2)}
+        .nutr-table td:last-child{font-weight:600;color:var(--text);text-align:right}
+
+        /* ══════════════ PROMO BANNERS ══════════════ */
+        .promo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+        .promo-card{border-radius:var(--r-md);padding:18px;position:relative;overflow:hidden;cursor:pointer;transition:transform var(--tr),box-shadow var(--tr)}
+        .promo-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+        .pc1{background:linear-gradient(135deg,#EAF3FF,#C5DFFF)}
+        .pc2{background:linear-gradient(135deg,#E8F8EF,#B8ECCC)}
+        .pc3{background:linear-gradient(135deg,#FFF0E8,#FFCCAA)}
+        .promo-tag{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.6;margin-bottom:6px}
+        .promo-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;line-height:1.2}
+        .promo-sub{font-size:12px;color:var(--text-2);margin-bottom:10px}
+        .promo-badge{display:inline-flex;font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px}
+        .pb1{background:var(--blue);color:#fff}
+        .pb2{background:var(--green);color:#fff}
+        .pb3{background:var(--orange);color:#fff}
+        .promo-icon{position:absolute;right:14px;bottom:10px;font-size:36px;opacity:.4}
+
+        /* ══════════════ ORDER HISTORY ══════════════ */
+        .order-table table{width:100%;border-collapse:collapse;font-size:13px}
+        .order-table th{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:0 0 10px;text-align:left;border-bottom:.5px solid var(--border-2)}
+        .order-table td{padding:12px 0;border-bottom:.5px solid var(--border);vertical-align:middle}
+        .order-table tr:last-child td{border-bottom:none}
+        .order-table tr:hover td{background:rgba(0,102,204,.018)}
+        .ord-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px}
+        .ob-green{background:rgba(48,209,88,.1);color:#1A8A3A}
+        .ob-orange{background:rgba(255,159,10,.1);color:#C07000}
+        .ob-blue{background:var(--blue-light);color:var(--blue)}
+        .ob-gray{background:var(--off);color:var(--text-3)}
+        .ord-prod{display:flex;align-items:center;gap:8px}
+        .ord-prod-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+
+        /* ══════════════ PAGINATION ══════════════ */
+        .pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:24px}
+        .pg-btn{width:34px;height:34px;border-radius:var(--r);background:#fff;border:.5px solid var(--border-2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tr);box-shadow:var(--sh-sm)}
+        .pg-btn:hover{border-color:var(--blue);color:var(--blue)}
+        .pg-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+        .pg-btn.nav{padding:0 12px;width:auto}
+
+        /* ══════════════ TOASTS ══════════════ */
+        .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+        .toast-wrap.cart-open{right:calc(var(--cart-w) + 14px)}
+        .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:13px 15px;min-width:280px;max-width:340px;pointer-events:all;transform:translateX(110%);transition:transform .38s cubic-bezier(.22,1,.36,1),opacity .38s;opacity:0}
+        .toast.show{transform:none;opacity:1}
+        .toast.hide{transform:translateX(110%);opacity:0}
+        .t-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .tg{background:rgba(48,209,88,.1)}.tb2{background:var(--blue-light)}.to{background:rgba(255,159,10,.1)}.tr{background:rgba(255,59,48,.08)}
+        .t-info{flex:1}
+        .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+        .t-msg{font-size:11px;color:var(--text-3);line-height:1.45}
+        .t-close{background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px;flex-shrink:0}
+        .t-bar{height:2px;background:var(--off2);border-radius:1px;overflow:hidden;margin-top:8px}
+        .t-bf{height:100%;border-radius:1px;animation:tbar 4s linear forwards}
+        @keyframes tbar{from{width:100%}to{width:0}}
+
+        /* ══════════════ SKELETON ══════════════ */
+        .skel{background:linear-gradient(90deg,#F0F0F2 25%,#E6E6E8 50%,#F0F0F2 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:6px}
+        @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+        /* ══════════════ RESPONSIVE ══════════════ */
+        @media(max-width:1200px){.products-grid{grid-template-columns:repeat(2,1fr)}.promo-grid{grid-template-columns:1fr 1fr}}
+        @media(max-width:1050px){.shop-layout{grid-template-columns:1fr}.filter-panel{position:static;display:grid;grid-template-columns:repeat(3,1fr);gap:0}.fp-hd{display:none}}
+        @media(max-width:900px){.topbar{left:0!important}.sidebar{transform:translateX(-100%);width:var(--sw)!important}.sidebar.mobile-open{transform:none}.main{margin-left:0!important;padding:16px}.main.cart-open{margin-right:0}.promo-grid{grid-template-columns:1fr}}
+        @media(max-width:700px){.products-grid{grid-template-columns:1fr}.pm-img{display:none}.prod-modal{max-width:100%;border-radius:var(--r-md)}}
+        /* FIX: Asigură că tot conținutul coșului este clickabil */
+        .cart-panel.open,
+        .cart-panel.open * {
+            pointer-events: auto !important;
+        }
+
+        .cart-panel.open .cart-body,
+        .cart-panel.open .cart-footer,
+        .cart-panel.open .coupon-row,
+        .cart-panel.open .coupon-inp,
+        .cart-panel.open .btn-prim,
+        .cart-panel.open .checkout-btn {
+            pointer-events: auto !important;
+        }
+
+        /* Asigură că nimic nu acoperă coșul */
+        .cart-panel.open {
+            z-index: 1000 !important;
+        }
+
+        /* Dacă există un overlay, asigură că nu blochează */
+        body.cart-open .main::before {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sb">
+    <a href="/home" class="sb-logo">
+        <div class="sb-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round">
+                <rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/>
+                <rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+            </svg>
+        </div>
+        <span class="sb-logo-text">SmartFit</span>
+    </a>
+    <nav class="sb-nav">
+        <div class="sb-sec">
+            <div class="sb-lbl">Principal</div>
+            <a class="sb-item" href="/dashboard" data-tip="Dashboard">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                <span class="sb-txt">Dashboard</span>
+            </a>
+            <a class="sb-item" href="/tracking" data-tip="Tracking">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+                <span class="sb-txt">Tracking</span>
+            </a>
+            <a class="sb-item" href="/jurnal-alimentar" data-tip="Jurnal">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+                <span class="sb-txt">Jurnal alimentar</span>
+            </a>
+        </div>
+        <div class="sb-sec">
+            <div class="sb-lbl">Servicii</div>
+            <a class="sb-item active" href="/magazin" data-tip="Magazin">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+                <span class="sb-txt">Magazin</span>
+                <span th:if="${isAuthenticated}" class="sb-badge" id="sbCartBadge">3</span>
+            </a>
+            <a class="sb-item" th:href="@{/academie}" data-tip="Academie">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                <span class="sb-txt">Academie</span>
+                <span th:if="${isAuthenticated}" class="sb-badge" th:text="${completedCoursesCount}">0</span>
+            </a>
+            <a class="sb-item" href="/rapoarte" data-tip="Rapoarte">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+                <span class="sb-txt">Rapoarte & PDF</span>
+            </a>
+        </div>
+        <div class="sb-sec">
+            <div class="sb-lbl">Cont</div>
+            <a class="sb-item" href="/profil" data-tip="Profil">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span class="sb-txt">Profil</span>
+            </a>
+            <a class="sb-item" href="/setari" data-tip="Setări">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+                <span class="sb-txt">Setări</span>
+            </a>
+        </div>
+    </nav>
+    <div class="sb-bottom">
+        <button class="sb-toggle" id="sbToggle">
+            <svg id="sbArr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+    </div>
+</aside>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar" id="topbar">
+    <div class="tb-search">
+        <span class="tb-sico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input type="search" placeholder="Caută produse, suplimente, haine…" id="topSearch" oninput="searchProducts(this.value)"/>
+    </div>
+    <div class="tb-right">
+        <!-- Buton Lista de dorințe (wishlist) -->
+        <button class="tb-icon-btn" id="wishlistTopBtn" data-tt="Lista de dorințe" onclick="toggleWishlistView()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            <span class="ndot" id="wishlistDot" style="display:none"></span>
+        </button>
+        <!-- Buton Comenzile mele (redirecționează) -->
+        <button class="tb-icon-btn" data-tt="Comenzile mele" onclick="window.location.href='/orders'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        </button>
+        <!-- Buton Coș -->
+        <button class="tb-cart-btn" onclick="toggleCart()"
+                th:title="${!isAuthenticated} ? 'Autentifică-te pentru a cumpăra' : ''">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg>
+            Coș
+            <span class="cart-count-badge" id="cartBadge">3</span>
+        </button>
+        <div style="width:1px;height:20px;background:var(--border-2);margin:0 4px"></div>
+        <span class="tb-name" th:text="${isAuthenticated and user != null} ? ${user.firstName} : 'Vizitator'">Vizitator</span>
+        <div class="tb-avatar" th:text="${isAuthenticated and user != null} ? ${userInitials} : '?'">?</div>
+    </div>
+</header>
+
+<!-- ═══ CART PANEL ═══ -->
+<div class="cart-panel" id="cartPanel">
+    <div class="cart-hd">
+        <div>
+            <div class="cart-hd-title">Coșul meu</div>
+            <div class="cart-hd-count" id="cartHdCount">3 produse</div>
+        </div>
+        <button class="cart-close" onclick="toggleCart()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+        </button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer" id="cartFooter">
+        <div class="coupon-row">
+            <input class="coupon-inp" type="text" placeholder="Cod cupon sau XP discount…" id="couponInp"/>
+            <button class="btn-prim" style="font-size:12px;padding:9px 14px" onclick="applyCoupon()">Aplică</button>
+        </div>
+        <div class="summary-rows" id="cartSummary"></div>
+        <button class="checkout-btn" onclick="proceedToCheckout()">
+            Finalizează comanda →
+        </button>
+        <div class="secure-note">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+            Plată securizată SSL · Retur 30 zile
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main" id="main">
+
+    <!-- Page header -->
+    <div class="page-hd">
+        <div>
+            <div class="ph-tag">03 — Magazin</div>
+            <h1>Magazin SmartFit</h1>
+            <p>Suplimente, alimente funcționale și vestimentație sport. Cu discount dacă ai XP.</p>
+        </div>
+        <div class="ph-right">
+            <span class="chip ch-green">🟢 Livrare gratuită &gt; 200 lei</span>
+            <span class="chip ch-blue">📦 Livrare 24-48h</span>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="shop-hero">
+        <div class="sh-blob shb1"></div><div class="sh-blob shb2"></div><div class="sh-dots"></div>
+        <div class="sh-left">
+            <div class="sh-tag"><span class="sh-dot"></span>Ofertă săptămânii</div>
+            <div class="sh-title">Whey Protein Gold<br><span>cu −30% reducere</span></div>
+            <div class="sh-sub">2kg formulă premium, 80% proteine per porție. Disponibil în 5 arome. Stoc limitat.</div>
+            <div class="sh-chips">
+                <span class="sh-chip">🥛 2,000g</span>
+                <span class="sh-chip">💪 80% proteine</span>
+                <span class="sh-chip">⚡ Livrare mâine</span>
+                <span class="sh-chip">⭐ 4.9/5 (347 reviews)</span>
+            </div>
+        </div>
+        <div class="sh-right">
+            <div class="sh-stat">
+                <div class="sh-stat-ico">🛒</div>
+                <div><div class="sh-stat-n">+500</div><div class="sh-stat-l">produse disponibile</div></div>
+            </div>
+            <div class="sh-stat">
+                <div class="sh-stat-ico">⚡</div>
+                <div><div class="sh-stat-n">24h</div><div class="sh-stat-l">livrare rapidă</div></div>
+            </div>
+            <div class="sh-stat">
+                <div class="sh-stat-ico">🔄</div>
+                <div><div class="sh-stat-n">30 zile</div><div class="sh-stat-l">retur gratuit</div></div>
+            </div>
+            <div style="margin-top:4px">
+                <button class="btn-prim" style="background:#fff;color:var(--blue-deep);box-shadow:0 4px 18px rgba(0,0,0,.25)" onclick="openProduct(0)">
+                    Vezi oferta →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- XP banner -->
+    <div class="xp-bar">
+        <span class="xp-bar-ico">🏆</span>
+        <div class="xp-bar-info">
+            <div class="xp-bar-title">Ai 1,240 XP · Discount activ: <strong style="color:var(--green)">12%</strong> la orice comandă</div>
+            <div class="xp-bar-sub">Câștigă mai mult XP completând quiz-uri în Academie · Următor nivel: Gold la 1,500 XP</div>
+        </div>
+        <div class="xp-prog"><div class="xp-prog-fill" id="xpFill" style="width:83%"></div></div>
+        <div class="xp-badge">
+            <div class="xp-badge-n">12%</div>
+            <div class="xp-badge-l">discount<br>activ</div>
+        </div>
+    </div>
+
+    <!-- Promo banners -->
+    <div class="promo-grid">
+        <div class="promo-card pc1" onclick="setCategory('Suplimente')">
+            <div class="promo-tag" style="color:#0066CC">Bestseller</div>
+            <div class="promo-title">Suplimente Premium</div>
+            <div class="promo-sub">Protein, Creatine, Omega-3</div>
+            <span class="promo-badge pb1">−15% azi</span>
+            <div class="promo-icon">💊</div>
+        </div>
+        <div class="promo-card pc2" onclick="setCategory('Alimente')">
+            <div class="promo-tag" style="color:#1A8A3A">Curat & Natural</div>
+            <div class="promo-title">Alimente Funcționale</div>
+            <div class="promo-sub">Nuci, semințe, batoane proteice</div>
+            <span class="promo-badge pb2">Nou în stoc</span>
+            <div class="promo-icon">🥗</div>
+        </div>
+        <div class="promo-card pc3" onclick="setCategory('Vestimentatie')">
+            <div class="promo-tag" style="color:#C07000">Colecție nouă</div>
+            <div class="promo-title">Vestimentație Sport</div>
+            <div class="promo-sub">Training, running, yoga</div>
+            <span class="promo-badge pb3">Sezon 2025</span>
+            <div class="promo-icon">👕</div>
+        </div>
+    </div>
+
+    <!-- Category strip -->
+    <div class="cat-strip" id="catStrip">
+        <button class="cat-btn active" onclick="setCategory('Toate')"><span class="cat-ico">🛍</span>Toate<span class="cat-cnt" id="cat-cnt-Toate">0</span></button>
+        <button class="cat-btn" onclick="setCategory('Suplimente')"><span class="cat-ico">💊</span>Suplimente<span class="cat-cnt" id="cat-cnt-Suplimente">0</span></button>
+        <button class="cat-btn" onclick="setCategory('Alimente')"><span class="cat-ico">🥗</span>Alimente<span class="cat-cnt" id="cat-cnt-Alimente">0</span></button>
+        <button class="cat-btn" onclick="setCategory('Vestimentatie')"><span class="cat-ico">👕</span>Vestimentație<span class="cat-cnt" id="cat-cnt-Vestimentatie">0</span></button>
+        <button class="cat-btn" onclick="setCategory('Echipament')"><span class="cat-ico">🏋️</span>Echipament<span class="cat-cnt" id="cat-cnt-Echipament">0</span></button>
+        <button class="cat-btn" onclick="setCategory('Oferte')"><span class="cat-ico">🔥</span>Oferte<span class="cat-cnt" id="cat-cnt-Oferte">0</span></button>
+        <button class="cat-btn" onclick="setCategory('Favorite')"><span class="cat-ico">❤️</span>Favorite<span class="cat-cnt" id="favCount">0</span></button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="shop-toolbar">
+        <div class="shop-search">
+            <span class="shop-search-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <input type="text" placeholder="Filtrează produse…" id="shopSearch" oninput="applyFilters()"/>
+        </div>
+        <select class="sort-select" id="sortSel" onchange="applyFilters()">
+            <option value="popular">Popularitate</option>
+            <option value="price-asc">Preț: crescător</option>
+            <option value="price-desc">Preț: descrescător</option>
+            <option value="rating">Rating</option>
+            <option value="new">Cele mai noi</option>
+            <option value="discount">Reducere</option>
+        </select>
+        <div class="view-toggle">
+            <button class="vt-btn active" id="gridBtn" onclick="setView('grid')" data-tt="Grid">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="10" y="1" width="5" height="5" rx="1"/><rect x="1" y="10" width="5" height="5" rx="1"/><rect x="10" y="10" width="5" height="5" rx="1"/></svg>
+            </button>
+            <button class="vt-btn" id="listBtn" onclick="setView('list')" data-tt="Listă">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/></svg>
+            </button>
+        </div>
+        <span class="result-count" id="resultCount">0 produse găsite</span>
+    </div>
+
+    <!-- Shop layout: filter + grid -->
+    <div class="shop-layout">
+
+        <!-- Filter panel -->
+        <div class="filter-panel">
+            <div class="fp-hd">
+                <span class="fp-title">Filtre</span>
+                <button class="btn-ghost" onclick="resetFilters()">Resetează</button>
+            </div>
+            <div class="fp-section">
+                <div class="fp-section-title">Categorie</div>
+                <label class="fp-check"><input type="checkbox" class="cat-checkbox" value="Suplimente" checked onchange="applyFilters()"/><span class="fp-check-label">Suplimente</span><span class="fp-check-cnt" id="side-cnt-Suplimente">0</span></label>
+                <label class="fp-check"><input type="checkbox" class="cat-checkbox" value="Alimente" checked onchange="applyFilters()"/><span class="fp-check-label">Alimente</span><span class="fp-check-cnt" id="side-cnt-Alimente">0</span></label>
+                <label class="fp-check"><input type="checkbox" class="cat-checkbox" value="Vestimentatie" checked onchange="applyFilters()"/><span class="fp-check-label">Vestimentație</span><span class="fp-check-cnt" id="side-cnt-Vestimentatie">0</span></label>
+                <label class="fp-check"><input type="checkbox" class="cat-checkbox" value="Echipament" checked onchange="applyFilters()"/><span class="fp-check-label">Echipament</span><span class="fp-check-cnt" id="side-cnt-Echipament">0</span></label>
+            </div>
+            <div class="fp-section">
+                <div class="fp-section-title">Interval preț (lei)</div>
+                <div class="price-range">
+                    <div class="price-row">
+                        <input class="price-inp" type="number" placeholder="Min" value="0" id="priceMin" oninput="applyFilters()"/>
+                        <input class="price-inp" type="number" placeholder="Max" value="500" id="priceMax" oninput="applyFilters()"/>
+                    </div>
+                    <input class="range-slider" type="range" min="0" max="500" value="500" oninput="document.getElementById('priceMax').value=this.value; applyFilters()"/>
+                </div>
+            </div>
+            <div class="fp-section">
+                <div class="fp-section-title">Rating minim</div>
+                <div class="rating-row" onclick="setRating(4)"><span class="stars-disp">★★★★</span><span style="font-size:12px;color:var(--text-3);margin-left:2px">& mai mult</span></div>
+                <div class="rating-row" onclick="setRating(3)"><span class="stars-disp">★★★</span><span style="font-size:12px;color:var(--text-3);margin-left:2px">& mai mult</span></div>
+                <div class="rating-row" onclick="setRating(0)"><span style="font-size:12px;color:var(--text-2)">Toate rating-urile (inclusiv fără)</span></div>
+            </div>
+            <div class="fp-section">
+                <div class="fp-section-title">Disponibilitate</div>
+                <label class="fp-check"><input type="checkbox" id="checkInStock" checked onchange="applyFilters()"/><span class="fp-check-label">În stoc</span><span class="fp-check-cnt" id="cnt-instock">0</span></label>
+                <label class="fp-check"><input type="checkbox" id="checkPreorder" checked onchange="applyFilters()"/><span class="fp-check-label">Precomandă / Stoc 0</span><span class="fp-check-cnt" id="cnt-preorder">0</span></label>
+            </div>
+            <div class="fp-section">
+                <div class="fp-section-title">Reduceri</div>
+                <label class="fp-check"><input type="checkbox" id="checkSale" onchange="applyFilters()"/><span class="fp-check-label">Produse la reducere</span><span class="fp-check-cnt" id="cnt-sale">0</span></label>
+            </div>
+        </div>
+
+        <!-- Products grid & Pagination -->
+        <div>
+            <div class="products-grid" id="productsGrid"></div>
+            <div class="pagination" id="paginationContainer"></div>
+        </div>
+    </div>
+
+    <!-- Order history -->
+    <div class="sect-lbl" style="margin-top:32px">Comenzile mele recente</div>
+    <div style="background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:28px">
+        <div style="padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between">
+            <div>
+                <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)">Istoricul comenzilor</div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:2px">Ultimele 5 comenzi plasate</div>
+            </div>
+            <button class="btn-ghost">Vezi toate →</button>
+        </div>
+        <div style="padding:16px 20px 20px" class="order-table">
+            <table>
+                <thead>
+                <tr><th>Produs</th><th>Data</th><th>Total</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr><td><div class="ord-prod"><div class="ord-prod-ico" style="background:#EAF3FF">🥛</div><div><div style="font-weight:500;font-size:13px">Whey Protein Gold 2kg</div><div style="font-size:10px;color:var(--text-3)">Suplimente · ×1</div></div></div></td><td style="color:var(--text-3);font-size:12px">24 Apr 2025</td><td style="font-weight:700;color:var(--blue);font-size:13px">149 lei</td><td><span class="ord-badge ob-green">● Livrat</span></td><td><button class="btn-ghost">Factură</button></td></tr>
+                <tr><td><div class="ord-prod"><div class="ord-prod-ico" style="background:#F0E8FF">💊</div><div><div style="font-weight:500;font-size:13px">Omega-3 · Vitamina D3</div><div style="font-size:10px;color:var(--text-3)">Suplimente · ×2</div></div></div></td><td style="color:var(--text-3);font-size:12px">20 Apr 2025</td><td style="font-weight:700;color:var(--blue);font-size:13px">134 lei</td><td><span class="ord-badge ob-orange">◌ Tranzit</span></td><td><button class="btn-ghost">Track</button></td></tr>
+                <tr><td><div class="ord-prod"><div class="ord-prod-ico" style="background:#FFF0E8">👕</div><div><div style="font-weight:500;font-size:13px">SmartFit Training Tee · L</div><div style="font-size:10px;color:var(--text-3)">Vestimentație · ×1</div></div></div></td><td style="color:var(--text-3);font-size:12px">15 Apr 2025</td><td style="font-weight:700;color:var(--blue);font-size:13px">89 lei</td><td><span class="ord-badge ob-green">● Livrat</span></td><td><button class="btn-ghost">Factură</button></td></tr>
+                <tr><td><div class="ord-prod"><div class="ord-prod-ico" style="background:#E8F8EF">🌿</div><div><div style="font-weight:500;font-size:13px">Mix Nuts Premium 500g × 3</div><div style="font-size:10px;color:var(--text-3)">Alimente</div></div></div></td><td style="color:var(--text-3);font-size:12px">10 Apr 2025</td><td style="font-weight:700;color:var(--blue);font-size:13px">192 lei</td><td><span class="ord-badge ob-green">● Livrat</span></td><td><button class="btn-ghost">Factură</button></td></tr>
+                <tr><td><div class="ord-prod"><div class="ord-prod-ico" style="background:#EAF3FF">⚡</div><div><div style="font-weight:500;font-size:13px">Creatine Monohydrate 500g</div><div style="font-size:10px;color:var(--text-3)">Suplimente · ×1</div></div></div></td><td style="color:var(--text-3);font-size:12px">02 Apr 2025</td><td style="font-weight:700;color:var(--blue);font-size:13px">79 lei</td><td><span class="ord-badge ob-blue">◎ Procesat</span></td><td><button class="btn-ghost">Factură</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- ═══ PRODUCT MODAL ═══ -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+    <div class="prod-modal" id="prodModal">
+        <div class="pm-img" id="pmImg" style="background:#EAF3FF"></div>
+        <div class="pm-body">
+            <button class="pm-close" onclick="closeModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+            <div class="pm-cat" id="pmCat"></div>
+            <div class="pm-name" id="pmName"></div>
+            <div class="pm-rating">
+                <span class="stars" id="pmStars"></span>
+                <span style="font-size:12px;font-weight:700;color:var(--text)" id="pmRatingN"></span>
+                <span style="font-size:11px;color:var(--text-3)" id="pmRatingCnt"></span>
+            </div>
+            <div class="pm-desc" id="pmDesc"></div>
+            <div class="pm-specs" id="pmSpecs"></div>
+            <div class="pm-price-row">
+                <span class="pm-price" id="pmPrice"></span>
+                <span class="pm-price-old" id="pmOld"></span>
+                <span class="pm-save" id="pmSave"></span>
+            </div>
+            <div class="pm-qty-row">
+                <span class="pm-qty-label">Cantitate:</span>
+                <div class="qty-ctrl">
+                    <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                    <span class="qty-num" id="modalQty">1</span>
+                    <button class="qty-btn" onclick="changeQty(1)">+</button>
+                </div>
+            </div>
+            <div class="pm-actions">
+                <button class="pm-add-btn" id="pmAddBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg>
+                    Adaugă în coș
+                </button>
+                <button class="pm-wish-btn" id="pmWishBtn" onclick="toggleWish()">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                </button>
+            </div>
+            <div class="pm-tab-bar">
+                <span class="pm-tab active" onclick="setTab(this,'desc')">Descriere</span>
+                <span class="pm-tab" onclick="setTab(this,'nutr')">Valori nutriționale</span>
+                <span class="pm-tab" onclick="setTab(this,'rev')">Recenzii</span>
+            </div>
+            <div class="pm-tab-content" id="pmTabContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ TOASTS ═══ -->
+<div class="toast-wrap" id="toastWrap">
+    <div class="toast" id="toast-cart">
+        <div class="t-ico tg">🛒</div>
+        <div class="t-info"><div class="t-title" id="tc-title">Adăugat în coș!</div><div class="t-msg" id="tc-msg">Produsul a fost adăugat cu succes.</div><div class="t-bar"><div class="t-bf" style="background:var(--green)"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-cart')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-wish">
+        <div class="t-ico to">⭐</div>
+        <div class="t-info"><div class="t-title">Salvat la dorințe!</div><div class="t-msg">Îl găsești în lista ta de dorințe.</div><div class="t-bar"><div class="t-bf" style="background:var(--orange)"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-wish')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-coupon">
+        <div class="t-ico tg">🏷</div>
+        <div class="t-info"><div class="t-title">Cupon aplicat!</div><div class="t-msg">Reducere suplimentară de 5% activată.</div><div class="t-bar"><div class="t-bf" style="background:var(--green)"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-coupon')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-checkout">
+        <div class="t-ico tb2">📦</div>
+        <div class="t-info"><div class="t-title">Comandă plasată!</div><div class="t-msg">Confirmare trimisă pe email. Livrare estimată: 24–48h.</div><div class="t-bar"><div class="t-bf" style="background:var(--blue)"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-checkout')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+    <div class="toast" id="toast-del">
+        <div class="t-ico tr">🗑</div>
+        <div class="t-info"><div class="t-title">Produs eliminat din coș</div><div class="t-msg">Poți adăuga din nou oricând.</div><div class="t-bar"><div class="t-bf" style="background:var(--red)"></div></div></div>
+        <button class="t-close" onclick="hideToast('toast-del')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var isAuthenticated = /*[[${isAuthenticated}]]*/ false;
+    var serverProducts = [];
+    /*[# th:each="p : ${products}"]*/
+
+    // Simulam date pt. UI (intrucat nu exista inca in DB old_price, rating)
+    var isSale = Math.random() > 0.7; // 30% sansa sa aiba reducere
+    var hasRating = Math.random() > 0.2; // 80% sansa sa aiba rating
+    var stock = /*[[${p.stockQuantity}]]*/ 0;
+
+    serverProducts.push({
+        id:          /*[[${p.id}]]*/ 0,
+        name:        /*[[${p.name}]]*/ '',
+        cat:         /*[[${p.categoryName}]]*/ '',
+        icon:        /*[[${p.fallbackEmoji}]]*/ '📦',
+        imageUrl:    /*[[${p.displayImageUrl}]]*/ null,
+        bg:          /*[[${p.cardBg}]]*/ '#F5F5F7',
+        price:       /*[[${p.price}]]*/ 0,
+        stock:       stock,
+        oldPrice:    isSale ? parseFloat((/*[[${p.price}]]*/ 0) * 1.25).toFixed(2) : null,
+        rating:      hasRating ? (Math.random() * 2 + 3).toFixed(1) : null,
+        reviews:     hasRating ? Math.floor(Math.random() * 100) + 1 : 0,
+        badge:       isSale ? 'sale' : (stock === 0 ? 'hot' : null),
+        desc:        /*[[${p.description != null ? p.description : ''}]]*/ '',
+        specs:       [],
+        nutr:        [],
+        reviews_data:[]
+    });
+    /*[/]*/
+    /*]]>*/
+</script>
+
+<script>
+    /* ══════════════════════════════════
+       SIDEBAR
+    ══════════════════════════════════ */
+    const sb=document.getElementById('sb'),main=document.getElementById('main'),topbar=document.getElementById('topbar'),sbArr=document.getElementById('sbArr');
+    let sbOpen=true;
+    document.getElementById('sbToggle').addEventListener('click',()=>{
+        sbOpen=!sbOpen;
+        sb.classList.toggle('closed',!sbOpen);
+        main.classList.toggle('sb-closed',!sbOpen);
+        topbar.classList.toggle('sb-closed',!sbOpen);
+        sbArr.style.transform=sbOpen?'':'rotate(180deg)';
+    });
+
+    /* ══════════════════════════════════
+       PRODUCTS DATA
+    ══════════════════════════════════ */
+    // ── Checkout redirect ────────────────────────────────────────
+    function getCsrfToken() {
+        // Încearcă mai întâi din meta tag (recomandat)
+        const metaToken = document.querySelector('meta[name="_csrf"]');
+        if (metaToken) return metaToken.getAttribute('content');
+
+        // Fallback: din cookie (dacă există)
+        const m = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+
+    function proceedToCheckout() {
+        console.log('CSRF Token:', getCsrfToken());
+        if (!isAuthenticated) { window.location.href = '/login'; return; }
+        if (cart.length === 0) {
+            document.getElementById('tc-title').textContent = '⚠️ Coșul este gol!';
+            document.getElementById('tc-msg').textContent = 'Adaugă produse înainte de checkout.';
+            showToast('toast-cart'); return;
+        }
+        fetch('/checkout/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
+            body: JSON.stringify(cart)
+        }).then(r => { if (r.ok) window.location.href = '/checkout'; })
+            .catch(() => alert('Eroare de rețea. Reîncarcă pagina.'));
+    }
+
+
+    const products = (typeof serverProducts !== 'undefined' && serverProducts.length > 0)
+        ? serverProducts
+        : [];
+
+    /* ══════════════════════════════════
+       CART STATE
+    ══════════════════════════════════ */
+    let cart = isAuthenticated ? [] : [];
+    let cartOpen=false;
+    const XP_DISCOUNT=0.12;
+
+    function cartTotal(){return cart.reduce((s,ci)=>{const p=products.find(p=>p.id===ci.id);return s+p.price*ci.qty},0)}
+    function cartCount(){return cart.reduce((s,ci)=>s+ci.qty,0)}
+
+    function updateCartBadges(){
+        const cnt=cartCount();
+        document.getElementById('cartBadge').textContent=cnt;
+        document.getElementById('sbCartBadge').textContent=cnt;
+        document.getElementById('cartHdCount').textContent=cnt+' '+(cnt===1?'produs':'produse');
+    }
+
+    function renderCart(){
+        const body=document.getElementById('cartBody');
+        if(cart.length===0){
+            body.innerHTML=`<div class="cart-empty">
+      <div class="cart-empty-ico">🛒</div>
+      <div class="cart-empty-t">Coșul este gol</div>
+      <div class="cart-empty-s">Adaugă produse din magazin pentru a continua.</div>
+    </div>`;
+            document.getElementById('cartFooter').style.display='none';
+            return;
+        }
+        document.getElementById('cartFooter').style.display='block';
+        const imgBgs={'Suplimente':'#EAF3FF','Alimente':'#FFF9EC','Vestimentatie':'#EAF3FF','Echipament':'#EAF3FF'};
+        body.innerHTML=cart.map((ci,idx)=>{
+            const p=products.find(pr=>pr.id===ci.id);if(!p)return'';
+            return`<div class="cart-item" id="ci-${idx}">
+      <div class="ci-img" style="background:${imgBgs[p.cat]||'#EAF3FF'}">${p.icon}</div>
+      <div class="ci-info">
+        <div class="ci-cat">${p.cat}</div>
+        <div class="ci-name">${p.name}</div>
+        <div class="ci-price">${(p.price*ci.qty).toFixed(0)} lei</div>
+        <div class="ci-qty">
+          <button class="cq-btn" onclick="adjustCart(${idx},-1)">−</button>
+          <span class="cq-val">${ci.qty}</span>
+          <button class="cq-btn" onclick="adjustCart(${idx},1)">+</button>
+        </div>
+      </div>
+      <button class="ci-del" onclick="removeFromCart(${idx})" data-tt="Elimină">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="2 4 14 4"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M6 7v5M10 7v5"/><path d="M3 4l1 10a1 1 0 001 1h6a1 1 0 001-1l1-10"/></svg>
+      </button>
+    </div>`;
+        }).join('');
+        renderCartSummary();
+        updateCartBadges();
+    }
+
+    function renderCartSummary(){
+        const sub=cartTotal();
+        const xpDisc=Math.round(sub*XP_DISCOUNT);
+        const shipping=sub>=200?0:25;
+        const total=sub-xpDisc+shipping;
+        document.getElementById('cartSummary').innerHTML=`
+    <div class="sum-row"><span>Subtotal</span><span>${sub.toFixed(0)} lei</span></div>
+    <div class="sum-row"><span>Discount XP (12%)</span><span class="disc">−${xpDisc} lei</span></div>
+    <div class="sum-row"><span>Livrare</span><span>${shipping===0?'<span class="disc">Gratuit</span>':shipping+' lei'}</span></div>
+    <div class="sum-row total"><span>Total</span><span>${total.toFixed(0)} lei</span></div>`;
+    }
+
+    function adjustCart(idx,delta){
+        cart[idx].qty=Math.max(1,cart[idx].qty+delta);
+        renderCart();
+    }
+    function removeFromCart(idx){
+        cart.splice(idx,1);renderCart();showToast('toast-del');
+    }
+    function toggleCart() {
+        if (!isAuthenticated) {
+            window.location.href = '/login';
+            return;
+        }
+        cartOpen = !cartOpen;
+        document.getElementById('cartPanel').classList.toggle('open', cartOpen);
+        main.classList.toggle('cart-open', cartOpen);
+        document.getElementById('toastWrap').classList.toggle('cart-open', cartOpen);
+        if (cartOpen) {
+            renderCart(); // forțează re-rendarea când deschizi coșul
+        }
+    }
+    function applyCoupon(){
+        const v=document.getElementById('couponInp').value.trim().toUpperCase();
+        if(v==='SMARTFIT'||v==='XP5'){showToast('toast-coupon')}
+        else{document.getElementById('couponInp').style.borderColor='var(--red)';setTimeout(()=>document.getElementById('couponInp').style.borderColor='',1200)}
+    }
+
+
+
+    /* ══════════════════════════════════
+        WISHLIST (favorite)
+     ══════════════════════════════════ */
+    let wishlisted = new Set();
+
+    function loadWishlist() {
+        const stored = localStorage.getItem('smartfit_wishlist');
+        if (stored) { try { wishlisted = new Set(JSON.parse(stored)); } catch(e) {} }
+        updateWishlistTopButton();
+    }
+    function saveWishlist() {
+        localStorage.setItem('smartfit_wishlist', JSON.stringify(Array.from(wishlisted)));
+        updateWishlistTopButton();
+        if(typeof updateCategoryCounts === 'function') updateCategoryCounts();
+    }
+
+    function updateWishlistTopButton() {
+        const btn = document.getElementById('wishlistTopBtn');
+        const dot = document.getElementById('wishlistDot');
+        if (!btn) return;
+        const hasFav = wishlisted.size > 0;
+        const svg = btn.querySelector('svg');
+        if (svg) {
+            svg.setAttribute('fill', hasFav ? 'var(--red)' : 'none');
+            svg.setAttribute('stroke', hasFav ? 'var(--red)' : 'currentColor');
+        }
+        if (dot) dot.style.display = hasFav ? 'inline-block' : 'none';
+    }
+
+    function toggleWishlistView() {
+        if (currentCategory === 'Favorite') setCategory('Toate');
+        else setCategory('Favorite');
+        if (cartOpen) toggleCart();
+    }
+
+    /* ══════════════════════════════════
+       PRODUCT RENDERING, FILTERS & PAGINATION
+    ══════════════════════════════════ */
+    let currentView = 'grid';
+    let currentCategory = 'Toate';
+    let currentSearch = '';
+    let selectedRating = 0;
+
+    let currentPage = 1;
+    const itemsPerPage = 6;
+    let filteredArray = [];
+
+    const badgeMap = {sale:'pcb-sale', new:'pcb-new', hot:'pcb-hot', xp:'pcb-xp'};
+    const badgeText = {sale:'REDUCERE', new:'NOU', hot:'STOC 0', xp:'XP'};
+
+    function setCategory(cat){
+        currentCategory = cat;
+        currentPage = 1;
+        document.querySelectorAll('.cat-btn').forEach(b => {
+            const btnText = b.textContent.trim();
+            if (cat === 'Toate' && btnText.includes('Toate')) b.classList.add('active');
+            else if (cat === 'Favorite' && btnText.includes('Favorite')) b.classList.add('active');
+            else if (cat === 'Oferte' && btnText.includes('Oferte')) b.classList.add('active');
+            else if (cat !== 'Toate' && cat !== 'Favorite' && cat !== 'Oferte' && btnText.includes(cat)) b.classList.add('active');
+            else b.classList.remove('active');
+        });
+        const checkboxes = document.querySelectorAll('.cat-checkbox');
+        checkboxes.forEach(cb => {
+            if(cat === 'Toate' || cat === 'Favorite' || cat === 'Oferte') cb.checked = true;
+            else cb.checked = (cb.value === cat);
+        });
+        applyFilters();
+    }
+
+    function setRating(r) { selectedRating = r; currentPage = 1; applyFilters(); }
+
+    function applyFilters() {
+        currentSearch = document.getElementById('shopSearch').value.toLowerCase();
+        const minP = parseFloat(document.getElementById('priceMin').value) || 0;
+        const maxP = parseFloat(document.getElementById('priceMax').value) || 99999;
+        const inStock = document.getElementById('checkInStock').checked;
+        const preOrder = document.getElementById('checkPreorder').checked;
+        const saleOnly = document.getElementById('checkSale').checked;
+
+        const catBoxes = document.querySelectorAll('.cat-checkbox:checked');
+        const activeCats = Array.from(catBoxes).map(cb => cb.value);
+
+        filteredArray = products.filter(p => {
+            if (currentSearch && !p.name.toLowerCase().includes(currentSearch) && !p.cat.toLowerCase().includes(currentSearch)) return false;
+            if (currentCategory === 'Favorite' && !wishlisted.has(p.id)) return false;
+            if (currentCategory === 'Oferte' && !p.oldPrice) return false;
+            if (currentCategory !== 'Favorite' && currentCategory !== 'Oferte') {
+                if (activeCats.length > 0 && !activeCats.includes(p.cat)) return false;
+                if (activeCats.length === 0) return false;
+            }
+            if (p.price < minP || p.price > maxP) return false;
+            if (selectedRating > 0 && (!p.rating || parseFloat(p.rating) < selectedRating)) return false;
+            if (inStock && !preOrder && p.stock <= 0) return false;
+            if (!inStock && preOrder && p.stock > 0) return false;
+            if (!inStock && !preOrder) return false;
+            if (saleOnly && !p.oldPrice) return false;
+            return true;
+        });
+
+        const sortVal = document.getElementById('sortSel').value;
+        if(sortVal === 'price-asc') filteredArray.sort((a,b) => a.price - b.price);
+        else if(sortVal === 'price-desc') filteredArray.sort((a,b) => b.price - a.price);
+        else if(sortVal === 'rating') filteredArray.sort((a,b) => (b.rating || 0) - (a.rating || 0));
+        else if(sortVal === 'discount') filteredArray.sort((a,b) => (b.oldPrice ? b.oldPrice-b.price : 0) - (a.oldPrice ? a.oldPrice-a.price : 0));
+
+        document.getElementById('resultCount').textContent = filteredArray.length + ' produse găsite';
+        renderCurrentPage();
+        updateCategoryCounts();
+    }
+
+    function resetFilters() {
+        document.getElementById('shopSearch').value = '';
+        document.getElementById('priceMin').value = 0;
+        document.getElementById('priceMax').value = 500;
+        document.querySelector('.range-slider').value = 500;
+        document.getElementById('checkInStock').checked = true;
+        document.getElementById('checkPreorder').checked = true;
+        document.getElementById('checkSale').checked = false;
+        selectedRating = 0;
+        setCategory('Toate');
+    }
+
+    function renderCurrentPage() {
+        const grid = document.getElementById('productsGrid');
+        if (currentView === 'list') grid.classList.add('list-view'); else grid.classList.remove('list-view');
+
+        if (filteredArray.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px">
+                <div style="font-size:44px;margin-bottom:14px">${currentCategory === 'Favorite' ? '❤️' : '🔍'}</div>
+                <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text-2);margin-bottom:8px">
+                    ${currentCategory === 'Favorite' ? 'Niciun produs adăugat la favorite' : 'Niciun produs găsit'}</div>
+                <div style="font-size:13px;color:var(--text-3)">Încearcă alte filtre.</div>
+            </div>`;
+            document.getElementById('paginationContainer').style.display = 'none';
+            return;
+        }
+
+        const totalPages = Math.ceil(filteredArray.length / itemsPerPage);
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const pageItems = filteredArray.slice(startIndex, startIndex + itemsPerPage);
+
+        grid.innerHTML = pageItems.map(p => {
+            const disc = p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+            const iW = wishlisted.has(p.id);
+            const ratingHTML = p.rating
+                ? `<span class="stars">${starsHTML(p.rating)}</span><span class="pc-rating-n">${p.rating}</span><span class="pc-rating-cnt">(${p.reviews})</span>`
+                : `<span style="font-size:11px;color:var(--text-3)">Fără rating</span>`;
+
+            if (currentView === 'list') {
+                return `<div class="pcard" onclick="openProduct(${p.id})">
+                    <div class="pc-img" style="background:${p.bg};padding:0;overflow:hidden">${productImgHTML(p)}
+                        <div class="pc-badges">${p.badge ? `<span class="pcb ${badgeMap[p.badge]}">${badgeText[p.badge]}</span>` : ''}</div>
+                    </div>
+                    <div class="pc-body">
+                        <div class="pc-cat">${p.cat}</div>
+                        <div class="pc-name">${p.name}</div>
+                        <div class="pc-desc">${p.desc}</div>
+                        <div class="pc-rating">${ratingHTML}</div>
+                        <div class="pc-footer"><div class="pc-price-wrap"><span class="pc-price">${p.price} lei</span>${p.oldPrice ? `<span class="pc-price-old">${p.oldPrice} lei</span>` : ''}${disc>0 ? `<span class="pc-price-save">Economisești ${disc}%</span>` : ''}</div></div>
+                    </div>
+                    <div class="pc-actions" style="flex-direction:column;padding:16px 16px 16px 0;justify-content:center;gap:8px;opacity:1;transform:none;position:static;background:none">
+                        <button class="btn-prim" style="font-size:12px;padding:9px 16px" onclick="event.stopPropagation();addToCart(${p.id})">+ Coș</button>
+                        <button class="btn-sec" style="font-size:12px;padding:8px 14px" onclick="event.stopPropagation();wishBtn(${p.id})">${iW ? '❤️ În favorite' : '♡ Adaugă la favorite'}</button>
+                    </div>
+                </div>`;
+            }
+            return `<div class="pcard" onclick="openProduct(${p.id})">
+                <div class="pc-img" style="background:${p.bg};padding:0;overflow:hidden">${productImgHTML(p)}
+                    <div class="pc-badges">${p.badge ? `<span class="pcb ${badgeMap[p.badge]}">${badgeText[p.badge]}</span>` : ''}</div>
+                    <button class="pc-wish${iW ? ' active' : ''}" onclick="event.stopPropagation();wishBtn(${p.id})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="${iW ? 'var(--red)' : 'none'}" stroke="${iW ? 'var(--red)' : 'currentColor'}" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                    </button>
+                </div>
+                <div class="pc-body">
+                    <div class="pc-cat">${p.cat}</div>
+                    <div class="pc-name">${p.name}</div>
+                    <div class="pc-rating">${ratingHTML}</div>
+                    <div class="pc-footer">
+                        <div class="pc-price-wrap"><span class="pc-price">${p.price} lei</span>${p.oldPrice ? `<span class="pc-price-old">${p.oldPrice} lei</span>` : ''}${disc>0 ? `<span class="pc-price-save">−${disc}%</span>` : ''}</div>
+                        <button class="pc-add" onclick="event.stopPropagation();addToCart(${p.id})"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg></button>
+                    </div>
+                </div>
+                <div class="pc-actions">
+                    <button class="btn-prim" style="font-size:12px;padding:9px 0;flex:1;justify-content:center" onclick="event.stopPropagation();addToCart(${p.id})">Adaugă în coș</button>
+                    <button class="btn-sec" style="font-size:12px;padding:9px 12px" onclick="event.stopPropagation();openProduct(${p.id})">Detalii</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        renderPaginationControls(totalPages);
+    }
+
+    function renderPaginationControls(totalPages) {
+        const pagContainer = document.getElementById('paginationContainer');
+        if (totalPages <= 1) { pagContainer.style.display = 'none'; return; }
+
+        pagContainer.style.display = 'flex';
+        let html = `<button class="pg-btn nav" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled style="opacity:0.5"' : ''}>← Înapoi</button>`;
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<button class="pg-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        }
+        html += `<button class="pg-btn nav" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled style="opacity:0.5"' : ''}>Înainte →</button>`;
+        pagContainer.innerHTML = html;
+    }
+
+    function changePage(p) {
+        const totalPages = Math.ceil(filteredArray.length / itemsPerPage);
+        if (p >= 1 && p <= totalPages) {
+            currentPage = p;
+            renderCurrentPage();
+            window.scrollTo({ top: document.querySelector('.shop-toolbar').offsetTop - 80, behavior: 'smooth' });
+        }
+    }
+
+    function updateCategoryCounts() {
+        const counts = { 'Toate': products.length, 'Suplimente': 0, 'Alimente': 0, 'Vestimentatie': 0, 'Echipament': 0, 'Oferte': 0, 'Favorite': wishlisted.size };
+        let inStock = 0, preOrder = 0, onSale = 0;
+
+        products.forEach(p => {
+            if (counts[p.cat] !== undefined) counts[p.cat]++;
+            if (p.oldPrice) { counts['Oferte']++; onSale++; }
+            if (p.stock > 0) inStock++; else preOrder++;
+        });
+
+        document.getElementById('cat-cnt-Toate').textContent = counts['Toate'];
+        document.getElementById('cat-cnt-Suplimente').textContent = counts['Suplimente'];
+        document.getElementById('cat-cnt-Alimente').textContent = counts['Alimente'];
+        document.getElementById('cat-cnt-Vestimentatie').textContent = counts['Vestimentatie'];
+        document.getElementById('cat-cnt-Echipament').textContent = counts['Echipament'];
+        document.getElementById('cat-cnt-Oferte').textContent = counts['Oferte'];
+        document.getElementById('favCount').textContent = counts['Favorite'];
+
+        document.getElementById('side-cnt-Suplimente').textContent = counts['Suplimente'];
+        document.getElementById('side-cnt-Alimente').textContent = counts['Alimente'];
+        document.getElementById('side-cnt-Vestimentatie').textContent = counts['Vestimentatie'];
+        document.getElementById('side-cnt-Echipament').textContent = counts['Echipament'];
+
+        document.getElementById('cnt-instock').textContent = inStock;
+        document.getElementById('cnt-preorder').textContent = preOrder;
+        document.getElementById('cnt-sale').textContent = onSale;
+    }
+
+    function starsHTML(r){
+        if(!r) return '';
+        const full=Math.floor(r); const half=r%1>=0.5; let s='';
+        for(let i=0;i<5;i++) s+=i<full?'★':i===full&&half?'☆':'☆';
+        return s;
+    }
+
+    function productImgHTML(p) {
+        if (p.imageUrl) return `<img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:52px">${p.icon}</span>`;
+        return `<span style="font-size:52px; display:flex; height:100%; width:100%; align-items:center; justify-content:center;">${p.icon}</span>`;
+    }
+
+    function setView(v){ currentView=v; document.getElementById('gridBtn').classList.toggle('active',v==='grid'); document.getElementById('listBtn').classList.toggle('active',v==='list'); renderCurrentPage(); }
+
+    function searchProducts(q){ document.getElementById('shopSearch').value=q; applyFilters(); }
+
+    function addToCart(id) {
+        if (!isAuthenticated) { window.location.href = '/login'; return; }
+        const existing = cart.find(ci => ci.id === id);
+        if (existing) existing.qty++; else cart.push({id, qty: 1});
+        if (cartOpen) renderCart(); else updateCartBadges();
+        const p = products.find(pr => pr.id === id);
+        document.getElementById('tc-title').textContent = '🛒 ' + p.name + ' adăugat!';
+        document.getElementById('tc-msg').textContent = p.price + ' lei · coș: ' + cartCount() + ' produse';
+        showToast('toast-cart');
+    }
+
+    function wishBtn(id){
+        if(wishlisted.has(id)) wishlisted.delete(id); else wishlisted.add(id);
+        saveWishlist(); applyFilters(); showToast('toast-wish');
+    }
+
+    function updateModalWishButton() {
+        const modalWishBtn = document.getElementById('pmWishBtn');
+        if (modalWishBtn && modalProd) {
+            const isFav = wishlisted.has(modalProd.id);
+            const svg = modalWishBtn.querySelector('svg');
+            if (svg) { svg.setAttribute('fill', isFav ? 'var(--red)' : 'none'); svg.setAttribute('stroke', isFav ? 'var(--red)' : 'currentColor'); }
+        }
+    }
+    /* ══════════════════════════════════
+       PRODUCT MODAL
+    ══════════════════════════════════ */
+    let modalProd=null,modalQtyVal=1,modalActiveTab='desc';
+    function openProduct(id){
+        modalProd=products.find(p=>p.id===id);if(!modalProd)return;
+        modalQtyVal=1;
+        const pmImg = document.getElementById('pmImg');
+        pmImg.style.background = modalProd.bg;
+        pmImg.style.padding = '0';
+        pmImg.style.overflow = 'hidden';
+        if (modalProd.imageUrl) {
+            pmImg.innerHTML = `<img src="${modalProd.imageUrl}" alt="${modalProd.name}"
+                            style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+            pmImg.textContent = modalProd.icon;
+        }
+        document.getElementById('pmCat').textContent=modalProd.cat;
+        document.getElementById('pmName').textContent=modalProd.name;
+        document.getElementById('pmStars').textContent=starsHTML(modalProd.rating);
+        document.getElementById('pmRatingN').textContent=modalProd.rating;
+        document.getElementById('pmRatingCnt').textContent='('+modalProd.reviews+' recenzii)';
+        document.getElementById('pmDesc').textContent=modalProd.desc;
+        document.getElementById('pmSpecs').innerHTML=(modalProd.specs||[]).map(s=>`<div class="pm-spec"><div class="pm-spec-l">${s.l}</div><div class="pm-spec-v">${s.v}</div></div>`).join('');
+        document.getElementById('pmPrice').textContent=modalProd.price+' lei';
+        document.getElementById('pmOld').textContent=modalProd.oldPrice?modalProd.oldPrice+' lei':'';
+        const disc=modalProd.oldPrice?Math.round((1-modalProd.price/modalProd.oldPrice)*100):0;
+        document.getElementById('pmSave').textContent=disc>0?'Economisești '+disc+'%':'';
+        document.getElementById('modalQty').textContent=1;
+        document.getElementById('pmAddBtn').onclick=()=>{addToCart(modalProd.id);closeModal()};
+        setTab(document.querySelector('.pm-tab.active')||document.querySelector('.pm-tab'),'desc');
+        document.getElementById('modalBg').classList.add('open');
+    }
+    function closeModal(){document.getElementById('modalBg').classList.remove('open')}
+    function changeQty(d){modalQtyVal=Math.max(1,modalQtyVal+d);document.getElementById('modalQty').textContent=modalQtyVal}
+    function toggleWish(){if(!modalProd)return;wishBtn(modalProd.id)}
+    function setTab(el,tab){
+        document.querySelectorAll('.pm-tab').forEach(t=>t.classList.remove('active'));
+        if(el)el.classList.add('active');
+        modalActiveTab=tab;
+        const c=document.getElementById('pmTabContent');
+        if(tab==='nutr'&&modalProd){
+            c.innerHTML=`<table class="nutr-table">${(modalProd.nutr||[]).map(r=>`<tr><td>${r[0]}</td><td>${r[1]||r[2]||''}</td></tr>`).join('')}</table>`;
+        }else if(tab==='rev'&&modalProd){
+            const rs=(modalProd.reviews_data||[]).filter(r=>r);
+            c.innerHTML=rs.length?rs.map(r=>`<div class="review-item"><div class="rev-hd"><div class="rev-avatar">${r.n[0]}</div><span class="rev-name">${r.n}</span><span style="color:var(--orange);font-size:12px">${'★'.repeat(r.s)}</span><span class="rev-date">${r.d}</span></div><div class="rev-text">${r.t}</div></div>`).join('')
+                :'<div style="text-align:center;padding:24px;color:var(--text-3);font-size:13px">Nicio recenzie disponibilă încă.</div>';
+        }else{
+            c.innerHTML=`<p style="font-size:13px;color:var(--text-2);line-height:1.68">${modalProd?modalProd.desc:''}</p>`;
+        }
+    }
+
+    /* ══════════════════════════════════
+       TOASTS
+    ══════════════════════════════════ */
+    function showToast(id){
+        const el=document.getElementById(id);if(!el)return;
+        el.classList.remove('show','hide');void el.offsetWidth;el.classList.add('show');
+        setTimeout(()=>hideToast(id),4500);
+    }
+    function hideToast(id){
+        const el=document.getElementById(id);if(!el)return;
+        el.classList.add('hide');setTimeout(()=>el.classList.remove('show','hide'),420);
+    }
+
+    /* ══════════════════════════════════
+       INIT
+    ══════════════════════════════════ */
+    loadWishlist();
+    applyFilters();
+    renderCart();
+    updateCartBadges();
+
+    window.addEventListener('load',()=>{
+        const xp=document.getElementById('xpFill');
+        xp.style.width='0';setTimeout(()=>xp.style.width='83%',200);
+        setTimeout(()=>{
+            document.getElementById('tc-title').textContent='👋 Bun venit în Magazin!';
+            document.getElementById('tc-msg').textContent='Ai 12% discount XP activ la toate produsele.';
+            showToast('toast-cart');
+        },700);
+    });
+</script>
+</body>
+</html>

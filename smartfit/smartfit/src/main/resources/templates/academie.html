@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SmartFit – Academie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+            --blue-light:#EAF3FF;
+            --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;
+            --white:#FFFFFF;--off:#F5F5F7;--off2:#EBEBED;
+            --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+            --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.1);
+            --sh-sm:0 2px 10px rgba(0,0,0,.06);
+            --sh-md:0 6px 28px rgba(0,0,0,.08);
+            --sh-lg:0 16px 56px rgba(0,0,0,.12);
+            --r:12px;--r-md:16px;--r-lg:22px;
+            --sidebar-w:248px;--topbar-h:58px;
+            --transition:.22s ease;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+
+        /* ═══════════════════ TOPBAR & SIDEBAR ═══════════════════ */
+        .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--transition);}
+        .topbar.sb-closed{left:64px}
+        .tb-search{flex:1;max-width:340px;position:relative}
+        .tb-search input{width:100%;padding:9px 14px 9px 38px;background:var(--off);border:1.5px solid transparent;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--transition),background var(--transition);}
+        .tb-search input::placeholder{color:var(--text-3)}
+        .tb-search input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+        .tb-search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+        .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+        .tb-icon-btn{position:relative;width:36px;height:36px;border-radius:100px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--transition);color:var(--text-2)}
+        .tb-icon-btn:hover{background:var(--off)}
+        .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;}
+        .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--transition);overflow:hidden;}
+        .sidebar.closed{width:64px}
+        .sb-logo{display:flex;align-items:center;gap:11px;padding:16px 18px;height:var(--topbar-h);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;}
+        .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sb-logo-icon svg{width:17px;height:17px}
+        .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;transition:opacity var(--transition)}
+        .sidebar.closed .sb-logo-text{opacity:0}
+        .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+        .sb-nav::-webkit-scrollbar{width:0}
+        .sb-section{margin-bottom:22px}
+        .sb-section-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;transition:opacity var(--transition)}
+        .sidebar.closed .sb-section-lbl{opacity:0}
+        .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--transition),color var(--transition);position:relative}
+        .sb-item:hover{background:var(--off);color:var(--text)}
+        .sb-item.active{background:var(--blue-light);color:var(--blue)}
+        .sb-item.active .sb-ico{color:var(--blue);background:rgba(0,102,204,.12)}
+        .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--transition)}
+        .sb-item-txt{opacity:1;transition:opacity var(--transition)}
+        .sidebar.closed .sb-item-txt{opacity:0}
+        .sb-badge{font-size:10px;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;border-radius:100px;margin-left:auto;}
+        .sidebar.closed .sb-badge{opacity:0}
+        .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+        .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);transition:color var(--transition);border-radius:8px}
+        .sb-toggle:hover{color:var(--text);background:var(--off)}
+        .sidebar.closed .sb-toggle{justify-content:center}
+
+        .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:28px;transition:margin-left var(--transition);min-height:calc(100vh - var(--topbar-h))}
+        .main.sb-closed{margin-left:64px}
+
+        /* ═══════════════════ ACADEMY STYLES ═══════════════════ */
+        .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+        .ph-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+        .page-hd h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.6px;line-height:1.05;margin-bottom:4px}
+        .page-hd p{font-size:14px;color:var(--text-2);font-weight:300}
+
+        /* XP Banner */
+        .xp-banner{background:linear-gradient(120deg,var(--blue-deep),#0B3870);border-radius:var(--r-md);padding:18px 20px;display:flex;align-items:center;gap:14px;border:.5px solid rgba(255,255,255,.06);margin-bottom:24px;box-shadow:var(--sh-md)}
+        .xp-ico{font-size:28px;flex-shrink:0}
+        .xp-info{flex:1}
+        .xp-top{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}
+        .xp-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#FFD60A;line-height:1}
+        .xp-lbl{font-size:11px;color:rgba(255,255,255,.45)}
+        .xp-bar{height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-bottom:4px}
+        .xp-fill{height:100%;background:linear-gradient(90deg,#FFD60A,#FF9F0A);border-radius:3px;transition:width 1.5s cubic-bezier(.22,1,.36,1)}
+        .xp-next{font-size:10px;color:rgba(255,255,255,.35);display:flex;justify-content:space-between}
+        .xp-disc{background:rgba(255,214,10,.15);border:1px solid rgba(255,214,10,.25);border-radius:10px;padding:10px 16px;text-align:center;flex-shrink:0}
+        .xp-disc-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#FFD60A;line-height:1}
+        .xp-disc-l{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px}
+
+        /* KPI Grid */
+        .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+        .kcard{background:#fff;border-radius:var(--r-md);padding:20px;border:.5px solid var(--border);box-shadow:var(--sh-sm);transition:transform var(--transition),box-shadow var(--transition);}
+        .kcard:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
+        .kc-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:18px}
+        .kc-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
+        .kc-lbl{font-size:12px;color:var(--text-3)}
+
+        /* Tabs */
+        .pm-tab-bar{display:flex;gap:0;border-bottom:.5px solid var(--border);margin-bottom:24px;overflow-x:auto}
+        .pm-tab{padding:10px 0;margin-right:20px;font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:color var(--transition),border-color var(--transition);white-space:nowrap}
+        .pm-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+        .panel{display:none}
+        .panel.active-panel{display:block;animation:fadeIn .3s ease}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+        /* Courses Grid */
+        .courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+        .course-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;transition:transform var(--transition);display:flex;flex-direction:column}
+        .course-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md)}
+        .course-img{height:140px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:50px}
+        .course-body{padding:16px;flex:1;display:flex;flex-direction:column}
+        .c-cat{font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:var(--off);color:var(--text-2);width:fit-content;margin-bottom:8px}
+        .c-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.2}
+        .c-desc{font-size:12px;color:var(--text-3);margin-bottom:14px;line-height:1.5;flex:1}
+        .c-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+        .c-xp{font-size:12px;font-weight:700;color:var(--orange)}
+        .btn-prim{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--transition);box-shadow:0 3px 14px rgba(0,102,204,.25);text-decoration:none}
+        .btn-prim:hover{background:#0055AA}
+        .btn-sec{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all var(--transition);box-shadow:var(--sh-sm);text-decoration:none}
+        .btn-sec:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+
+        /* Progress bar on card */
+        .c-progress{height:5px;background:var(--off2);border-radius:3px;overflow:hidden;margin-bottom:12px}
+        .c-progress-fill{height:100%;background:var(--blue);border-radius:3px}
+
+        /* Leaderboard */
+        .card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:14px 20px;text-align:left;border-bottom:.5px solid var(--border-2);background:var(--off)}
+        td{padding:14px 20px;border-bottom:.5px solid var(--border);vertical-align:middle;color:var(--text)}
+        tr:last-child td{border-bottom:none}
+        tr.me-row{background:var(--blue-light);font-weight:600}
+
+        /* Empty state */
+        .empty{grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--text-3)}
+        .empty-ico{font-size:40px;margin-bottom:12px}
+        .empty p{font-size:14px}
+
+        /* Toasts */
+        .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+        .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:14px 16px;min-width:300px;pointer-events:all;transform:translateX(110%);transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0}
+        .toast.show{transform:none;opacity:1}
+        .toast.hide{transform:translateX(110%);opacity:0}
+        .t-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+        .t-info{flex:1}
+        .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+        .t-msg{font-size:12px;color:var(--text-3);line-height:1.45}
+
+        @media(max-width:900px){
+            .topbar{left:0!important;padding:0 16px}
+            .sidebar{transform:translateX(-100%);width:var(--sidebar-w)!important}
+            .sidebar.mobile-open{transform:none}
+            .main{margin-left:0!important;padding:16px}
+            .kpi-grid{grid-template-columns:repeat(2,1fr)}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sb">
+    <a href="/home" class="sb-logo">
+        <div class="sb-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round">
+                <rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/>
+                <rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+            </svg>
+        </div>
+        <span class="sb-logo-text">SmartFit</span>
+    </a>
+    <nav class="sb-nav">
+        <div class="sb-section">
+            <div class="sb-section-lbl">Principal</div>
+            <a class="sb-item" href="/dashboard">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                <span class="sb-item-txt">Dashboard</span>
+            </a>
+            <a class="sb-item" href="/tracking">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+                <span class="sb-item-txt">Tracking</span>
+            </a>
+            <a class="sb-item" href="/jurnal-alimentar">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+                <span class="sb-item-txt">Jurnal alimentar</span>
+            </a>
+        </div>
+        <div class="sb-section">
+            <div class="sb-section-lbl">Servicii</div>
+            <a class="sb-item" href="/magazin">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+                <span class="sb-item-txt">Magazin</span>
+            </a>
+            <a class="sb-item active" href="/academie">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                <span class="sb-item-txt">Academie</span>
+                <span th:if="${isAuthenticated}" class="sb-badge" th:text="${completedCoursesCount}">0</span>
+            </a>
+            <a class="sb-item" href="/rapoarte">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+                <span class="sb-item-txt">Rapoarte & PDF</span>
+            </a>
+        </div>
+        <div class="sb-section">
+            <div class="sb-section-lbl">Cont</div>
+            <a class="sb-item" href="/profil">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span class="sb-item-txt">Profil</span>
+            </a>
+            <a class="sb-item" href="/setari">
+                <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 9a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 4.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+                <span class="sb-item-txt">Setări</span>
+            </a>
+        </div>
+    </nav>
+    <div class="sb-bottom">
+        <button class="sb-toggle" id="sbToggle"><svg id="sbArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    </div>
+</aside>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar" id="topbar">
+    <div class="tb-search">
+        <span class="tb-search-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input type="search" placeholder="Caută cursuri, lecții..." id="searchInput"/>
+    </div>
+    <div class="tb-right">
+        <span class="tb-name" th:text="${isAuthenticated and user != null} ? ${user.firstName} : 'Vizitator'">Vizitator</span>
+        <div class="tb-avatar" th:text="${isAuthenticated and user != null} ? ${userInitials} : '?'">?</div>
+    </div>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main" id="main">
+
+    <div class="page-hd">
+        <div>
+            <div class="ph-tag">04 — Academie</div>
+            <h1>Învață și câștigă.</h1>
+            <p>Fiecare curs finalizat îți aduce XP și discounturi reale în magazin.</p>
+        </div>
+    </div>
+
+    <!-- XP Banner — date reale din server -->
+    <div class="xp-banner">
+        <span class="xp-ico">🏆</span>
+        <div class="xp-info">
+            <div class="xp-top">
+                <span class="xp-n" th:text="${userXP} + ' XP'">0 XP</span>
+                <span class="xp-lbl" th:text="'câștigați total · nivel ' + ${xpLevel}">câștigați total · nivel Bronze</span>
+            </div>
+            <div class="xp-bar">
+                <div class="xp-fill" th:style="'width:' + ${xpProgressPct} + '%'"></div>
+            </div>
+            <div class="xp-next">
+                <span th:text="'Progres către ' + ${nextLevel}">Progres</span>
+                <span th:text="${userXP} + ' / ' + ${xpNextTier} + ' XP'">0 / 500 XP</span>
+            </div>
+        </div>
+        <div class="xp-disc" th:if="${isAuthenticated}">
+            <div class="xp-disc-v" th:text="${activeDiscount} + '%'">0%</div>
+            <div class="xp-disc-l">discount activ<br>în magazin</div>
+        </div>
+    </div>
+
+    <!-- KPI Stats — date reale -->
+    <div class="kpi-grid">
+        <div class="kcard">
+            <div class="kc-ico" style="background:#EAF3FF;color:var(--blue)">📚</div>
+            <div class="kc-val" th:text="${completedCoursesCount}">0</div>
+            <div class="kc-lbl">Cursuri finalizate</div>
+        </div>
+        <div class="kcard">
+            <div class="kc-ico" style="background:rgba(255,159,10,.1);color:var(--orange)">⚡</div>
+            <div class="kc-val" th:text="${userXP}">0</div>
+            <div class="kc-lbl">Puncte XP totale</div>
+        </div>
+        <div class="kcard">
+            <div class="kc-ico" style="background:rgba(48,209,88,.1);color:var(--green)">📜</div>
+            <div class="kc-val" th:text="${#lists.size(certificates)}">0</div>
+            <div class="kc-lbl">Certificate obținute</div>
+        </div>
+        <div class="kcard">
+            <div class="kc-ico" style="background:rgba(191,90,242,.1);color:var(--purple)">📖</div>
+            <div class="kc-val" th:text="${#lists.size(courses)}">0</div>
+            <div class="kc-lbl">Cursuri disponibile</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="pm-tab-bar">
+        <span class="pm-tab active" data-panel="catalog">📖 Catalog cursuri</span>
+        <span class="pm-tab" data-panel="mycourses"
+              th:classappend="${!isAuthenticated} ? ' locked' : ''">
+            📌 Cursurile mele
+            <span th:if="${!isAuthenticated}" style="font-size:10px">🔒</span>
+        </span>
+        <span class="pm-tab" data-panel="leaderboard"
+              th:classappend="${!isAuthenticated} ? ' locked' : ''">
+            🏅 Clasament XP
+            <span th:if="${!isAuthenticated}" style="font-size:10px">🔒</span>
+        </span>
+        <span class="pm-tab" data-panel="certificates"
+              th:classappend="${!isAuthenticated} ? ' locked' : ''">
+            📜 Certificate
+            <span th:if="${!isAuthenticated}" style="font-size:10px">🔒</span>
+        </span>
+    </div>
+
+    <!-- ═══ PANEL: CATALOG ═══ -->
+    <div class="panel active-panel" id="catalogPanel">
+        <div class="courses-grid" id="catalogGrid">
+            <!-- Thymeleaf renderează fiecare curs din DB -->
+            <div class="course-card" th:each="course : ${courses}">
+                <div class="course-img"
+                     th:style="'background:' + (${course.bgColor} != null ? ${course.bgColor} : '#EAF3FF')"
+                     th:text="${course.emoji} != null ? ${course.emoji} : '📚'">📚</div>
+                <div class="course-body">
+                    <span class="c-cat" th:text="${course.difficulty} != null ? ${course.difficulty} : 'Curs'">Curs</span>
+                    <div class="c-title" th:text="${course.title}">Titlu</div>
+                    <div class="c-desc" th:text="${course.description}">Descriere</div>
+
+                    <!-- Progress bar dacă e înscris -->
+                    <div class="c-progress" th:if="${enrollmentMap.containsKey(course.id)}">
+                        <div class="c-progress-fill"
+                             th:style="'width:' + ${enrollmentMap[course.id].progressPct} + '%'"></div>
+                    </div>
+
+                    <div class="c-footer">
+                        <span class="c-xp" th:text="'+' + ${course.rewardPoints} + ' XP'">+0 XP</span>
+
+                        <!-- Neautentificat -->
+                        <a th:if="${!isAuthenticated}" href="/login" class="btn-prim">🔒 Cont necesar</a>
+
+                        <!-- Autentificat + finalizat -->
+                        <a th:if="${isAuthenticated and completedIds.contains(course.id)}"
+                           th:href="'/academie/course/' + ${course.id}"
+                           class="btn-sec" style="color:var(--green);border-color:var(--green)">✓ Finalizat</a>
+
+                        <!-- Autentificat + înscris + nefinalizat -->
+                        <a th:if="${isAuthenticated and !completedIds.contains(course.id) and enrollmentMap.containsKey(course.id)}"
+                           th:href="'/academie/course/' + ${course.id}"
+                           class="btn-sec">Continuă →</a>
+
+                        <!-- Autentificat + neinscris -->
+                        <button th:if="${isAuthenticated and !completedIds.contains(course.id) and !enrollmentMap.containsKey(course.id)}"
+                                class="btn-prim"
+                                th:attr="onclick='enrollCourse(' + ${course.id} + ', this)'">Înscrie-te</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty state dacă nu sunt cursuri -->
+            <div class="empty" th:if="${#lists.isEmpty(courses)}">
+                <div class="empty-ico">📭</div>
+                <p>Nu există cursuri disponibile momentan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ PANEL: MY COURSES ═══ -->
+    <div class="panel" id="mycoursesPanel">
+        <div class="courses-grid">
+            <!-- Cursuri la care userul e înscris -->
+            <th:block th:if="${isAuthenticated}">
+                <th:block th:each="course : ${courses}" th:if="${enrollmentMap.containsKey(course.id)}">
+                    <div class="course-card">
+                        <div class="course-img"
+                             th:style="'background:' + (${course.bgColor} != null ? ${course.bgColor} : '#EAF3FF')"
+                             th:text="${course.emoji} != null ? ${course.emoji} : '📚'">📚</div>
+                        <div class="course-body">
+                            <div class="c-title" th:text="${course.title}">Titlu</div>
+                            <div style="font-size:11px;color:var(--text-3);margin-bottom:6px"
+                                 th:text="${enrollmentMap[course.id].progressPct} + '% completat'">0% completat</div>
+                            <div class="c-progress">
+                                <div class="c-progress-fill"
+                                     th:style="'width:' + ${enrollmentMap[course.id].progressPct} + '%'"></div>
+                            </div>
+                            <div class="c-footer">
+                                <a th:href="'/academie/course/' + ${course.id}" class="btn-prim"
+                                   style="width:100%;justify-content:center"
+                                   th:text="${completedIds.contains(course.id)} ? '🏆 Vezi certificat' : 'Continuă lecția →'">
+                                    Continuă
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+                <!-- Empty state dacă nu e înscris nicăieri -->
+                <div class="empty" th:if="${enrollmentMap.isEmpty()}">
+                    <div class="empty-ico">📌</div>
+                    <p>Nu ești înscris la niciun curs. Explorează catalogul!</p>
+                </div>
+            </th:block>
+            <div class="empty" th:if="${!isAuthenticated}">
+                <div class="empty-ico">🔒</div>
+                <p>Autentifică-te pentru a vedea cursurile tale.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ PANEL: LEADERBOARD ═══ -->
+    <div class="panel" id="leaderboardPanel">
+        <div class="card" style="max-width:600px" th:if="${isAuthenticated}">
+            <table>
+                <thead>
+                <tr><th>#</th><th>Utilizator</th><th>XP Câștigat</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="u, stat : ${leaderboard}"
+                    th:classappend="${u.id == user.id} ? ' me-row' : ''">
+                    <td th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <span th:text="${u.firstName} + ' ' + ${#strings.substring(u.lastName,0,1)} + '.'">Utilizator</span>
+                        <span th:if="${u.id == user.id}"
+                              style="font-size:10px;background:var(--blue);color:#fff;padding:1px 6px;border-radius:100px;margin-left:6px">Tu</span>
+                    </td>
+                    <td><strong th:text="${u.fitPoints}">0</strong> XP</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(leaderboard)}">
+                    <td colspan="3" style="text-align:center;color:var(--text-3)">Nu există date în clasament.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" th:if="${!isAuthenticated}">
+            <div class="empty-ico">🔒</div>
+            <p>Autentifică-te pentru a vedea clasamentul.</p>
+        </div>
+    </div>
+
+    <!-- ═══ PANEL: CERTIFICATES ═══ -->
+    <div class="panel" id="certificatesPanel">
+        <div class="courses-grid" th:if="${isAuthenticated}">
+            <div class="course-card" style="text-align:center;padding:24px"
+                 th:each="cert : ${certificates}">
+                <div style="font-size:44px;margin-bottom:12px">🎓</div>
+                <div class="c-title" th:text="${cert.course.title}">Curs</div>
+                <div class="c-desc"
+                     th:text="'Obținut la: ' + (${cert.completedAt} != null
+              ? ${#temporals.format(cert.completedAt,'dd MMM yyyy')}
+              : 'N/A')">Data</div>
+
+                <div style="margin-top:14px">
+    <span style="font-size:13px;font-weight:700;color:var(--green)"
+          th:text="'Scor: ' + ${cert.scoreObtained} + '%'">Scor: 0%</span>
+                </div>
+            </div>
+            <div class="empty" th:if="${#lists.isEmpty(certificates)}">
+                <div class="empty-ico">📜</div>
+                <p>Finalizează un curs pentru a obține primul certificat!</p>
+            </div>
+        </div>
+        <div class="empty" th:if="${!isAuthenticated}">
+            <div class="empty-ico">🔒</div>
+            <p>Autentifică-te pentru a vedea certificatele.</p>
+        </div>
+    </div>
+
+</main>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script th:inline="javascript">
+    /* ── SIDEBAR ── */
+    const sb=document.getElementById('sb'),main=document.getElementById('main'),topbar=document.getElementById('topbar'),sbArrow=document.getElementById('sbArrow');
+    let sbOpen=true;
+    document.getElementById('sbToggle').addEventListener('click',()=>{
+        sbOpen=!sbOpen;sb.classList.toggle('closed',!sbOpen);main.classList.toggle('sb-closed',!sbOpen);topbar.classList.toggle('sb-closed',!sbOpen);sbArrow.style.transform=sbOpen?'':'rotate(180deg)';
+    });
+
+    const isAuthenticated = /*[[${isAuthenticated}]]*/ false;
+
+    /* ── CSRF pentru AJAX ── */
+    function getCsrf(){
+        const c=document.cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('XSRF-TOKEN='));
+        return c?decodeURIComponent(c.split('=')[1]):'';
+    }
+
+    /* ── ENROLL via POST ── */
+    async function enrollCourse(courseId, btn) {
+        if (!isAuthenticated) { window.location.href='/login'; return; }
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+            const resp = await fetch('/academie/enroll/' + courseId, {
+                method: 'POST',
+                headers: { 'X-XSRF-TOKEN': getCsrf() }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                showToast('Înscris cu succes!', 'Mergi la curs pentru a începe.', 'green');
+                // Înlocuiește butonul cu link "Continuă"
+                btn.outerHTML = '<a href="/academie/course/' + courseId + '" class="btn-sec">Continuă →</a>';
+            }
+        } catch(e) {
+            btn.disabled = false;
+            btn.textContent = 'Înscrie-te';
+            showToast('Eroare', 'Nu s-a putut înscrie. Încearcă din nou.', 'red');
+        }
+    }
+
+    /* ── TABS cu auth guard ── */
+    document.querySelectorAll('.pm-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const panel = tab.dataset.panel;
+            if (!isAuthenticated && panel !== 'catalog') {
+                showToast('🔒 Cont necesar', 'Autentifică-te pentru a accesa această secțiune.', 'blue');
+                setTimeout(() => window.location.href = '/login', 1200);
+                return;
+            }
+            document.querySelectorAll('.pm-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+            tab.classList.add('active');
+            document.getElementById(panel + 'Panel').classList.add('active-panel');
+        });
+    });
+
+    /* ── SEARCH FILTER pe catalog ── */
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        document.querySelectorAll('#catalogGrid .course-card').forEach(card => {
+            const title = card.querySelector('.c-title')?.textContent.toLowerCase() || '';
+            const desc  = card.querySelector('.c-desc')?.textContent.toLowerCase() || '';
+            card.style.display = (!q || title.includes(q) || desc.includes(q)) ? '' : 'none';
+        });
+    });
+
+    /* ── TOAST ── */
+    function showToast(title, msg, color) {
+        const wrap=document.getElementById('toastWrap');
+        const t=document.createElement('div');
+        t.className='toast show';
+        const bg=color==='green'?'rgba(48,209,88,.1)':color==='orange'?'rgba(255,159,10,.1)':color==='red'?'rgba(255,59,48,.08)':'var(--blue-light)';
+        const ic=color==='green'?'✅':color==='orange'?'⚡':color==='red'?'❌':'🔔';
+        t.innerHTML=`<div class="t-ico" style="background:${bg}">${ic}</div><div class="t-info"><div class="t-title">${title}</div><div class="t-msg">${msg}</div></div>`;
+        wrap.appendChild(t);
+        setTimeout(()=>{t.classList.remove('show');t.classList.add('hide');setTimeout(()=>t.remove(),400);},3500);
+    }
+</script>
+</body>
+</html>

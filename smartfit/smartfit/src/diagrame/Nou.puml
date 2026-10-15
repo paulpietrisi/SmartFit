@@ -1,0 +1,135 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+skinparam classAttributeIconSize 0
+hide empty methods
+
+' --- MODULE CORE / SHOP ---
+package "Core & Shop" {
+  class User {
+    - id: Long
+    - email: String
+    - passwordHash: String
+    - firstName: String
+    - lastName: String
+    - role: String
+    - fitPoints: Integer
+    - goal: String
+    - activityLevel: Double
+  }
+
+  class Order {
+    - id: Long
+    - totalPrice: Double
+    - status: String
+    - shippingAddress: String
+    - pointsUsed: Integer
+    - paymentMethod: String
+    - createdAt: LocalDateTime
+  }
+
+  class OrderItem {
+    - id: Long
+    - quantity: Integer
+    - priceAtPurchase: Double
+    + getLineTotal(): double
+  }
+
+  class Product {
+    - id: Long
+    - name: String
+    - price: Double
+    - stockQuantity: Integer
+    - categoryName: String
+  }
+}
+
+' --- MODULE ACADEMY ---
+package "Academy" {
+  class Course {
+    - id: Long
+    - title: String
+    - description: String
+    - videoUrl: String
+    - rewardPoints: Integer
+    - passScorePercentage: Integer
+    - difficulty: String
+    - emoji: String
+    - bgColor: String
+    - content: String
+  }
+
+  class QuizQuestion {
+    - id: Long
+    - questionText: String
+    - correctAnswer: String
+    - wrongAnswer1: String
+    - wrongAnswer2: String
+    - wrongAnswer3: String
+  }
+
+  class CourseEnrollment {
+    - id: Long
+    - progressPct: Integer
+    - enrolledAt: LocalDateTime
+  }
+
+  class CourseCompletion {
+    - id: Long
+    - scoreObtained: Integer
+    - completedAt: LocalDateTime
+  }
+}
+
+' --- MODULE TRACKING ---
+package "Tracking" {
+  class DailyLog {
+    - id: Long
+    - logDate: LocalDate
+    - waterMl: Integer
+    - steps: Integer
+    - sleepMinutes: Integer
+  }
+
+  class DiaryEntry {
+    - id: Long
+    - consumedDate: LocalDate
+    - mealType: String
+    - quantityG: Double
+  }
+
+  class WeightHistory {
+    - id: Long
+    - weightKg: Double
+    - loggedDate: LocalDate
+  }
+
+  class Food {
+    - id: Long
+    - name: String
+  }
+}
+
+' --- RELATIONS SHOP ---
+User "1" <-- "0..*" Order : plasează
+Order "1" *-- "1..*" OrderItem : conține (cascade)
+OrderItem "*" --> "1" Product : referă
+
+' --- RELATIONS ACADEMY ---
+Course "1" *-- "0..*" QuizQuestion : conține (mappedBy)
+
+CourseEnrollment "*" --> "1" User : aparține
+CourseEnrollment "*" --> "1" Course : înscris la
+
+CourseCompletion "*" --> "1" User : aparține
+CourseCompletion "*" --> "1" Course : finalizat
+
+' --- RELATIONS TRACKING ---
+DailyLog "*" --> "1" User : monitorizează
+WeightHistory "*" --> "1" User : aparține
+
+DiaryEntry "*" --> "1" User : înregistrează
+DiaryEntry "*" --> "1" Food : se referă la
+
+@enduml

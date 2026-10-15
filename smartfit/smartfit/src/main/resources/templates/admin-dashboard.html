@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Dashboard Admin | SmartFit</title>
+    <th:block th:replace="fragments/admin-layout :: styles"></th:block>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="fragments/admin-layout :: sidebar"></div>
+
+    <main class="main">
+        <div class="page-header">
+            <div>
+                <h1>📊 Dashboard Administrator</h1>
+                <p class="subtitle">Privire de ansamblu asupra platformei SmartFit</p>
+            </div>
+        </div>
+
+        <div th:replace="fragments/admin-layout :: alerts"></div>
+
+        <!-- STATISTICI GENERALE -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Utilizatori totali</div>
+                <div class="value" th:text="${stats.totalUsers}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Angajați activi</div>
+                <div class="value blue" th:text="${stats.totalEmployees}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Venituri luna curentă</div>
+                <div class="value green"
+                     th:text="${stats.monthlyRevenue != null ? #numbers.formatDecimal(stats.monthlyRevenue, 1, 2) + ' lei' : '0 lei'}">
+                    0 lei
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Comenzi luna curentă</div>
+                <div class="value" th:text="${stats.monthlyOrders}">0</div>
+            </div>
+        </div>
+
+        <!-- ACȚIUNI RAPIDE -->
+        <div class="card">
+            <h2>Acțiuni rapide</h2>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="btn btn-primary" th:href="@{/admin/produse/nou}">➕ Produs nou</a>
+                <a class="btn btn-primary" th:href="@{/admin/cursuri/nou}">➕ Curs nou</a>
+                <a class="btn btn-primary" th:href="@{/admin/angajati/nou}">➕ Angajat nou</a>
+                <a class="btn btn-secondary" th:href="@{/admin/rapoarte}">📈 Vezi rapoarte</a>
+                <a class="btn btn-secondary" th:href="@{/admin/loguri}">🧾 Vezi log-uri</a>
+            </div>
+        </div>
+
+        <!-- PRODUSE CU STOC SCĂZUT -->
+        <div class="card" th:if="${!lowStock.isEmpty()}">
+            <h2>⚠️ Produse cu stoc scăzut (≤ 10 buc.)</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Produs</th><th>Categorie</th><th>Stoc</th><th>Preț</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${lowStock}">
+                            <td th:text="${p.name}"></td>
+                            <td th:text="${p.categoryName}"></td>
+                            <td><strong style="color:#B3261E" th:text="${p.stockQuantity}"></strong></td>
+                            <td th:text="${#numbers.formatDecimal(p.price,1,2)} + ' lei'"></td>
+                            <td><a class="btn btn-sm btn-secondary" th:href="@{/admin/produse/{id}/edit(id=${p.id})}">Actualizează stoc</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ACTIVITATE RECENTĂ -->
+        <div class="card">
+            <h2>Activitate recentă</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Data/Ora</th><th>Utilizator</th><th>Rol</th><th>Acțiune</th><th>Descriere</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${recentLogs}">
+                            <td th:text="${#temporals.format(log.loggedAt, 'dd.MM.yyyy HH:mm')}"></td>
+                            <td th:text="${log.userEmail}"></td>
+                            <td><span class="badge" th:class="'badge badge-' + ${log.userRole}" th:text="${log.userRole}"></span></td>
+                            <td th:text="${log.actionType}"></td>
+                            <td th:text="${log.actionDescription}"></td>
+                        </tr>
+                        <tr th:if="${recentLogs.isEmpty()}">
+                            <td colspan="5" class="empty-state">Nu există activitate înregistrată încă.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:12px;">
+                <a class="btn btn-secondary btn-sm" th:href="@{/admin/loguri}">Vezi toate log-urile →</a>
+            </div>
+        </div>
+
+    </main>
+</div>
+</body>
+</html>

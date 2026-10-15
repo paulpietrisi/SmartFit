@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Dashboard Angajat | SmartFit</title>
+    <th:block th:replace="fragments/admin-layout :: styles"></th:block>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="fragments/admin-layout :: sidebar"></div>
+
+    <main class="main">
+        <div class="page-header">
+            <div>
+                <h1 th:if="${profile.isAcademy()}">🎓 Dashboard Academie</h1>
+                <h1 th:if="${profile.isShop()}">🛒 Dashboard Magazin</h1>
+                <p class="subtitle">
+                    Bun venit, <span sec:authentication="name"></span>!
+                    Permisiuni:
+                    <strong th:text="${profile.canCreate} ? 'Adăugare ✅' : 'Adăugare ❌'"></strong> ·
+                    <strong th:text="${profile.canEdit} ? 'Editare ✅' : 'Editare ❌'"></strong> ·
+                    <strong th:text="${profile.canDelete} ? 'Ștergere ✅' : 'Ștergere ❌'"></strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- ═══ ACADEMIE ═══ -->
+        <div th:if="${profile.isAcademy()}">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Cursuri active</div>
+                    <div class="value" th:text="${courseCount}">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Acțiuni rapide</h2>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <a class="btn btn-primary" th:if="${profile.canCreate}" th:href="@{/angajat/cursuri/nou}">➕ Curs nou</a>
+                    <a class="btn btn-secondary" th:href="@{/angajat/cursuri}">📚 Vezi cursuri</a>
+                    <a class="btn btn-secondary" th:href="@{/angajat/rapoarte}">📈 Rapoarte Academie</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ MAGAZIN ═══ -->
+        <div th:if="${profile.isShop()}">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Produse active</div>
+                    <div class="value" th:text="${productCount}">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Produse cu stoc scăzut</div>
+                    <div class="value" style="color:#B3261E" th:text="${#lists.size(lowStock)}">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Acțiuni rapide</h2>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <a class="btn btn-primary" th:if="${profile.canCreate}" th:href="@{/angajat/produse/nou}">➕ Produs nou</a>
+                    <a class="btn btn-secondary" th:href="@{/angajat/produse}">🛒 Vezi produse</a>
+                    <a class="btn btn-secondary" th:href="@{/angajat/comenzi}">📦 Vezi comenzi</a>
+                    <a class="btn btn-secondary" th:href="@{/angajat/rapoarte}">📈 Rapoarte Magazin</a>
+                </div>
+            </div>
+
+            <div class="card" th:if="${!lowStock.isEmpty()}">
+                <h2>⚠️ Produse cu stoc scăzut</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Produs</th><th>Categorie</th><th>Stoc</th><th></th></tr></thead>
+                        <tbody>
+                            <tr th:each="p : ${lowStock}">
+                                <td th:text="${p.name}"></td>
+                                <td th:text="${p.categoryName}"></td>
+                                <td><strong style="color:#B3261E" th:text="${p.stockQuantity}"></strong></td>
+                                <td>
+                                    <a class="btn btn-sm btn-secondary" th:if="${profile.canEdit}"
+                                       th:href="@{/angajat/produse/{id}/edit(id=${p.id})}">Actualizează</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title th:text="${isNew} ? 'Curs nou | Admin SmartFit' : 'Editare curs | Admin SmartFit'">Curs</title>
+    <th:block th:replace="fragments/admin-layout :: styles"></th:block>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="fragments/admin-layout :: sidebar"></div>
+
+    <main class="main">
+        <div class="page-header">
+            <div>
+                <h1 th:text="${isNew} ? '➕ Curs nou' : '✏️ Editare curs'">Curs</h1>
+                <p class="subtitle">Adaugă conținut educațional și întrebări de quiz</p>
+            </div>
+            <a class="btn btn-secondary" th:href="@{/admin/cursuri}">← Înapoi la listă</a>
+        </div>
+
+        <div th:replace="fragments/admin-layout :: alerts"></div>
+
+        <form th:action="@{/admin/cursuri/salveaza}" th:object="${course}" method="post" id="courseForm">
+            <input type="hidden" th:field="*{id}">
+
+            <div class="card">
+                <h2>Detalii curs</h2>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Titlu *</label>
+                        <input type="text" th:field="*{title}" placeholder="ex. Nutriție fundamentală">
+                        <div class="form-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dificultate *</label>
+                        <select th:field="*{difficulty}">
+                            <option value="Începător">Începător</option>
+                            <option value="Mediu">Mediu</option>
+                            <option value="Avansat">Avansat</option>
+                        </select>
+                        <div class="form-error" th:if="${#fields.hasErrors('difficulty')}" th:errors="*{difficulty}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Puncte recompensă *</label>
+                        <input type="number" min="0" max="5000" th:field="*{rewardPoints}">
+                        <div class="form-error" th:if="${#fields.hasErrors('rewardPoints')}" th:errors="*{rewardPoints}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prag promovare (%) *</label>
+                        <input type="number" min="1" max="100" th:field="*{passScorePercentage}">
+                        <div class="form-error" th:if="${#fields.hasErrors('passScorePercentage')}" th:errors="*{passScorePercentage}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Emoji</label>
+                        <input type="text" th:field="*{emoji}" placeholder="🥗" maxlength="4">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Culoare fundal card</label>
+                        <input type="text" th:field="*{bgColor}" placeholder="#EAF3FF">
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>URL video (YouTube embed)</label>
+                        <input type="text" th:field="*{videoUrl}" placeholder="https://www.youtube.com/embed/...">
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Descriere scurtă</label>
+                        <textarea th:field="*{description}" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Conținut complet (HTML)</label>
+                        <textarea th:field="*{content}" rows="10" placeholder="&lt;h3&gt;Titlu secțiune&lt;/h3&gt;&lt;p&gt;Text...&lt;/p&gt;"></textarea>
+                        <div class="form-error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÎNTREBĂRI QUIZ -->
+            <div class="card">
+                <h2>Întrebări quiz</h2>
+                <div id="questionsContainer">
+                    <div class="quiz-question-block" th:each="q, iter : *{questions}">
+                        <h4 th:text="'Întrebarea ' + (${iter.index} + 1)"></h4>
+                        <input type="hidden" th:field="*{questions[__${iter.index}__].id}">
+
+                        <div class="form-group">
+                            <label>Text întrebare *</label>
+                            <input type="text" th:field="*{questions[__${iter.index}__].questionText}">
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Răspuns corect *</label>
+                                <input type="text" th:field="*{questions[__${iter.index}__].correctAnswer}">
+                            </div>
+                            <div class="form-group">
+                                <label>Răspuns greșit 1 *</label>
+                                <input type="text" th:field="*{questions[__${iter.index}__].wrongAnswer1}">
+                            </div>
+                            <div class="form-group">
+                                <label>Răspuns greșit 2 *</label>
+                                <input type="text" th:field="*{questions[__${iter.index}__].wrongAnswer2}">
+                            </div>
+                            <div class="form-group">
+                                <label>Răspuns greșit 3 *</label>
+                                <input type="text" th:field="*{questions[__${iter.index}__].wrongAnswer3}">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.quiz-question-block').remove()">🗑️ Elimină întrebarea</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" id="addQuestionBtn">➕ Adaugă întrebare</button>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">💾 Salvează curs</button>
+                <a class="btn btn-secondary" th:href="@{/admin/cursuri}">Anulează</a>
+            </div>
+        </form>
+    </main>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     JS: adăugare dinamică de întrebări quiz
+     Folosește un index incremental bazat pe numărul curent de blocuri,
+     respectând convenția Thymeleaf questions[i].field pentru binding.
+     ════════════════════════════════════════════════════════════ -->
+<script th:inline="javascript">
+    document.getElementById('addQuestionBtn').addEventListener('click', function () {
+        const container = document.getElementById('questionsContainer');
+        const index = container.querySelectorAll('.quiz-question-block').length;
+
+        const block = document.createElement('div');
+        block.className = 'quiz-question-block';
+        block.innerHTML = `
+            <h4>Întrebarea ${index + 1}</h4>
+            <input type="hidden" name="questions[${index}].id" value="">
+            <div class="form-group">
+                <label>Text întrebare *</label>
+                <input type="text" name="questions[${index}].questionText" required>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Răspuns corect *</label>
+                    <input type="text" name="questions[${index}].correctAnswer" required>
+                </div>
+                <div class="form-group">
+                    <label>Răspuns greșit 1 *</label>
+                    <input type="text" name="questions[${index}].wrongAnswer1" required>
+                </div>
+                <div class="form-group">
+                    <label>Răspuns greșit 2 *</label>
+                    <input type="text" name="questions[${index}].wrongAnswer2" required>
+                </div>
+                <div class="form-group">
+                    <label>Răspuns greșit 3 *</label>
+                    <input type="text" name="questions[${index}].wrongAnswer3" required>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.quiz-question-block').remove()">🗑️ Elimină întrebarea</button>
+        `;
+        container.appendChild(block);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartFit – Comenzile mele</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --blue:       #0066CC;
+      --blue-light: #EAF3FF;
+      --blue-mid:   rgba(0,102,204,0.12);
+      --surface:    #F5F5F7;
+      --card:       #FFFFFF;
+      --border:     rgba(0,0,0,0.07);
+      --border-mid: rgba(0,0,0,0.1);
+      --text:       #1D1D1F;
+      --muted:      #6E6E73;
+      --subtle:     #86868B;
+      --green:      #1A8A3A;
+      --green-bg:   rgba(48,209,88,0.1);
+      --orange:     #C07000;
+      --orange-bg:  rgba(255,159,10,0.1);
+      --red:        #D93025;
+      --red-bg:     rgba(255,59,48,0.1);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── TOP NAV ── */
+    .nav {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 0.5px solid var(--border-mid);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--blue);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-link:hover { background: var(--surface); color: var(--text); }
+    .nav-link.active { background: var(--blue-light); color: var(--blue); }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    /* ── PAGE SHELL ── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .page-header-left h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    .page-header-left p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .btn-shop {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--blue);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 9px 20px;
+      border-radius: 30px;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-shop:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* ── ORDER COUNT CHIP ── */
+    .orders-meta {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--blue);
+      background: var(--blue-light);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* ── ORDER CARD ── */
+    .orders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .order-card {
+      background: var(--card);
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      overflow: hidden;
+      animation: fadeUp 0.35s ease both;
+    }
+    .order-card:nth-child(1) { animation-delay: 0.04s; }
+    .order-card:nth-child(2) { animation-delay: 0.08s; }
+    .order-card:nth-child(3) { animation-delay: 0.12s; }
+    .order-card:nth-child(4) { animation-delay: 0.16s; }
+    .order-card:nth-child(5) { animation-delay: 0.20s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* card header */
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 18px 22px 16px;
+      border-bottom: 0.5px solid #EBEBED;
+    }
+    .card-head-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .order-id {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--blue);
+      letter-spacing: -0.3px;
+    }
+    .order-date {
+      font-size: 12px;
+      color: var(--subtle);
+    }
+    .card-head-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* status pills */
+    .status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+    .status-PENDING   { background: var(--orange-bg); color: var(--orange); }
+    .status-SHIPPED   { background: var(--blue-mid);  color: var(--blue); }
+    .status-DELIVERED { background: var(--green-bg);  color: var(--green); }
+    .status-CANCELLED { background: var(--red-bg);    color: var(--red); }
+
+    /* status dot for timeline feel */
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-PENDING   { background: var(--orange); }
+    .dot-SHIPPED   { background: var(--blue); }
+    .dot-DELIVERED { background: var(--green); }
+    .dot-CANCELLED { background: var(--red); }
+
+    /* items */
+    .card-items {
+      padding: 6px 22px;
+    }
+    .order-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 0.5px solid #F0F0F2;
+    }
+    .order-item:last-child { border-bottom: none; }
+
+    .item-emoji {
+      width: 44px; height: 44px;
+      background: var(--blue-light);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name {
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-qty {
+      font-size: 12px;
+      color: var(--subtle);
+      margin-top: 2px;
+    }
+    .item-price {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    /* card footer */
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      background: #FAFAFA;
+      border-top: 0.5px solid #EBEBED;
+    }
+    .foot-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .foot-total {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .foot-total span { color: var(--blue); }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      background: var(--card);
+      border-radius: 28px;
+      border: 0.5px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+      padding: 80px 32px;
+      text-align: center;
+      animation: fadeUp 0.4s ease both;
+    }
+    .empty-emoji {
+      font-size: 72px;
+      margin-bottom: 20px;
+      display: block;
+      filter: grayscale(0.1);
+    }
+    .empty h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+    .empty p {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 340px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="nav">
+  <a href="/home" class="nav-brand">SmartFit</a>
+  <div class="nav-right">
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+    <a href="/magazin"   class="nav-link">Magazin</a>
+    <a href="/orders"    class="nav-link active">Comenzi</a>
+    <a href="/profil"    class="nav-link">Profil</a>
+    <div class="avatar" th:text="${userInitials}">U</div>
+  </div>
+</nav>
+
+<!-- ── PAGE ── -->
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Comenzile mele</h1>
+      <p>Istoricul complet al tuturor achizițiilor tale</p>
+    </div>
+    <a href="/magazin" class="btn-shop">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Mergi la magazin
+    </a>
+  </div>
+
+  <!-- ══ COMENZI EXISTENTE ══ -->
+  <div th:if="${orders != null and !orders.isEmpty()}">
+
+    <div class="orders-meta">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      <span th:text="${orders.size()} + ' ' + (${orders.size()} == 1 ? 'comandă' : 'comenzi')">3 comenzi</span>
+    </div>
+
+    <div class="orders-list">
+      <div class="order-card" th:each="order : ${orders}">
+
+        <!-- Head -->
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="order-id">Comanda #<span th:text="${order.id}">1</span></span>
+            <span class="order-date" th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy, HH:mm')}">01 Ian 2025, 14:30</span>
+          </div>
+          <div class="card-head-right">
+                        <span class="status-dot"
+                              th:classappend="'dot-' + ${order.status}"></span>
+            <span class="status-pill"
+                  th:classappend="'status-' + ${order.status}"
+                  th:text="${
+                                  order.status == 'PENDING'   ? 'Confirmed' :
+                                  order.status == 'SHIPPED'   ? 'Expediat'     :
+                                  order.status == 'DELIVERED' ? 'Livrat'       :
+                                  order.status == 'CANCELLED' ? 'Anulat'       :
+                                  order.status
+                              }">Status</span>
+          </div>
+        </div>
+
+        <!-- Items -->
+        <div class="card-items">
+          <div class="order-item" th:each="item : ${order.items}">
+            <div class="item-emoji" th:text="${item.product.fallbackEmoji}">📦</div>
+            <div class="item-info">
+              <div class="item-name" th:text="${item.product.name}">Produs</div>
+              <div class="item-qty">Cantitate: <span th:text="${item.quantity}">1</span></div>
+            </div>
+            <div class="item-price">
+              <span th:text="${#numbers.formatDecimal(item.priceAtPurchase, 1, 2)}">0.00</span> lei
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-foot">
+          <span class="foot-label">Total comandă</span>
+          <span class="foot-total">
+                        <span th:text="${#numbers.formatDecimal(order.totalPrice, 1, 2)}">0.00</span> lei
+                    </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ EMPTY STATE ══ -->
+  <div th:if="${orders == null or orders.isEmpty()}" class="empty">
+    <span class="empty-emoji">📦</span>
+    <h2>Nicio comandă încă</h2>
+    <p>Nu ai plasat nicio comandă. Explorează magazinul și găsește ce ai nevoie!</p>
+    <a href="/magazin" class="btn-shop" style="font-size:14px; padding:11px 26px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Mergi la magazin
+    </a>
+  </div>
+
+</div>
+</body>
+</html>

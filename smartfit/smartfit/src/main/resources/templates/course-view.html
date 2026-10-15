@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="${course.title} + ' – SmartFit Academie'">Curs – SmartFit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+      --blue-light:#EAF3FF;
+      --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;
+      --white:#FFFFFF;--off:#F5F5F7;--off2:#EBEBED;
+      --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+      --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.1);
+      --sh-sm:0 2px 10px rgba(0,0,0,.06);
+      --sh-md:0 6px 28px rgba(0,0,0,.08);
+      --sh-lg:0 16px 56px rgba(0,0,0,.12);
+      --r:12px;--r-md:16px;--r-lg:22px;
+      --sidebar-w:248px;--topbar-h:58px;
+      --transition:.22s ease;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+
+    /* ═══ TOPBAR & SIDEBAR ═══ */
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--transition);}
+    .topbar.sb-closed{left:64px}
+    .tb-back{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;padding:7px 12px;border-radius:var(--r);transition:all var(--transition)}
+    .tb-back:hover{background:var(--off);color:var(--text)}
+    .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+    .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;}
+    .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--transition);overflow:hidden;}
+    .sidebar.closed{width:64px}
+    .sb-logo{display:flex;align-items:center;gap:11px;padding:16px 18px;height:var(--topbar-h);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;}
+    .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sb-logo-icon svg{width:17px;height:17px}
+    .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;transition:opacity var(--transition)}
+    .sidebar.closed .sb-logo-text{opacity:0}
+    .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+    .sb-nav::-webkit-scrollbar{width:0}
+    .sb-section{margin-bottom:22px}
+    .sb-section-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;transition:opacity var(--transition)}
+    .sidebar.closed .sb-section-lbl{opacity:0}
+    .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--transition),color var(--transition);position:relative}
+    .sb-item:hover{background:var(--off);color:var(--text)}
+    .sb-item.active{background:var(--blue-light);color:var(--blue)}
+    .sb-item.active .sb-ico{color:var(--blue);background:rgba(0,102,204,.12)}
+    .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--transition)}
+    .sb-item-txt{opacity:1;transition:opacity var(--transition)}
+    .sidebar.closed .sb-item-txt{opacity:0}
+    .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+    .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);transition:color var(--transition);border-radius:8px}
+    .sb-toggle:hover{color:var(--text);background:var(--off)}
+    .sidebar.closed .sb-toggle{justify-content:center}
+
+    .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:28px;transition:margin-left var(--transition);min-height:calc(100vh - var(--topbar-h))}
+    .main.sb-closed{margin-left:64px}
+
+    /* ═══ COURSE VIEW LAYOUT ═══ */
+    .course-layout{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
+
+    /* Left: video + content */
+    .course-main{}
+    .video-wrap{background:#000;border-radius:var(--r-lg);overflow:hidden;aspect-ratio:16/9;margin-bottom:20px;box-shadow:var(--sh-lg)}
+    .video-wrap iframe{width:100%;height:100%;border:none;display:block}
+    .video-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--blue-deep),#0B3870);color:rgba(255,255,255,.4);font-size:13px}
+
+    .course-info-card{background:#fff;border-radius:var(--r-md);padding:24px;border:.5px solid var(--border);box-shadow:var(--sh-sm);margin-bottom:20px}
+    .ci-cat{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;background:var(--blue-light);color:var(--blue);margin-bottom:12px}
+    .ci-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:-.4px}
+    .ci-desc{font-size:14px;color:var(--text-2);line-height:1.65;font-weight:300}
+    .ci-meta{display:flex;gap:20px;margin-top:16px;padding-top:16px;border-top:.5px solid var(--border)}
+    .ci-meta-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2)}
+    .ci-meta-item strong{color:var(--text);font-weight:600}
+
+    .course-info-card h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin:20px 0 8px}
+    .course-info-card h3:first-child{margin-top:0}
+    .course-info-card p{font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:12px}
+    .course-info-card strong{color:var(--text);font-weight:600}
+
+    /* Progress bar in card */
+    .progress-section{margin-top:16px;padding-top:16px;border-top:.5px solid var(--border)}
+    .progress-lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}
+    .progress-lbl span:first-child{color:var(--text-2)}
+    .progress-lbl span:last-child{font-weight:600;color:var(--blue)}
+    .prog-bar{height:7px;background:var(--off2);border-radius:4px;overflow:hidden}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-2));border-radius:4px;transition:width 1s cubic-bezier(.22,1,.36,1)}
+
+    /* Right: Quiz sidebar */
+    .quiz-sidebar{}
+    .quiz-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;position:sticky;top:calc(var(--topbar-h) + 20px)}
+
+    .qc-header{background:linear-gradient(120deg,var(--blue-deep),#0B3870);padding:20px;color:#fff}
+    .qc-header-tag{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px}
+    .qc-header h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px}
+    .qc-header p{font-size:12px;color:rgba(255,255,255,.5)}
+
+    .qc-progress{padding:14px 20px;background:var(--off);border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px}
+    .qc-dots{display:flex;gap:5px;flex:1}
+    .qc-dot{width:7px;height:7px;border-radius:100px;background:var(--off2);transition:all .3s}
+    .qc-dot.done{background:var(--green)}
+    .qc-dot.current{background:var(--blue);width:18px}
+    .qc-dot.wrong{background:var(--red)}
+    .qc-progress-txt{font-size:11px;color:var(--text-3);white-space:nowrap}
+
+    .qc-body{padding:20px}
+    .q-counter{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px}
+    .q-text{font-size:14px;font-weight:600;color:var(--text);line-height:1.45;margin-bottom:16px}
+
+    .q-option{display:flex;align-items:center;gap:10px;padding:11px 14px;border:.5px solid var(--border-2);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:all var(--transition);font-size:13px;color:var(--text)}
+    .q-option:hover{background:var(--off);border-color:var(--blue)}
+    .q-option.selected{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+    .q-option.correct{background:rgba(48,209,88,.1);border-color:var(--green);color:#1a7a37}
+    .q-option.incorrect{background:rgba(255,59,48,.08);border-color:var(--red);color:var(--red)}
+    .q-option input[type=radio]{accent-color:var(--blue);width:15px;height:15px;flex-shrink:0}
+    .q-option.disabled{pointer-events:none}
+
+    .q-actions{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+    .btn-submit{width:100%;padding:12px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--transition);box-shadow:0 3px 14px rgba(0,102,204,.25)}
+    .btn-submit:hover{background:#0055AA}
+    .btn-submit:disabled{opacity:.5;cursor:not-allowed}
+    .btn-next{width:100%;padding:12px;background:var(--off);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all var(--transition);display:none}
+    .btn-next:hover{background:var(--off2)}
+
+    .q-feedback{margin-top:12px;padding:10px 13px;border-radius:var(--r);font-size:12px;font-weight:500;display:none}
+    .q-feedback.correct{background:rgba(48,209,88,.1);color:#1a7a37;border:.5px solid rgba(48,209,88,.3)}
+    .q-feedback.incorrect{background:rgba(255,59,48,.08);color:var(--red);border:.5px solid rgba(255,59,48,.2)}
+
+    /* Results card */
+    .result-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);padding:28px;text-align:center;display:none}
+    .result-card.show{display:block}
+    .result-emoji{font-size:52px;margin-bottom:12px}
+    .result-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px}
+    .result-score{font-size:42px;font-weight:800;font-family:'Syne',sans-serif;margin:16px 0 4px}
+    .result-sub{font-size:13px;color:var(--text-3);margin-bottom:20px}
+    .xp-earned{display:inline-flex;align-items:center;gap:8px;background:rgba(255,214,10,.12);border:1px solid rgba(255,214,10,.3);border-radius:100px;padding:8px 18px;font-size:14px;font-weight:700;color:#b8860b;margin-bottom:24px}
+    .btn-retry{padding:11px 22px;background:var(--off);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all var(--transition);margin-right:10px}
+    .btn-retry:hover{background:var(--off2)}
+    .btn-back-ac{padding:11px 22px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--transition);box-shadow:0 3px 14px rgba(0,102,204,.25)}
+    .btn-back-ac:hover{background:#0055AA}
+
+    /* Already completed banner */
+    .completed-banner{background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05));border:.5px solid rgba(48,209,88,.3);border-radius:var(--r-md);padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:20px}
+    .cb-ico{font-size:28px}
+    .cb-text h3{font-size:15px;font-weight:700;color:#1a7a37;margin-bottom:2px}
+    .cb-text p{font-size:12px;color:var(--text-3)}
+
+    /* Toasts */
+    .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+    .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:14px 16px;min-width:300px;pointer-events:all;transform:translateX(110%);transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0}
+    .toast.show{transform:none;opacity:1}
+    .toast.hide{transform:translateX(110%);opacity:0}
+    .t-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .t-msg{font-size:12px;color:var(--text-3);line-height:1.45}
+
+    @media(max-width:1100px){
+      .course-layout{grid-template-columns:1fr}
+      .quiz-card{position:static}
+    }
+    @media(max-width:900px){
+      .topbar{left:0!important;padding:0 16px}
+      .sidebar{transform:translateX(-100%);width:var(--sidebar-w)!important}
+      .main{margin-left:0!important;padding:16px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sb">
+  <a href="/home" class="sb-logo">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round">
+        <rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/>
+        <rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>
+        <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
+      </svg>
+    </div>
+    <span class="sb-logo-text">SmartFit</span>
+  </a>
+  <nav class="sb-nav">
+    <div class="sb-section">
+      <div class="sb-section-lbl">Principal</div>
+      <a class="sb-item" href="/dashboard">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+        <span class="sb-item-txt">Dashboard</span>
+      </a>
+      <a class="sb-item" href="/tracking">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+        <span class="sb-item-txt">Tracking</span>
+      </a>
+      <a class="sb-item" href="/jurnal-alimentar">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+        <span class="sb-item-txt">Jurnal alimentar</span>
+      </a>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-lbl">Servicii</div>
+      <a class="sb-item" href="/magazin">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+        <span class="sb-item-txt">Magazin</span>
+      </a>
+      <a class="sb-item active" href="/academie">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+        <span class="sb-item-txt">Academie</span>
+      </a>
+      <a class="sb-item" href="/rapoarte">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+        <span class="sb-item-txt">Rapoarte & PDF</span>
+      </a>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-lbl">Cont</div>
+      <a class="sb-item" href="/profil">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        <span class="sb-item-txt">Profil</span>
+      </a>
+      <a class="sb-item" href="/setari">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 9a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 4.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+        <span class="sb-item-txt">Setări</span>
+      </a>
+    </div>
+  </nav>
+  <div class="sb-bottom">
+    <button class="sb-toggle" id="sbToggle"><svg id="sbArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+  </div>
+</aside>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar" id="topbar">
+  <a href="/academie" class="tb-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Înapoi la Academie
+  </a>
+  <div class="tb-right">
+    <span class="tb-name" th:text="${user.firstName}">Utilizator</span>
+    <div class="tb-avatar" th:text="${userInitials}">U</div>
+  </div>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main" id="main">
+
+  <!-- Already completed banner -->
+  <div class="completed-banner" th:if="${completed}">
+    <span class="cb-ico">🏆</span>
+    <div class="cb-text">
+      <h3>Curs finalizat cu succes!</h3>
+      <p>Ai trecut deja quiz-ul pentru acest curs. Poți relua lecția sau îți poți descărca certificatul din secțiunea Academie.</p>
+    </div>
+  </div>
+
+  <div class="course-layout">
+
+    <!-- LEFT: Video + Info -->
+    <div class="course-main">
+
+      <!-- Video -->
+      <div class="video-wrap">
+        <iframe th:if="${course.videoUrl != null and !#strings.isEmpty(course.videoUrl)}"
+                th:src="${course.videoUrl}"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        <div class="video-placeholder" th:unless="${course.videoUrl != null and !#strings.isEmpty(course.videoUrl)}">
+          📹 Video indisponibil momentan
+        </div>
+      </div>
+
+      <!-- Course info -->
+      <div class="course-info-card">
+        <span class="ci-cat">
+          📚 <span th:text="${course.title}">Curs</span>
+        </span>
+        <div class="ci-title" th:text="${course.title}">Titlu curs</div>
+        <div class="ci-desc" th:text="${course.description}">Descriere curs</div>
+        <div class="ci-meta">
+          <div class="ci-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>Recompensă: <strong th:text="${course.rewardPoints} + ' XP'">0 XP</strong></span>
+          </div>
+          <div class="ci-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>Scor minim: <strong th:text="${course.passScorePercentage} + '%'">60%</strong></span>
+          </div>
+          <div class="ci-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Progres: <strong th:text="${enrollment.progressPct} + '%'" id="progressLabel">0%</strong></span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-section">
+          <div class="progress-lbl">
+            <span>Progres curs</span>
+            <span th:text="${enrollment.progressPct} + '%'" id="progressPct">0%</span>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill" id="progressFill"
+                 th:style="'width:' + ${enrollment.progressPct} + '%'"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conținut lecție -->
+      <div class="course-info-card" th:if="${course.content != null and !#strings.isEmpty(course.content)}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+          <span style="font-size:18px">📖</span>
+          <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text)">Material de studiu</span>
+        </div>
+        <div style="font-size:14px;color:var(--text-2);line-height:1.75;font-weight:300"
+             th:utext="${course.content}"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Quiz -->
+    <div class="quiz-sidebar">
+
+      <!-- Active quiz card (shown when not yet completed) -->
+      <div class="quiz-card" th:if="${!completed}" id="quizCard">
+        <div class="qc-header">
+          <div class="qc-header-tag">Quiz de evaluare</div>
+          <h2>Testează-ți cunoștințele</h2>
+          <p th:text="'Scor minim pentru promovare: ' + ${course.passScorePercentage} + '%'">Scor minim: 60%</p>
+        </div>
+
+        <div class="qc-progress">
+          <div class="qc-dots" id="qDots"></div>
+          <span class="qc-progress-txt" id="qProgressTxt">0 / 0</span>
+        </div>
+
+        <div class="qc-body" id="quizBody">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Already completed card -->
+      <div class="quiz-card" th:if="${completed}">
+        <div class="qc-header">
+          <div class="qc-header-tag">Curs finalizat</div>
+          <h2>Felicitări! 🏆</h2>
+          <p>Ai trecut cu succes quiz-ul acestui curs.</p>
+        </div>
+        <div style="padding:24px;text-align:center">
+          <div style="font-size:44px;margin-bottom:12px">🎓</div>
+          <div style="font-size:14px;color:var(--text-2);margin-bottom:16px">Certificatul tău este disponibil în secțiunea Academie.</div>
+          <a href="/academie" style="display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:var(--blue);color:#fff;text-decoration:none;border-radius:var(--r);font-size:13px;font-weight:600;box-shadow:0 3px 14px rgba(0,102,204,.25)">
+            ← Înapoi la Academie
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Results overlay card (shown after quiz submit) -->
+  <div class="result-card" id="resultCard">
+    <div class="result-emoji" id="resultEmoji">🎉</div>
+    <div class="result-title" id="resultTitle">Felicitări!</div>
+    <div class="result-score" id="resultScore">0%</div>
+    <div class="result-sub" id="resultSub">Ai răspuns corect la 0 din 0 întrebări</div>
+    <div class="xp-earned" id="xpEarned" style="display:none">
+      ⚡ <span id="xpEarnedText">+0 XP câștigați!</span>
+    </div>
+    <div>
+      <button class="btn-retry" id="retryBtn" onclick="retryQuiz()">🔄 Încearcă din nou</button>
+      <button class="btn-back-ac" onclick="window.location.href='/academie'">← Înapoi la Academie</button>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script id="questionsRaw" type="application/json" th:utext="${questionsJson}"></script>
+
+<script th:inline="javascript">
+  /* ── SIDEBAR ── */
+  const sb=document.getElementById('sb'),main=document.getElementById('main'),topbar=document.getElementById('topbar'),sbArrow=document.getElementById('sbArrow');
+  let sbOpen=true;
+  document.getElementById('sbToggle').addEventListener('click',()=>{
+    sbOpen=!sbOpen;sb.classList.toggle('closed',!sbOpen);main.classList.toggle('sb-closed',!sbOpen);topbar.classList.toggle('sb-closed',!sbOpen);sbArrow.style.transform=sbOpen?'':'rotate(180deg)';
+  });
+
+  /* ── QUIZ DATA from server ── */
+  const courseId  = /*[[${course.id}]]*/ 0;
+  const passScore = /*[[${course.passScorePercentage}]]*/ 60;
+  const isCompleted = /*[[${completed}]]*/ false;
+
+  const questions = JSON.parse(document.getElementById('questionsRaw').textContent || '[]');
+
+  let currentQ   = 0;
+  let userAnswers = new Array(questions.length).fill(null);
+  let submitted  = false;
+
+  /* ── CSRF token (needed for POST) ── */
+  function getCsrf() {
+    const cookie = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('XSRF-TOKEN='));
+    return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
+  }
+
+  /* ── RENDER DOTS ── */
+  function renderDots() {
+    const dots = document.getElementById('qDots');
+    if (!dots) return;
+    dots.innerHTML = questions.map((_, i) => {
+      let cls = 'qc-dot';
+      if (i === currentQ) cls += ' current';
+      return `<div class="${cls}" id="dot-${i}"></div>`;
+    }).join('');
+    document.getElementById('qProgressTxt').textContent = `${currentQ + 1} / ${questions.length}`;
+  }
+
+  /* ── RENDER QUESTION ── */
+  function renderQuestion() {
+    if (isCompleted || questions.length === 0) return;
+    const body = document.getElementById('quizBody');
+    if (!body) return;
+    const q = questions[currentQ];
+    let html = `
+            <div class="q-counter">Întrebarea ${currentQ + 1} din ${questions.length}</div>
+            <div class="q-text">${q.text}</div>
+        `;
+    q.options.forEach((opt, idx) => {
+      const sel = userAnswers[currentQ] === opt ? 'selected' : '';
+      html += `
+                <label class="q-option ${sel}" onclick="selectOption(this, '${escapeQuotes(opt)}')">
+    <input type="radio" name="q${currentQ}" value="${escapeQuotes(opt)}" ${sel ? 'checked' : ''}> ${opt || ''}
+</label>
+            `;
+    });
+    html += `
+            <div class="q-actions">
+                <div class="q-feedback" id="qFeedback"></div>
+                ${currentQ < questions.length - 1
+            ? `<button class="btn-submit" id="btnSubmitQ" onclick="nextQuestion()">Continuă →</button>`
+            : `<button class="btn-submit" id="btnSubmitQ" onclick="submitQuiz()" style="background:var(--green)">✓ Trimite quiz-ul</button>`
+    }
+            </div>
+        `;
+    body.innerHTML = html;
+    renderDots();
+  }
+
+  function escapeQuotes(str) {
+    if (str == null) return '';
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  function selectOption(el, value) {
+    document.querySelectorAll('.q-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    userAnswers[currentQ] = value;
+  }
+
+  function nextQuestion() {
+    if (userAnswers[currentQ] === null) {
+      showToast('Selectează un răspuns', 'Alege o opțiune înainte de a continua.', 'orange');
+      return;
+    }
+    const dot = document.getElementById(`dot-${currentQ}`);
+    if (dot) { dot.classList.remove('current'); dot.classList.add('done'); }
+    currentQ++;
+    renderQuestion();
+  }
+
+  async function submitQuiz() {
+    if (userAnswers[currentQ] === null) {
+      showToast('Selectează un răspuns', 'Alege o opțiune înainte de a trimite.', 'orange');
+      return;
+    }
+    const btn = document.getElementById('btnSubmitQ');
+    if (btn) { btn.disabled = true; btn.textContent = 'Se procesează...'; }
+
+    try {
+      const resp = await fetch('/academie/quiz/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': getCsrf()
+        },
+        body: JSON.stringify({ courseId: courseId, answers: userAnswers })
+      });
+      const data = await resp.json();
+      showResults(data);
+    } catch (e) {
+      showToast('Eroare', 'Nu s-a putut trimite quiz-ul. Verifică conexiunea.', 'red');
+      if (btn) { btn.disabled = false; btn.textContent = '✓ Trimite quiz-ul'; }
+    }
+  }
+
+  function showResults(data) {
+    const qCard = document.getElementById('quizCard');
+    if (qCard) qCard.style.display = 'none';
+    const rc = document.getElementById('resultCard');
+    rc.classList.add('show');
+
+    const passed = data.passed || data.alreadyCompleted;
+    const score  = data.score  || 0;
+    const correct = data.correct || 0;
+    const total   = data.total  || questions.length;
+    const xp      = data.xpEarned || 0;
+
+    document.getElementById('resultEmoji').textContent = passed ? '🏆' : '😓';
+    document.getElementById('resultTitle').textContent = passed
+            ? (data.alreadyCompleted ? 'Deja finalizat!' : 'Felicitări, ai promovat!')
+            : 'Nu ai promovat';
+    document.getElementById('resultScore').textContent = score + '%';
+    document.getElementById('resultScore').style.color = passed ? 'var(--green)' : 'var(--red)';
+    document.getElementById('resultSub').textContent = `Ai răspuns corect la ${correct} din ${total} întrebări (minim ${passScore}% pentru promovare)`;
+
+    if (xp > 0) {
+      document.getElementById('xpEarned').style.display = 'inline-flex';
+      document.getElementById('xpEarnedText').textContent = `+${xp} XP câștigați!`;
+    }
+
+    if (passed) {
+      document.getElementById('retryBtn').style.display = 'none';
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('progressPct').textContent = '100%';
+    }
+
+    if (passed && !data.alreadyCompleted) {
+      showToast('🎉 Curs finalizat!', `+${xp} XP adăugați în contul tău!`, 'green');
+    }
+  }
+
+  function retryQuiz() {
+    currentQ = 0;
+    userAnswers = new Array(questions.length).fill(null);
+    submitted = false;
+    document.getElementById('resultCard').classList.remove('show');
+    const qCard = document.getElementById('quizCard');
+    if (qCard) qCard.style.display = '';
+    renderQuestion();
+  }
+
+  function showToast(title, msg, color) {
+    const wrap = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = 'toast show';
+    const bg = color==='green' ? 'rgba(48,209,88,.1)' : color==='orange' ? 'rgba(255,159,10,.1)' : color==='red' ? 'rgba(255,59,48,.08)' : 'var(--blue-light)';
+    const ic = color==='green' ? '✅' : color==='orange' ? '⚠️' : color==='red' ? '❌' : '🔔';
+    t.innerHTML = `<div class="t-ico" style="background:${bg}">${ic}</div><div class="t-info"><div class="t-title">${title}</div><div class="t-msg">${msg}</div></div>`;
+    wrap.appendChild(t);
+    setTimeout(() => { t.classList.remove('show'); t.classList.add('hide'); setTimeout(()=>t.remove(), 400); }, 4000);
+  }
+
+  if (!isCompleted && questions.length > 0) {
+    renderQuestion();
+  }
+</script>
+</body>
+</html>

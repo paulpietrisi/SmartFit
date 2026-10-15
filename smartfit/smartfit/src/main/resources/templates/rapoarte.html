@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartFit – Rapoarte & PDF</title>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --blue:#0066CC;--blue-2:#0A84FF;--blue-3:#5AC8FA;--blue-deep:#0A2540;
+      --blue-light:#EAF3FF;--blue-mid:rgba(0,102,204,.07);
+      --green:#30D158;--orange:#FF9F0A;--red:#FF3B30;--purple:#BF5AF2;
+      --white:#fff;--off:#F5F5F7;--off2:#EBEBED;
+      --text:#1D1D1F;--text-2:#6E6E73;--text-3:#86868B;
+      --border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.10);
+      --sh-sm:0 2px 10px rgba(0,0,0,.06);--sh-md:0 6px 28px rgba(0,0,0,.09);--sh-lg:0 16px 56px rgba(0,0,0,.13);
+      --r:12px;--r-md:16px;--r-lg:22px;--sw:248px;--th:58px;--tr:.22s ease;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);background:var(--off);min-height:100vh;overflow-x:hidden}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);z-index:300;background:#fff;border-right:.5px solid var(--border-2);display:flex;flex-direction:column;transition:width var(--tr);overflow:hidden}
+    .sidebar.closed{width:64px}
+    .sb-logo{display:flex;align-items:center;gap:11px;padding:14px 18px;height:var(--th);border-bottom:.5px solid var(--border);text-decoration:none;flex-shrink:0;overflow:hidden}
+    .sb-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sb-logo-icon svg{width:17px;height:17px}
+    .sb-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--tr)}
+    .sidebar.closed .sb-logo-text{opacity:0}
+    .sb-nav{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden}
+    .sb-nav::-webkit-scrollbar{width:0}
+    .sb-sec{margin-bottom:22px}
+    .sb-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;white-space:nowrap;transition:opacity var(--tr)}
+    .sidebar.closed .sb-lbl{opacity:0}
+    .sb-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);cursor:pointer;text-decoration:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:background var(--tr),color var(--tr);position:relative}
+    .sb-item:hover{background:var(--off);color:var(--text)}
+    .sb-item.active{background:var(--blue-light);color:var(--blue)}
+    .sb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sb-item.active .sb-ico{background:rgba(0,102,204,.12)}
+    .sb-txt{opacity:1;transition:opacity var(--tr)}
+    .sidebar.closed .sb-txt{opacity:0}
+    .sb-badge{font-size:10px;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;border-radius:100px;margin-left:auto;flex-shrink:0;transition:opacity var(--tr)}
+    .sidebar.closed .sb-badge{opacity:0}
+    .sb-bottom{padding:12px 10px;border-top:.5px solid var(--border);flex-shrink:0}
+    .sb-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;background:none;border:none;cursor:pointer;padding:8px 4px;color:var(--text-3);border-radius:8px;transition:color var(--tr)}
+    .sb-toggle:hover{color:var(--text);background:var(--off)}
+    .sidebar.closed .sb-toggle{justify-content:center}
+    .sidebar.closed .sb-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:400}
+    .sidebar.closed .sb-item:hover::after{opacity:1}
+    .topbar{position:fixed;top:0;left:var(--sw);right:0;height:var(--th);z-index:200;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--border-2);display:flex;align-items:center;padding:0 28px;gap:16px;transition:left var(--tr)}
+    .topbar.sb-closed{left:64px}
+    .tb-search{flex:1;max-width:380px;position:relative}
+    .tb-search input{width:100%;padding:9px 14px 9px 38px;background:var(--off);border:1.5px solid transparent;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr)}
+    .tb-search input::placeholder{color:var(--text-3)}
+    .tb-search input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+    .tb-sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+    .tb-right{display:flex;align-items:center;gap:6px;margin-left:auto}
+    .tb-icon-btn{width:36px;height:36px;border-radius:100px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:background var(--tr)}
+    .tb-icon-btn:hover{background:var(--off)}
+    .tb-avatar{width:34px;height:34px;border-radius:100px;background:linear-gradient(135deg,var(--blue-deep),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;border:2px solid rgba(255,255,255,.9);box-shadow:var(--sh-sm)}
+    .tb-name{font-size:13px;font-weight:500;color:var(--text)}
+    .main{margin-left:var(--sw);margin-top:var(--th);padding:28px;transition:margin-left var(--tr);min-height:calc(100vh - var(--th))}
+    .main.sb-closed{margin-left:64px}
+    /* utilities */
+    .btn-prim{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--tr),transform .15s;box-shadow:0 3px 14px rgba(0,102,204,.25);text-decoration:none;white-space:nowrap}
+    .btn-prim:hover{background:#0055AA;transform:translateY(-1px)}
+    .btn-sec{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all var(--tr);box-shadow:var(--sh-sm);white-space:nowrap}
+    .btn-sec:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+    .btn-ghost{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;transition:opacity var(--tr)}
+    .btn-ghost:hover{opacity:.65}
+    .card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden}
+    .card-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+    .card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+    .card-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+    .card-body{padding:16px 20px 20px}
+    .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px}
+    .ch-blue{background:var(--blue-light);color:var(--blue)}
+    .ch-green{background:rgba(48,209,88,.1);color:#1A8A3A}
+    .ch-orange{background:rgba(255,159,10,.1);color:#C07000}
+    .ch-red{background:rgba(255,59,48,.08);color:#D93025}
+    .sect-lbl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .sect-lbl::after{content:'';flex:1;height:.5px;background:var(--border-2)}
+    [data-tt]{position:relative}
+    [data-tt]::after{content:attr(data-tt);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:500}
+    [data-tt]:hover::after{opacity:1}
+    /* page header */
+    .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+    .ph-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+    .page-hd h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.6px;margin-bottom:4px}
+    .page-hd p{font-size:14px;color:var(--text-2);font-weight:300}
+    .ph-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    /* report type cards */
+    .rtype-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+    .rtype-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);padding:20px 18px;cursor:pointer;transition:transform var(--tr),box-shadow var(--tr),border-color var(--tr);position:relative;overflow:hidden}
+    .rtype-card:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
+    .rtype-card.selected{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,102,204,.12),var(--sh-md)}
+    .rtype-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-md) var(--r-md) 0 0}
+    .rt-nutrition::before{background:linear-gradient(90deg,var(--blue),var(--blue-2))}
+    .rt-weight::before{background:linear-gradient(90deg,var(--green),#28B84C)}
+    .rt-orders::before{background:linear-gradient(90deg,var(--orange),#FF6B00)}
+    .rt-academy::before{background:linear-gradient(90deg,var(--purple),#9B59B6)}
+    .rt-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+    .rt-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .rt-desc{font-size:11px;color:var(--text-3);line-height:1.5;margin-bottom:10px}
+    .rt-formats{display:flex;gap:5px;flex-wrap:wrap}
+    .rt-fmt{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:var(--off);color:var(--text-3)}
+    .rt-check{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:100px;background:var(--blue);display:none;align-items:center;justify-content:center;color:#fff;font-size:11px}
+    .rtype-card.selected .rt-check{display:flex}
+    /* builder */
+    .builder-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;margin-bottom:28px}
+    .builder-form{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden}
+    .bf-hd{padding:18px 22px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px}
+    .bf-hd-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text)}
+    .bf-body{padding:22px;display:flex;flex-direction:column;gap:20px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field label{display:block;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-2);margin-bottom:7px}
+    .field input,.field select,.field textarea{width:100%;padding:10px 13px;background:var(--off);border:1.5px solid transparent;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr)}
+    .field input:focus,.field select:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(0,102,204,.09)}
+    .field select option{background:#fff}
+    .section-toggle{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:var(--r);border:.5px solid var(--border);cursor:pointer;transition:background var(--tr);margin-bottom:7px}
+    .section-toggle:hover{background:var(--off)}
+    .section-toggle:last-child{margin-bottom:0}
+    .st-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .st-info{flex:1}
+    .st-name{font-size:13px;font-weight:600;color:var(--text)}
+    .st-desc{font-size:10px;color:var(--text-3)}
+    .toggle-sw{position:relative;width:38px;height:22px;flex-shrink:0}
+    .toggle-sw input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--off2);border-radius:11px;transition:background var(--tr)}
+    .toggle-slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform var(--tr);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+    .toggle-sw input:checked+.toggle-slider{background:var(--blue)}
+    .toggle-sw input:checked+.toggle-slider::before{transform:translateX(16px)}
+    /* preview card */
+    .preview-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;position:sticky;top:calc(var(--th)+14px)}
+    .prev-hd{padding:16px 18px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .prev-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+    .pdf-mock{margin:16px 18px;border-radius:var(--r);border:.5px solid var(--border);overflow:hidden;background:#fff;box-shadow:var(--sh-sm)}
+    .pdf-header{background:linear-gradient(135deg,var(--blue-deep),#0B3870);padding:14px 16px;display:flex;align-items:center;gap:10px}
+    .pdf-logo-icon{width:26px;height:26px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+    .pdf-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff}
+    .pdf-sub{font-size:9px;color:rgba(255,255,255,.5);margin-top:1px}
+    .pdf-section{padding:12px 14px;border-bottom:.5px solid var(--border)}
+    .pdf-section:last-child{border-bottom:none}
+    .pdf-section-t{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px}
+    .pdf-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+    .pdf-stat{background:var(--off);border-radius:6px;padding:7px;text-align:center}
+    .pdf-stat-n{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--blue);line-height:1}
+    .pdf-stat-l{font-size:8px;color:var(--text-3);margin-top:2px}
+    .pdf-bar-row{display:flex;flex-direction:column;gap:5px}
+    .pdf-bar-item{display:flex;align-items:center;gap:7px}
+    .pdf-bar-lbl{font-size:9px;color:var(--text-3);min-width:55px}
+    .pdf-bar{flex:1;height:4px;background:var(--off2);border-radius:2px;overflow:hidden}
+    .pdf-bar-fill{height:100%;border-radius:2px}
+    .pdf-bar-val{font-size:9px;font-weight:700;color:var(--text-2);min-width:28px;text-align:right}
+    .pdf-table{width:100%;border-collapse:collapse;font-size:9px}
+    .pdf-table th{color:var(--text-3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:0 0 5px;text-align:left;border-bottom:.5px solid var(--border)}
+    .pdf-table td{padding:4px 0;border-bottom:.5px solid var(--off2);color:var(--text-2)}
+    .pdf-table td:last-child{font-weight:600;color:var(--blue);text-align:right}
+    .pdf-footer{padding:8px 14px;background:var(--off);display:flex;justify-content:space-between;font-size:8px;color:var(--text-3)}
+    /* history */
+    .history-table table{width:100%;border-collapse:collapse;font-size:13px}
+    .history-table th{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:0 0 10px;text-align:left;border-bottom:.5px solid var(--border-2)}
+    .history-table td{padding:12px 0;border-bottom:.5px solid var(--border);vertical-align:middle}
+    .history-table tr:last-child td{border-bottom:none}
+    .history-table tr:hover td{background:rgba(0,102,204,.018)}
+    .rpt-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .rpt-row{display:flex;align-items:center;gap:10px}
+    .rpt-status{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px}
+    .rs-done{background:rgba(48,209,88,.1);color:#1A8A3A}
+    .rs-gen{background:var(--blue-light);color:var(--blue)}
+    /* chart bar */
+    .bar-chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px}
+    .bc-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+    .bc-bar{width:100%;border-radius:4px 4px 0 0;transition: height 1.2s cubic-bezier(.22,1,.36,1), opacity var(--tr)}
+    .bc-bar:hover{opacity:.8;cursor:pointer}
+    .bc-lbl{font-size:9px;color:var(--text-3);text-align:center}
+    .bc-val{font-size:9px;font-weight:700;color:var(--text-2);text-align:center}
+    /* kpi strip */
+    .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+    .kpi-card{background:#fff;border-radius:var(--r-md);border:.5px solid var(--border);box-shadow:var(--sh-sm);padding:18px;transition:transform var(--tr)}
+    .kpi-card:hover{transform:translateY(-2px)}
+    .kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .kpi-ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+    .kpi-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);line-height:1;margin-bottom:3px}
+    .kpi-lbl{font-size:12px;color:var(--text-3);margin-bottom:8px}
+    .kpi-bar{height:4px;background:var(--off2);border-radius:2px;overflow:hidden}
+    .kpi-fill{height:100%;border-radius:2px;transition:width 1.3s cubic-bezier(.22,1,.36,1)}
+    .trend-up{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(48,209,88,.1);color:#1A8A3A}
+    .trend-dn{background:rgba(255,59,48,.08);color:#D93025}
+    /* chart containers */
+    .chart-wrap{position:relative}
+    .chart-svg{width:100%;display:block;overflow:visible}
+    .chart-tip{position:absolute;background:var(--blue-deep);color:#fff;font-size:11px;font-weight:500;padding:5px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:10}
+    /* toast */
+    .toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+    .toast{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--border-2);box-shadow:var(--sh-lg);border-radius:var(--r-md);padding:13px 15px;min-width:280px;max-width:340px;pointer-events:all;transform:translateX(110%);transition:transform .38s cubic-bezier(.22,1,.36,1),opacity .38s;opacity:0}
+    .toast.show{transform:none;opacity:1}
+    .toast.hide{transform:translateX(110%);opacity:0}
+    .t-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .tg{background:rgba(48,209,88,.1)}.tb2{background:var(--blue-light)}.to{background:rgba(255,159,10,.1)}
+    .t-info{flex:1}
+    .t-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .t-msg{font-size:11px;color:var(--text-3);line-height:1.45}
+    .t-close{background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px}
+    .t-bar{height:2px;background:var(--off2);border-radius:1px;overflow:hidden;margin-top:8px}
+    .t-bf{height:100%;border-radius:1px;animation:tbar 4s linear forwards}
+    @keyframes tbar{from{width:100%}to{width:0}}
+    /* responsive */
+    @media(max-width:1100px){.builder-grid,.rtype-grid{grid-template-columns:repeat(2,1fr)}.kpi-strip{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:900px){.topbar{left:0!important}.sidebar{transform:translateX(-100%);width:var(--sw)!important}.main{margin-left:0!important;padding:16px}.builder-grid{grid-template-columns:1fr}.rtype-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.rtype-grid,.kpi-strip,.form-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sb">
+  <a href="/home" class="sb-logo">
+    <div class="sb-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round"><rect x="2" y="10" width="3" height="4" rx="1"/><rect x="19" y="10" width="3" height="4" rx="1"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/><line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/></svg></div>
+    <span class="sb-logo-text">SmartFit</span>
+  </a>
+  <nav class="sb-nav">
+    <div class="sb-sec">
+      <div class="sb-lbl">Principal</div>
+      <a class="sb-item" th:href="@{/dashboard}" data-tip="Dashboard">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+        <span class="sb-txt">Dashboard</span>
+      </a>
+      <a class="sb-item" th:href="@{/tracking}" data-tip="Tracking">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg></span>
+        <span class="sb-txt">Tracking</span>
+      </a>
+      <a class="sb-item" th:href="@{/jurnal-alimentar}" data-tip="Jurnal alimentar">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 12h8M8 16h5"/></svg></span>
+        <span class="sb-txt">Jurnal alimentar</span>
+      </a>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Servicii</div>
+      <a class="sb-item" th:href="@{/magazin}" data-tip="Magazin">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.72l1.38-9.18H6"/></svg></span>
+        <span class="sb-txt">Magazin</span><span class="sb-badge">3</span>
+      </a>
+      <a class="sb-item" th:href="@{/academie}" data-tip="Academie">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+        <span class="sb-txt">Academie</span><span class="sb-badge">2</span>
+      </a>
+      <a class="sb-item active" th:href="@{/rapoarte}" data-tip="Rapoarte">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+        <span class="sb-txt">Rapoarte &amp; PDF</span>
+      </a>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Cont</div>
+      <a class="sb-item" th:href="@{/profil}" data-tip="Profil">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        <span class="sb-txt">Profil</span>
+      </a>
+      <a class="sb-item" th:href="@{/setari}" data-tip="Setări">
+        <span class="sb-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+        <span class="sb-txt">Setări</span>
+      </a>
+    </div>
+  </nav>
+  <div class="sb-bottom"><button class="sb-toggle" id="sbToggle"><svg id="sbArr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+</aside>
+<!-- TOPBAR -->
+<header class="topbar" id="topbar">
+  <div class="tb-search"><span class="tb-sico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input type="search" placeholder="Caută rapoarte…"/></div>
+  <div class="tb-right">
+    <button class="tb-icon-btn" onclick="showToast('toast-dl')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+    <div style="width:1px;height:20px;background:var(--border-2);margin:0 4px"></div>
+    <span class="tb-name">Alex</span><div class="tb-avatar">A</div>
+  </div>
+</header>
+<!-- MAIN -->
+<main class="main" id="main">
+  <div class="page-hd">
+    <div>
+      <div class="ph-tag">05 — Rapoarte & PDF</div>
+      <h1>Rapoarte & Exporturi</h1>
+      <p>Generează rapoarte detaliate și facturi PDF pentru orice perioadă.</p>
+    </div>
+    <div class="ph-right">
+      <span class="chip ch-green">📄 GDPR conform</span>
+      <button class="btn-prim" onclick="downloadReport()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 10v3H3v-3M8 2v8M5 7l3 3 3-3"/></svg>
+        Generează raport
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-ico" style="background:#EAF3FF">📊</div><span class="trend-up">↑ +4%</span></div>
+      <div class="kpi-val">1,847</div><div class="kpi-lbl">Calorii azi (kcal)</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:84%;background:linear-gradient(90deg,var(--blue),var(--blue-2))"></div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-ico" style="background:#E8F8EF">⚖️</div><span class="trend-up trend-dn">↓ −1.6kg</span></div>
+      <div class="kpi-val">78.6<span style="font-size:14px;font-weight:400;color:var(--text-3)">kg</span></div><div class="kpi-lbl">Greutate curentă</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:62%;background:linear-gradient(90deg,var(--green),#28B84C)"></div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-ico" style="background:#FFF0E8">🛒</div><span class="trend-up">↑ 5 comenzi</span></div>
+      <div class="kpi-val">643<span style="font-size:14px;font-weight:400;color:var(--text-3)"> lei</span></div><div class="kpi-lbl">Cheltuieli totale</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:72%;background:linear-gradient(90deg,var(--orange),#FF6B00)"></div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-ico" style="background:#F0E8FF">🏆</div><span class="trend-up">↑ +120 XP</span></div>
+      <div class="kpi-val">1,240<span style="font-size:14px;font-weight:400;color:var(--text-3)"> XP</span></div><div class="kpi-lbl">Puncte academie</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:83%;background:linear-gradient(90deg,var(--purple),#9B59B6)"></div></div>
+    </div>
+  </div>
+
+  <!-- Report type selector -->
+  <div class="sect-lbl">Tip raport</div>
+  <div class="rtype-grid">
+    <div class="rtype-card rt-nutrition selected" onclick="selectType(this,'nutrition')" id="rt-nutrition">
+      <div class="rt-check">✓</div>
+      <div class="rt-ico" style="background:#EAF3FF">🍽</div>
+      <div class="rt-name">Raport Nutriție</div>
+      <div class="rt-desc">Calorii, macro-uri, evoluție greutate, hidratare și obiective.</div>
+      <div class="rt-formats"><span class="rt-fmt">PDF</span><span class="rt-fmt">CSV</span><span class="rt-fmt">JSON</span></div>
+    </div>
+    <div class="rtype-card rt-weight" onclick="selectType(this,'weight')" id="rt-weight">
+      <div class="rt-check">✓</div>
+      <div class="rt-ico" style="background:#E8F8EF">📈</div>
+      <div class="rt-name">Raport Greutate</div>
+      <div class="rt-desc">Evoluție greutate, IMC, progres față de obiectiv, comparații.</div>
+      <div class="rt-formats"><span class="rt-fmt">PDF</span><span class="rt-fmt">CSV</span></div>
+    </div>
+    <div class="rtype-card rt-orders" onclick="selectType(this,'orders')" id="rt-orders">
+      <div class="rt-check">✓</div>
+      <div class="rt-ico" style="background:#FFF0E8">🛒</div>
+      <div class="rt-name">Facturi & Comenzi</div>
+      <div class="rt-desc">Facturi PDF individuale sau sumar comenzi pe perioadă.</div>
+      <div class="rt-formats"><span class="rt-fmt">PDF</span><span class="rt-fmt">XML</span></div>
+    </div>
+    <div class="rtype-card rt-academy" onclick="selectType(this,'academy')" id="rt-academy">
+      <div class="rt-check">✓</div>
+      <div class="rt-ico" style="background:#F0E8FF">🎓</div>
+      <div class="rt-name">Raport Academie</div>
+      <div class="rt-desc">Cursuri, XP, quiz-uri, certificate și progres educațional.</div>
+      <div class="rt-formats"><span class="rt-fmt">PDF</span><span class="rt-fmt">CSV</span></div>
+    </div>
+  </div>
+
+  <!-- Builder + Preview -->
+  <div class="builder-grid">
+    <div class="builder-form">
+      <div class="bf-hd">
+        <div style="width:34px;height:34px;background:var(--blue-light);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px">🍽</div>
+        <div class="bf-hd-title" id="bfTitle">Configurare Raport Nutriție</div>
+      </div>
+
+      <!-- Stocăm aici starea ca să o putem lua din JS -->
+      <input type="hidden" id="selectedReportType" value="NUTRITIE" />
+      <input type="hidden" id="selectedPeriod" value="SAPTAMANA" />
+
+      <div class="bf-body">
+        <!-- Period -->
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Perioadă</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="setPeriod(this,'AZI')">Azi</button>
+            <button class="btn-prim" style="font-size:12px;padding:7px 14px" onclick="setPeriod(this,'SAPTAMANA')">Săptămâna</button>
+            <button class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="setPeriod(this,'LUNA')">Luna</button>
+            <button class="btn-sec" style="font-size:12px;padding:7px 14px" onclick="setPeriod(this,'PERSONALIZAT')">Personalizat</button>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Data start</label><input type="date" id="startDate"/></div>
+            <div class="field"><label>Data final</label><input type="date" id="endDate"/></div>
+          </div>
+        </div>
+        <!-- Format -->
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Format export</div>
+          <div class="form-row">
+            <div class="field"><label>Tip fișier</label>
+              <select id="fileType"><option value="PDF" selected>PDF (recomandat)</option><option value="CSV">CSV</option><option value="JSON">JSON</option></select>
+            </div>
+            <div class="field"><label>Limbă raport</label>
+              <select id="language"><option value="RO" selected>Română</option><option value="EN">Engleză</option></select>
+            </div>
+          </div>
+        </div>
+        <!-- Sections -->
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Secțiuni incluse</div>
+          <div class="section-toggle">
+            <div class="st-ico" style="background:#EAF3FF">📊</div>
+            <div class="st-info"><div class="st-name">Sumar caloric zilnic</div><div class="st-desc">Grafic calorii consumate vs obiectiv</div></div>
+            <label class="toggle-sw"><input type="checkbox" id="togSumar" checked/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="section-toggle">
+            <div class="st-ico" style="background:#E8F8EF">💪</div>
+            <div class="st-info"><div class="st-name">Distribuție macro-nutrienți</div><div class="st-desc">Proteine, carbohidrați, grăsimi</div></div>
+            <label class="toggle-sw"><input type="checkbox" id="togMacro" checked/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="section-toggle">
+            <div class="st-ico" style="background:#FFF0E8">⚖️</div>
+            <div class="st-info"><div class="st-name">Evoluție greutate</div><div class="st-desc">Grafic greutate cu medie mobilă</div></div>
+            <label class="toggle-sw"><input type="checkbox" id="togGreutate" checked/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <!-- Options -->
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Opțiuni avansate</div>
+          <div class="form-row">
+            <div class="field"><label>Antet personalizat</label><input type="text" id="antetPersonalizat" th:value="${user.firstName != null ? 'SmartFit – Raport ' + user.firstName : 'SmartFit – Raport'}"/></div>
+            <div class="field"><label>E-mail livrare</label><input type="email" id="emailLivrare" th:value="${user.email}" /></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn-sec" onclick="triggerPreview()">Previzualizare</button>
+          <button class="btn-prim" onclick="downloadReport()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 10v3H3v-3M8 2v8M5 7l3 3 3-3"/></svg>
+            Generează
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Preview box -->
+    <div class="preview-card">
+      <div class="prev-hd"><span class="prev-title">Previzualizare PDF</span><span class="chip ch-blue">Live preview</span></div>
+
+      <!-- Aici ținem designul tău MOCK când nu e generat nimic încă -->
+      <div id="pdfMockWrapper">
+        <div class="pdf-mock">
+          <div class="pdf-header">
+            <div class="pdf-logo-icon">💪</div>
+            <div>
+              <div class="pdf-title" th:text="${user.firstName != null ? 'SmartFit – Raport ' + user.firstName : 'SmartFit – Raport'}">SmartFit – Raport</div>
+              <div class="pdf-sub">Generează PDF pentru a vedea rezultatul real.</div>
+            </div>
+          </div>
+
+          <div class="pdf-section">
+            <div class="pdf-section-t">Sumar săptămânal</div>
+            <div class="pdf-stat-row">
+              <div class="pdf-stat"><div class="pdf-stat-n" th:text="${stats.caloriAzi != null ? #numbers.formatDecimal(stats.caloriAzi, 1, 0) : '0'}">1,819</div><div class="pdf-stat-l">Calorii azi</div></div>
+              <div class="pdf-stat"><div class="pdf-stat-n" style="color:var(--green)" th:text="${#numbers.formatDecimal(stats.greutateaCurenta, 1, 1)}">78.6</div><div class="pdf-stat-l">Greutate (kg)</div></div>
+              <div class="pdf-stat"><div class="pdf-stat-n" style="color:var(--purple)" th:text="${stats.puncteAcademie}">1240</div><div class="pdf-stat-l">XP Total</div></div>
+            </div>
+          </div>
+
+          <div class="pdf-section">
+            <div class="pdf-section-t">Calorii zilnice (kcal)</div>
+            <div class="bar-chart" id="pdfBarChart"></div>
+          </div>
+
+          <div class="pdf-footer"><span>SmartFit · Confidențial</span><span>Preview Vizual</span></div>
+        </div>
+      </div>
+
+      <!-- Aici va apărea Iframe-ul real din Java -->
+      <iframe id="pdfIframe" style="display:none; width:100%; height:460px; border:none; border-bottom: 1px solid var(--border);"></iframe>
+
+      <!-- Loading indicator -->
+      <div id="previewLoading" style="display:none; text-align:center; padding:100px 0;">
+        <div style="display:inline-block;width:30px;height:30px;border:3px solid #EAF3FF;border-top-color:#0066CC;border-radius:50%;animation:spin 1s infinite linear;"></div>
+        <p style="font-size:11px;color:var(--text-3);margin-top:10px;">Se generează documentul PDF...</p>
+        <style>@keyframes spin { 100% { transform:rotate(360deg); } }</style>
+      </div>
+
+      <div style="padding:14px 18px;display:flex;gap:8px">
+        <button class="btn-prim" style="flex:1;justify-content:center;font-size:12px" onclick="downloadReport()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 10v3H3v-3M8 2v8M5 7l3 3 3-3"/></svg>
+          Descarcă PDF
+        </button>
+        <button class="btn-sec" style="font-size:12px;padding:9px 13px" onclick="showToast('toast-email')">✉ Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly calorie chart full -->
+  <div class="sect-lbl">Grafic caloric săptămânal</div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-hd">
+      <div><div class="card-title">Calorii consumate vs. obiectiv</div><div class="card-sub">Ultimele 7 zile</div></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)"><span style="width:10px;height:10px;background:var(--blue);border-radius:2px"></span>Consumate</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)"><span style="width:10px;height:3px;background:var(--orange);border-radius:2px;display:inline-block"></span>Obiectiv</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap"><div class="chart-tip" id="cTip"></div>
+        <svg class="chart-svg" id="calChart" height="160" viewBox="0 0 800 160"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- History table -->
+  <div class="sect-lbl">Rapoarte generate recent</div>
+  <div class="card" style="margin-bottom:28px">
+    <div class="card-hd"><div><div class="card-title">Istoricul rapoartelor</div><div class="card-sub">Ultimele rapoarte generate de tine</div></div><button class="btn-ghost">Șterge toate →</button></div>
+    <div class="card-body history-table">
+      <table>
+        <thead><tr><th>Raport</th><th>Format</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        <tr><td><div class="rpt-row"><div class="rpt-ico" style="background:#EAF3FF">🍽</div><div><div style="font-weight:600;font-size:13px">Raport Nutriție</div></div></div></td><td><span class="chip ch-red" style="font-size:10px">PDF</span></td><td><span class="rpt-status rs-done">● Gata</span></td><td style="display:flex;gap:6px"><button class="btn-ghost">Descarcă</button></td></tr>
+        <tr><td><div class="rpt-row"><div class="rpt-ico" style="background:#FFF0E8">🛒</div><div><div style="font-weight:600;font-size:13px">Raport Comenzi</div></div></div></td><td><span class="chip ch-red" style="font-size:10px">PDF</span></td><td><span class="rpt-status rs-done">● Gata</span></td><td style="display:flex;gap:6px"><button class="btn-ghost">Descarcă</button></td></tr>
+        <tr><td><div class="rpt-row"><div class="rpt-ico" style="background:#E8F8EF">📈</div><div><div style="font-weight:600;font-size:13px">Raport Greutate</div></div></div></td><td><span class="chip ch-red" style="font-size:10px">PDF</span></td><td><span class="rpt-status rs-done">● Gata</span></td><td style="display:flex;gap:6px"><button class="btn-ghost">Descarcă</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- TOASTS -->
+<div class="toast-wrap">
+  <div class="toast" id="toast-dl"><div class="t-ico tg">📄</div><div class="t-info"><div class="t-title">PDF generat cu succes!</div><div class="t-msg">Fisierul a fost descărcat.</div><div class="t-bar"><div class="t-bf" style="background:var(--green)"></div></div></div><button class="t-close" onclick="hideToast('toast-dl')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+  <div class="toast" id="toast-email"><div class="t-ico tb2">✉</div><div class="t-info"><div class="t-title">Trimis pe email!</div><div class="t-msg">Raportul a fost trimis.</div><div class="t-bar"><div class="t-bf" style="background:var(--blue)"></div></div></div><button class="t-close" onclick="hideToast('toast-email')"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg></button></div>
+</div>
+
+<script>
+  /* Sidebar Logic */
+  const sb=document.getElementById('sb'),main=document.getElementById('main'),topbar=document.getElementById('topbar'),sbArr=document.getElementById('sbArr');
+  let sbOpen=true;
+  if(document.getElementById('sbToggle')){
+    document.getElementById('sbToggle').addEventListener('click',()=>{sbOpen=!sbOpen;sb.classList.toggle('closed',!sbOpen);main.classList.toggle('sb-closed',!sbOpen);topbar.classList.toggle('sb-closed',!sbOpen);sbArr.style.transform=sbOpen?'':'rotate(180deg)'});
+  }
+
+  /* Generator Logic */
+  let pdfBlobUrl = null;
+
+  function selectType(el, type) {
+    document.querySelectorAll('.rtype-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selectedReportType').value = type;
+
+    // Resetam preview-ul automat pe MOCK cand schimbam tipul de raport
+    document.getElementById('pdfMockWrapper').style.display = 'block';
+    document.getElementById('pdfIframe').style.display = 'none';
+  }
+
+  function setPeriod(btn, p) {
+    document.querySelectorAll('.bf-body button').forEach(b => {
+      if(['Azi','Săptămâna','Luna','Personalizat'].includes(b.textContent)){
+        b.className='btn-sec'; b.style.fontSize='12px'; b.style.padding='7px 14px';
+      }
+    });
+    btn.className='btn-prim'; btn.style.fontSize='12px'; btn.style.padding='7px 14px';
+    document.getElementById('selectedPeriod').value = p;
+
+    const today = new Date();
+    let startStr = today.toISOString().split('T')[0];
+    const endStr = startStr;
+
+    if(p === 'SAPTAMANA') {
+      const d = new Date(); d.setDate(d.getDate() - 6);
+      startStr = d.toISOString().split('T')[0];
+    } else if (p === 'LUNA') {
+      const d = new Date(today.getFullYear(), today.getMonth(), 1);
+      startStr = d.toISOString().split('T')[0];
+    }
+
+    if(document.getElementById('startDate')) document.getElementById('startDate').value = startStr;
+    if(document.getElementById('endDate')) document.getElementById('endDate').value = endStr;
+  }
+
+  function buildFormBody() {
+    const params = new URLSearchParams();
+    params.append('reportType', document.getElementById('selectedReportType').value);
+    params.append('startDate', document.getElementById('startDate').value);
+    params.append('endDate', document.getElementById('endDate').value);
+
+    const antetEl = document.getElementById('antetPersonalizat');
+    if (antetEl) params.append('antetPersonalizat', antetEl.value);
+    return params.toString();
+  }
+
+  async function triggerPreview() {
+    const frame = document.getElementById('pdfIframe');
+    const mock = document.getElementById('pdfMockWrapper');
+    const loader = document.getElementById('previewLoading');
+
+    if(mock) mock.style.display = 'none';
+    if(frame) frame.style.display = 'none';
+    if(loader) loader.style.display = 'block';
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+    try {
+      const resp = await fetch('/rapoarte/previzualizare', {
+        method: 'POST',
+        headers: headers,
+        body: buildFormBody()
+      });
+
+      if(!resp.ok) throw new Error('Eroare backend la generare PDF');
+
+      const blob = await resp.blob();
+      if(pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+      pdfBlobUrl = URL.createObjectURL(blob);
+
+      if(frame) {
+        frame.src = pdfBlobUrl;
+        frame.style.display = 'block';
+      }
+      if(loader) loader.style.display = 'none';
+    } catch(err) {
+      if(loader) loader.style.display = 'none';
+      if(mock) mock.style.display = 'block';
+      alert("Eroare la previzualizare: Baza de date ar putea fi goală pe perioada selectată.");
+    }
+  }
+
+  async function downloadReport() {
+    const repType = document.getElementById('selectedReportType').value;
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+    try {
+      const resp = await fetch('/rapoarte/genereaza', {
+        method: 'POST',
+        headers: headers,
+        body: buildFormBody()
+      });
+
+      if(!resp.ok) throw new Error('Eroare server');
+
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SmartFit_${repType}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showToast('toast-dl');
+    } catch(err) {
+      alert("A apărut o eroare la descărcare. Verifică consola pentru detalii.");
+    }
+  }
+
+  function showToast(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('show','hide');
+    void el.offsetWidth;
+    el.classList.add('show');
+    setTimeout(()=>el.classList.add('hide'),4500);
+  }
+  function hideToast(id){
+    const el = document.getElementById(id);
+    if(el) el.classList.add('hide');
+  }
+
+  // --- GRAFICELE TALE ORIGINALE ---
+
+  /* mini bar chart in pdf preview mock */
+  (function(){
+    const days=['L','M','M','J','V','S','D'];
+    const vals=[1920,2100,1850,2200,1780,1950,1847];
+    const max=Math.max(...vals)*1.1;
+    const wrap=document.getElementById('pdfBarChart');
+    if(!wrap)return;
+    wrap.innerHTML=days.map((d,i)=>{
+      const h=Math.round(vals[i]/max*80);
+      const over=vals[i]>2200;
+      return`<div class="bc-bar-wrap">
+      <div class="bc-val" style="font-size:8px;color:${over?'var(--red)':'var(--text-3)'}">${vals[i]}</div>
+      <div class="bc-bar" style="height:${h}px;background:${over?'rgba(255,59,48,.5)':'rgba(0,102,204,.5)'}"></div>
+      <div class="bc-lbl">${d}</div>
+    </div>`;
+    }).join('');
+  })();
+
+  /* full calorie chart in main page */
+  (function(){
+    const cals=[1920,2100,1850,2200,1780,1950,1847];
+    const days=['Lun 21','Mar 22','Mie 23','Joi 24','Vin 25','Sâm 26','Dum 27','Azi 28'];
+    const svg=document.getElementById('calChart');
+    if(!svg)return;
+    const W=800,H=160,pd={t:14,b:28,l:6,r:6};
+    const target=2200,maxV=Math.max(...cals,target)*1.08;
+    const xs=i=>pd.l+i*((W-pd.l-pd.r)/6);
+    const ys=v=>pd.t+(1-v/maxV)*(H-pd.t-pd.b);
+    const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const g=document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+    g.id='cg';g.setAttribute('x1','0');g.setAttribute('x2','0');g.setAttribute('y1','0');g.setAttribute('y2','1');
+    [{o:'0.2',off:'0'},{o:'0',off:'1'}].forEach(s=>{const st=document.createElementNS('http://www.w3.org/2000/svg','stop');st.setAttribute('offset',s.off);st.setAttribute('stop-color','#0066CC');st.setAttribute('stop-opacity',s.o);g.appendChild(st)});
+    defs.appendChild(g);svg.appendChild(defs);
+    [500,1000,1500,2000,2500].forEach(v=>{const y=ys(v);const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',pd.l);l.setAttribute('x2',W-pd.r);l.setAttribute('y1',y);l.setAttribute('y2',y);l.setAttribute('stroke','#EBEBED');l.setAttribute('stroke-width','1');svg.appendChild(l)});
+    const ty=ys(target);const tl=document.createElementNS('http://www.w3.org/2000/svg','line');tl.setAttribute('x1',pd.l);tl.setAttribute('x2',W-pd.r);tl.setAttribute('y1',ty);tl.setAttribute('y2',ty);tl.setAttribute('stroke','#FF9F0A');tl.setAttribute('stroke-width','1.5');tl.setAttribute('stroke-dasharray','6,3');svg.appendChild(tl);
+    let ap=`M${xs(0)},${H-pd.b}`;cals.forEach((_,i)=>ap+=` L${xs(i)},${ys(cals[i])}`);ap+=` L${xs(6)},${H-pd.b} Z`;
+    const area=document.createElementNS('http://www.w3.org/2000/svg','path');area.setAttribute('d',ap);area.setAttribute('fill','url(#cg)');svg.appendChild(area);
+    const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.setAttribute('points',cals.map((_,i)=>`${xs(i)},${ys(cals[i])}`).join(' '));line.setAttribute('fill','none');line.setAttribute('stroke','#0066CC');line.setAttribute('stroke-width','2.2');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.appendChild(line);
+    const tip=document.getElementById('cTip');
+    cals.forEach((c,i)=>{
+      const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      dot.setAttribute('cx',xs(i));dot.setAttribute('cy',ys(c));dot.setAttribute('r','4');dot.setAttribute('fill',c>target?'var(--red)':'var(--blue)');dot.setAttribute('stroke','#fff');dot.setAttribute('stroke-width','2');dot.style.cursor='pointer';
+      dot.addEventListener('mouseenter',function(e){this.setAttribute('r','6');const r=svg.closest('.chart-wrap').getBoundingClientRect();if(tip){tip.textContent=days[i]+': '+c+' kcal';tip.style.opacity='1';tip.style.left=(e.clientX-r.left-45)+'px';tip.style.top=(e.clientY-r.top-36)+'px';}});
+      dot.addEventListener('mouseleave',function(){this.setAttribute('r','4');if(tip)tip.style.opacity='0'});
+      svg.appendChild(dot);
+      const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',xs(i));t.setAttribute('y',H-5);t.setAttribute('font-size','8.5');t.setAttribute('fill','#86868B');t.setAttribute('text-anchor','middle');t.textContent=days[i];svg.appendChild(t);
+    });
+  })();
+
+  // Initializare Pagina
+  window.addEventListener('DOMContentLoaded', () => {
+    // Animam bar-urile de la inceput
+    document.querySelectorAll('.kpi-fill,.pdf-bar-fill').forEach(el=>{const w=el.style.width;el.style.width='0';requestAnimationFrame(()=>setTimeout(()=>el.style.width=w,100))});
+
+    // Setam perioada "Saptamana" ca default vizual
+    const weekBtn = Array.from(document.querySelectorAll('.bf-body button')).find(b => b.textContent === 'Săptămâna');
+    if(weekBtn) setPeriod(weekBtn, 'SAPTAMANA');
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title th:text="${isNew} ? 'Angajat nou | Admin SmartFit' : 'Editare angajat | Admin SmartFit'">Angajat</title>
+    <th:block th:replace="fragments/admin-layout :: styles"></th:block>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="fragments/admin-layout :: sidebar"></div>
+
+    <main class="main">
+        <div class="page-header">
+            <div>
+                <h1 th:text="${isNew} ? '➕ Angajat nou' : '✏️ Editare angajat'">Angajat</h1>
+                <p class="subtitle">Setează departamentul și permisiunile angajatului</p>
+            </div>
+            <a class="btn btn-secondary" th:href="@{/admin/angajati}">← Înapoi la listă</a>
+        </div>
+
+        <div th:replace="fragments/admin-layout :: alerts"></div>
+
+        <div class="card">
+            <form th:action="${isNew} ? @{/admin/angajati/nou/salveaza} : @{/admin/angajati/{id}/salveaza(id=${employeeProfileId})}"
+                  th:object="${employee}" method="post">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Prenume *</label>
+                        <input type="text" th:field="*{firstName}">
+                        <div class="form-error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nume *</label>
+                        <input type="text" th:field="*{lastName}">
+                        <div class="form-error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" th:field="*{email}">
+                        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label th:text="${isNew} ? 'Parolă *' : 'Parolă nouă (lasă gol pentru a o păstra)'">Parolă</label>
+                        <input type="password" th:field="*{password}" autocomplete="new-password">
+                        <div class="form-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Departament *</label>
+                        <select th:field="*{department}">
+                            <option value="ACADEMY">Academie (gestiune cursuri)</option>
+                            <option value="SHOP">Magazin (gestiune produse/comenzi)</option>
+                        </select>
+                        <div class="form-error" th:if="${#fields.hasErrors('department')}" th:errors="*{department}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Angajat din data</label>
+                        <input type="date" th:field="*{hiredDate}">
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Note interne (vizibile doar adminului)</label>
+                        <textarea th:field="*{notes}" rows="3"></textarea>
+                        <div class="form-error" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}"></div>
+                    </div>
+                </div>
+
+                <div class="card" style="background:var(--gray-bg); margin-top:6px;">
+                    <h2 style="font-size:14px;">Permisiuni</h2>
+                    <div class="checkbox-row" style="margin-bottom:10px;">
+                        <input type="checkbox" id="canCreate" th:field="*{canCreate}">
+                        <label for="canCreate" style="margin:0;">Poate adăuga (Creare)</label>
+                    </div>
+                    <div class="checkbox-row" style="margin-bottom:10px;">
+                        <input type="checkbox" id="canEdit" th:field="*{canEdit}">
+                        <label for="canEdit" style="margin:0;">Poate modifica (Editare)</label>
+                    </div>
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="canDelete" th:field="*{canDelete}">
+                        <label for="canDelete" style="margin:0;">Poate șterge (Ștergere) — recomandat OFF</label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Salvează angajat</button>
+                    <a class="btn btn-secondary" th:href="@{/admin/angajati}">Anulează</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Produse | Angajat SmartFit</title>
+    <th:block th:replace="fragments/admin-layout :: styles"></th:block>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="fragments/admin-layout :: sidebar"></div>
+
+    <main class="main">
+        <div class="page-header">
+            <div>
+                <h1>🛒 Produse</h1>
+                <p class="subtitle" th:text="${#lists.size(products)} + ' produse găsite'">0</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a class="btn btn-primary" th:if="${profile.canCreate}" th:href="@{/angajat/produse/nou}">➕ Produs nou</a>
+                <a class="btn btn-secondary" th:href="@{/angajat/produse/export/excel}">⬇️ Export Excel</a>
+            </div>
+        </div>
+
+        <div th:replace="fragments/admin-layout :: alerts"></div>
+
+        <!-- FILTRE -->
+        <form class="filter-bar" method="get" th:action="@{/angajat/produse}">
+            <div class="field">
+                <label>Căutare</label>
+                <input type="text" name="q" th:value="${q}" placeholder="Nume sau descriere...">
+            </div>
+            <div class="field">
+                <label>Categorie</label>
+                <select name="category">
+                    <option value="">Toate</option>
+                    <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == category}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Preț minim</label>
+                <input type="number" step="0.01" name="minPrice" th:value="${minPrice}">
+            </div>
+            <div class="field">
+                <label>Preț maxim</label>
+                <input type="number" step="0.01" name="maxPrice" th:value="${maxPrice}">
+            </div>
+            <div class="field">
+                <label>Stoc</label>
+                <select name="inStock">
+                    <option value="">Toate</option>
+                    <option value="true" th:selected="${inStock == true}">În stoc</option>
+                    <option value="false" th:selected="${inStock == false}">Fără stoc</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Filtrează</button>
+            <a class="btn btn-secondary" th:href="@{/angajat/produse}">Resetează</a>
+        </form>
+
+        <!-- IMPORT (doar dacă are permisiune de creare) -->
+        <div class="card" th:if="${profile.canCreate}">
+            <h2>📥 Import produse din Excel</h2>
+            <p style="font-size:12px; color:var(--gray-text); margin-bottom:10px;">
+                Format coloane: <strong>Nume | Categorie | Preț | Stoc | Descriere | URL imagine</strong> (rândul 1 = header)
+            </p>
+            <form th:action="@{/angajat/produse/import}" method="post" enctype="multipart/form-data" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <input type="file" name="file" accept=".xlsx,.xls" required>
+                <button type="submit" class="btn btn-primary">Importă</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Imagine</th><th>Nume</th><th>Categorie</th>
+                        <th>Preț</th><th>Stoc</th><th>Acțiuni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${products}">
+                        <td th:text="${p.id}"></td>
+                        <td>
+                            <img th:if="${p.displayImageUrl != null}" th:src="${p.displayImageUrl}"
+                                 style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
+                            <span th:unless="${p.displayImageUrl != null}" th:text="${p.fallbackEmoji}" style="font-size:24px;"></span>
+                        </td>
+                        <td th:text="${p.name}"></td>
+                        <td th:text="${p.categoryName}"></td>
+                        <td th:text="${#numbers.formatDecimal(p.price,1,2)} + ' lei'"></td>
+                        <td>
+                            <span th:text="${p.stockQuantity}"
+                                  th:style="${p.stockQuantity <= 10} ? 'color:#B3261E; font-weight:700;' : ''"></span>
+                        </td>
+                        <td class="actions-cell">
+                            <a class="btn btn-sm btn-secondary" th:if="${profile.canEdit}"
+                               th:href="@{/angajat/produse/{id}/edit(id=${p.id})}">✏️ Editează</a>
+                            <form th:if="${profile.canDelete}" th:action="@{/angajat/produse/{id}/sterge(id=${p.id})}" method="post"
+                                  onsubmit="return confirm('Sigur dorești să ștergi acest produs?')">
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️ Șterge</button>
+                            </form>
+                            <span th:if="${!profile.canEdit and !profile.canDelete}" style="color:var(--gray-text); font-size:12px;">doar vizualizare</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${products.isEmpty()}">
+                        <td colspan="7" class="empty-state">Nu există produse care să corespundă filtrelor.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

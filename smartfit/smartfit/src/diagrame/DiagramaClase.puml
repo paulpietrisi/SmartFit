@@ -1,0 +1,45 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide empty methods
+
+class User {
+  - id: Long
+  - email: String
+  - passwordHash: String
+  - firstName: String
+  - lastName: String
+  - role: String
+  - fitPoints: Integer
+  - goal: String
+  - activityLevel: Double
+}
+
+class Order {
+  - id: Long
+  - totalPrice: Double
+  - status: String
+  - shippingAddress: String
+  - pointsUsed: Integer
+  - paymentMethod: String
+  - createdAt: LocalDateTime
+}
+
+class OrderItem {
+  - id: Long
+  - quantity: Integer
+  - priceAtPurchase: Double
+  + getLineTotal(): double
+}
+
+class Product {
+  - id: Long
+  - name: String
+  - price: Double
+  - stockQuantity: Integer
+  - categoryName: String
+}
+
+User "1" <-- "0..*" Order : plasează
+Order "1" *-- "1..*" OrderItem : conține (cascade)
+OrderItem "*" --> "1" Product : referă
+@enduml

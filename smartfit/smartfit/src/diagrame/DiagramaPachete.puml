@@ -1,0 +1,48 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "com.smartfit" {
+
+    package "config" #EAF3FF {
+        class SecurityConfig
+        class WebConfig
+    }
+
+    package "controller" #FFF9EC {
+        class CheckoutController
+        class AdminController
+        class MainController
+    }
+
+    package "service" #EAF3FF {
+        class OrderService
+        class ProductAdminService
+        class EmployeeService
+    }
+
+    package "repository" #E8F8EF {
+        class OrderRepository
+        class UserRepository
+        class ProductRepository
+    }
+
+    package "entity" #F5F5F7 {
+        class User
+        class Order
+        class Product
+    }
+
+    package "dto" #F5F5F7 {
+        class CheckoutFormDto
+        class CartItemDto
+    }
+}
+
+controller ..> service : apelează
+controller ..> dto : folosește
+service ..> repository : apelează
+service ..> entity : manipulează
+repository ..> entity : citește/scrie
+config ..> controller : securizează
+@enduml
